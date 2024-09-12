@@ -26,10 +26,11 @@ classifiers = [
 ]
 
 dependencies = [
+  "rich",
 ]
 
 [project.optional-dependencies]
-test = ["coverage", "pytest"]
+test = ["pytest"]
 
 [project.urls]
 "Homepage" = "https://github.com/oir/startle"
