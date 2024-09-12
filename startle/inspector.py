@@ -1,10 +1,10 @@
 from typing import get_type_hints, Callable, Optional, Union, get_origin, get_args
 import inspect
-from inspect import getmembers
 from .parser import Args
 import types
 import re
 from textwrap import dedent
+
 
 def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     """
@@ -25,7 +25,7 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
                 brief += " "
             brief += lines[i].strip()
             i += 1
-        
+
         # first, find the Args section
         args_section = ""
         i = 0
@@ -51,7 +51,7 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
                     merged_lines[-1] += " " + line.strip()
                 else:
                     merged_lines.append(line.strip())
-            
+
             # now each line should be an arg description
             for line in merged_lines:
                 args_desc = re.search(r"(\S+)(?:\s+\(.*?\))?:(.*)", line)
@@ -60,7 +60,7 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
                 desc = desc.strip()
                 if param in hints:
                     arg_helps[param] = desc
-        
+
     return brief, arg_helps
 
 

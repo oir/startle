@@ -131,28 +131,36 @@ def test_args_both_positional_and_keyword_with_defaults():
 
     check_args(hi, ["--count", "3"], [], {"name": "john", "count": 3})
 
+
 def test_flag():
     def hi(name: str, /, *, verbose: bool = False) -> None:
         print(f"hello, {name}!")
         if verbose:
             print("verbose mode")
-    
+
     check_args(hi, ["jane"], ["jane"], {"verbose": False})
     check_args(hi, ["jane", "--verbose"], ["jane"], {"verbose": True})
     check_args(hi, ["--verbose", "jane"], ["jane"], {"verbose": True})
-    with raises(ParserOptionError, match="Required positional argument <name> is not provided!"):
+    with raises(
+        ParserOptionError, match="Required positional argument <name> is not provided!"
+    ):
         check_args(hi, ["--verbose"], [], {"verbose": True})
     with raises(ParserOptionError, match="Unexpected positional argument: `true`!"):
         check_args(hi, ["jane", "--verbose", "true"], [], {"verbose": False})
 
-@mark.parametrize("true", ["true", "True", "TRUE", "t", "T", "yes", "Yes", "YES", "y", "Y", "1"])
-@mark.parametrize("false", ["false", "False", "FALSE", "f", "F", "no", "No", "NO", "n", "N", "0"])
+
+@mark.parametrize(
+    "true", ["true", "True", "TRUE", "t", "T", "yes", "Yes", "YES", "y", "Y", "1"]
+)
+@mark.parametrize(
+    "false", ["false", "False", "FALSE", "f", "F", "no", "No", "NO", "n", "N", "0"]
+)
 def test_bool_but_not_flag(true: str, false: str):
     def hi(name: str, /, *, verbose: bool = True) -> None:
         print(f"hello, {name}!")
         if verbose:
             print("verbose mode")
-    
+
     check_args(hi, ["jane"], ["jane"], {"verbose": True})
     check_args(hi, ["jane", "--verbose", true], ["jane"], {"verbose": True})
     check_args(hi, ["--verbose", true, "jane"], ["jane"], {"verbose": True})
@@ -169,31 +177,55 @@ def test_bool_but_not_flag(true: str, false: str):
         print(f"hello, {name}!")
         if verbose:
             print("verbose mode")
-        
+
     check_args(hi2, ["jane"], ["jane", False], {})
     check_args(hi2, ["jane", true], ["jane", True], {})
     check_args(hi2, ["jane", false], ["jane", False], {})
-    
+
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
         check_args(hi2, ["jane", "maybe"], [], {})
-    
+
     def hi3(name: str, verbose: bool) -> None:
         print(f"hello, {name}!")
         if verbose:
             print("verbose mode")
-    
+
     check_args(hi3, ["jane", true], [], {"name": "jane", "verbose": True})
     check_args(hi3, ["jane", false], [], {"name": "jane", "verbose": False})
     check_args(hi3, ["--name", "jane", true], [], {"name": "jane", "verbose": True})
     check_args(hi3, ["--name", "jane", false], [], {"name": "jane", "verbose": False})
     check_args(hi3, ["jane", "--verbose", true], [], {"name": "jane", "verbose": True})
-    check_args(hi3, ["jane", "--verbose", false], [], {"name": "jane", "verbose": False})
+    check_args(
+        hi3, ["jane", "--verbose", false], [], {"name": "jane", "verbose": False}
+    )
     check_args(hi3, ["--verbose", true, "jane"], [], {"name": "jane", "verbose": True})
-    check_args(hi3, ["--verbose", false, "jane"], [], {"name": "jane", "verbose": False})
-    check_args(hi3, ["--name", "jane", "--verbose", true], [], {"name": "jane", "verbose": True})
-    check_args(hi3, ["--name", "jane", "--verbose", false], [], {"name": "jane", "verbose": False})
-    check_args(hi3, ["--verbose", true, "--name", "jane"], [], {"name": "jane", "verbose": True})
-    check_args(hi3, ["--verbose", false, "--name", "jane"], [], {"name": "jane", "verbose": False})
+    check_args(
+        hi3, ["--verbose", false, "jane"], [], {"name": "jane", "verbose": False}
+    )
+    check_args(
+        hi3,
+        ["--name", "jane", "--verbose", true],
+        [],
+        {"name": "jane", "verbose": True},
+    )
+    check_args(
+        hi3,
+        ["--name", "jane", "--verbose", false],
+        [],
+        {"name": "jane", "verbose": False},
+    )
+    check_args(
+        hi3,
+        ["--verbose", true, "--name", "jane"],
+        [],
+        {"name": "jane", "verbose": True},
+    )
+    check_args(
+        hi3,
+        ["--verbose", false, "--name", "jane"],
+        [],
+        {"name": "jane", "verbose": False},
+    )
 
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
         check_args(hi3, ["jane", "maybe"], [], {})
@@ -201,4 +233,3 @@ def test_bool_but_not_flag(true: str, false: str):
         check_args(hi3, ["jane", "--verbose", "maybe"], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
         check_args(hi3, ["--verbose", "maybe", "jane"], [], {})
-    

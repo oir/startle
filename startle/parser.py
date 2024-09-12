@@ -88,7 +88,7 @@ class Arg:
             assert value is None, "Flag options should not have values!"
             self._value = True
             self._parsed = True
-        else: 
+        else:
             assert value is not None, "Non-flag options should have values!"
             self._value = ValueParser(value).convert(self.type_)
             self._parsed = True
@@ -113,11 +113,11 @@ class Args:
             name = value[1:]
             if not name:
                 raise ValueError("Prefix `-` not followed by an option!")
-            #ensure(
+            # ensure(
             #    len(name) == 1,
             #    "Options prefixed by `-` have to be short names! "
             #    "Did you mean `--" + name + "`?",
-            #)
+            # )
             return name
         return False
 
@@ -267,7 +267,7 @@ class Args:
             opt for opt in self._named_args if opt.names and not opt.is_positional
         ]
 
-        def usage(arg: Arg, show_optional: bool=False) -> Text:
+        def usage(arg: Arg, show_optional: bool = False) -> Text:
             if arg.is_positional and not arg.names:
                 inner = Text(arg.metavar, style="bold")
                 text = Text.assemble("<", inner, ">")
@@ -275,7 +275,9 @@ class Args:
                 text = Text.assemble("--", (arg.names[-1], "bold"))
             else:
                 inner = arg.metavar
-                text = Text.assemble("--", (arg.names[-1], "bold")) + Text.assemble(" <", inner, ">")
+                text = Text.assemble("--", (arg.names[-1], "bold")) + Text.assemble(
+                    " <", inner, ">"
+                )
 
             if not arg.required and show_optional:
                 text = Text.assemble("[", text, "]")
@@ -286,7 +288,9 @@ class Args:
             if arg.required:
                 helptext = Text.assemble(helptext, (" (required)", "yellow"))
             else:
-                helptext = Text.assemble(helptext, (f" (default: {arg.default})", "green"))
+                helptext = Text.assemble(
+                    helptext, (f" (default: {arg.default})", "green")
+                )
             return helptext
 
         console = Console()
@@ -295,10 +299,15 @@ class Args:
         console.print(Text("Usage:", style="underline dim"))
         console.print(
             Text(f"  {name} ")
-            + Text(" ").join([usage(arg, show_optional=True) for arg in positional_only])
+            + Text(" ").join(
+                [usage(arg, show_optional=True) for arg in positional_only]
+            )
             + Text(" ")
             + Text(" ").join(
-                [usage(opt, show_optional=True) for opt in positional_and_named + named_only]
+                [
+                    usage(opt, show_optional=True)
+                    for opt in positional_and_named + named_only
+                ]
             )
         )
 
