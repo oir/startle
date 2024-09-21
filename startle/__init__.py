@@ -1,6 +1,5 @@
 from typing import Callable
 from .inspector import make_args
-from ._version import __version__
 
 
 def start(func: Callable):

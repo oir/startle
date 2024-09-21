@@ -91,7 +91,7 @@ def make_args(func: Callable) -> Args:
                     return Optional[pod_type]
         return annotation
 
-    # Iterate over the parameters and determine their kind
+    # Iterate over the parameters and add arguments based on kind
     for param_name, param in sig.parameters.items():
         normalized_annotation = normalize_type(param.annotation)
 
@@ -104,32 +104,28 @@ def make_args(func: Callable) -> Args:
 
         help = arg_helps.get(param_name, "")
 
+        positional = False
+        names = []
+        metavar = ""
+
         if param.kind == inspect.Parameter.POSITIONAL_ONLY:
-            args.add(
-                normalized_annotation,
-                positional=True,
-                metavar=param_name,
-                required=required,
-                default=default,
-                help=help,
-            )
+            positional = True
+            metavar = param_name
         elif param.kind == inspect.Parameter.KEYWORD_ONLY:
-            args.add(
-                normalized_annotation,
-                names=[param_name],
-                required=required,
-                default=default,
-                help=help,
-            )
+            names = [param_name]
         elif param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
-            args.add(
-                normalized_annotation,
-                positional=True,
-                metavar=param_name,
-                names=[param_name],
-                required=required,
-                default=default,
-                help=help,
-            )
+            positional = True
+            metavar = param_name
+            names = [param_name]
+
+        args.add(
+            normalized_annotation,
+            positional=positional,
+            metavar=metavar,
+            names=names,
+            required=required,
+            default=default,
+            help=help,
+        )
 
     return args
