@@ -1,6 +1,6 @@
 from typing import get_type_hints, Callable, Optional, Union, get_origin, get_args
 import inspect
-from .parser import Args
+from .parser import Args, Name
 import types
 import re
 from textwrap import dedent
@@ -91,6 +91,18 @@ def make_args(func: Callable) -> Args:
                     return Optional[pod_type]
         return annotation
 
+    used_short_names = set()
+
+    # Discover if there are any named options that are of length 1
+    # If so, those cannot be used as short names for other options
+    for param_name, param in sig.parameters.items():
+        if (
+            param.kind == inspect.Parameter.KEYWORD_ONLY
+            or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        ):
+            if len(param_name) == 1:
+                used_short_names.add(param_name)
+
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in sig.parameters.items():
         normalized_annotation = normalize_type(param.annotation)
@@ -105,24 +117,33 @@ def make_args(func: Callable) -> Args:
         help = arg_helps.get(param_name, "")
 
         positional = False
-        names = []
+        name: Name | None = None
         metavar = ""
 
         if param.kind == inspect.Parameter.POSITIONAL_ONLY:
-            positional = True
             metavar = param_name
-        elif param.kind == inspect.Parameter.KEYWORD_ONLY:
-            names = [param_name]
-        elif param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+        if (
+            param.kind == inspect.Parameter.POSITIONAL_ONLY
+            or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        ):
             positional = True
-            metavar = param_name
-            names = [param_name]
+        if (
+            param.kind == inspect.Parameter.KEYWORD_ONLY
+            or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+        ):
+            if len(param_name) == 1:
+                name = Name(short=param_name)
+            elif param_name[0] not in used_short_names:
+                name = Name(short=param_name[0], long=param_name)
+                used_short_names.add(param_name[0])
+            else:
+                name = Name(long=param_name)
 
         args.add(
             normalized_annotation,
             positional=positional,
             metavar=metavar,
-            names=names,
+            name=name,
             required=required,
             default=default,
             help=help,

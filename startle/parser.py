@@ -59,6 +59,16 @@ _default_metavars = {
 
 
 @dataclass
+class Name:
+    short: str = ""
+    long: str = ""
+
+    @property
+    def long_or_short(self) -> str:
+        return self.long or self.short
+
+
+@dataclass
 class Arg:
     type_: type
     help: str = ""
@@ -67,7 +77,7 @@ class Arg:
     required: bool = False
 
     # Note: an Arg can be both positional and named.
-    names: list[str] | None = None
+    name: Name | None = None
     is_positional: bool = False
 
     _parsed: bool = False  # if this is already parsed
@@ -125,7 +135,7 @@ class Args:
         self,
         type_: type,
         positional: bool = False,
-        names: list[str] | None = None,
+        name: Name | None = None,
         metavar: str = "",
         help: str = "",
         required: bool = False,
@@ -137,19 +147,25 @@ class Args:
             help=help,
             required=required,
             default=default,
-            names=names,
+            name=name,
             is_positional=positional,
         )
-        if not positional and not names:
+        if not positional and not name:
             raise ParserConfigError(
                 "Either positional or named arguments should be provided!"
             )
         if positional:  # positional argument
             self._positional_args.append(arg)
-        if names:  # named argument
+        if name is not None:  # named argument
+            if not name.short and not name.long:
+                raise ParserConfigError(
+                    "Named arguments should have at least one name!"
+                )
             self._named_args.append(arg)
-            for name in names:
-                self._name2idx[name] = len(self._named_args) - 1
+            if name.short:
+                self._name2idx[name.short] = len(self._named_args) - 1
+            if name.long:
+                self._name2idx[name.long] = len(self._named_args) - 1
 
     def _parse(self, args: list[str]):
         idx = 0
@@ -217,7 +233,7 @@ class Args:
             if not opt._parsed:
                 if opt.required:
                     raise ParserOptionError(
-                        f"Required option <{','.join(opt.names)}> is not provided!"
+                        f"Required option <{opt.name.long_or_short}> is not provided!"
                     )
                 else:
                     opt._value = opt.default
@@ -231,7 +247,7 @@ class Args:
         For arguments that are both positional and named, the named argument
         is preferred.
         """
-        named_args = {opt.names[-1]: opt._value for opt in self._named_args}
+        named_args = {opt.name.long_or_short: opt._value for opt in self._named_args}
         named_arg_values = list(named_args.values())
         positional_args = [
             arg._value
@@ -258,28 +274,40 @@ class Args:
         name = sys.argv[0]
 
         positional_only = [
-            arg for arg in self._positional_args if arg.is_positional and not arg.names
+            arg for arg in self._positional_args if arg.is_positional and not arg.name
         ]
         positional_and_named = [
-            arg for arg in self._positional_args if arg.is_positional and arg.names
+            arg for arg in self._positional_args if arg.is_positional and arg.name
         ]
         named_only = [
-            opt for opt in self._named_args if opt.names and not opt.is_positional
+            opt for opt in self._named_args if opt.name and not opt.is_positional
         ]
 
-        def usage(arg: Arg, show_optional: bool = False) -> Text:
-            if arg.is_positional and not arg.names:
+        def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
+            if kind == "listing":
+                name_list = []
+                if name.short:
+                    name_list.append(Text(f"-{name.short}", style="bold"))
+                if name.long:
+                    name_list.append(Text(f"--{name.long}", style="bold"))
+                return Text(",").join(name_list)
+            else:
+                if name.long:
+                    return Text(f"--{name.long}", style="bold")
+                else:
+                    return Text(f"-{name.short}", style="bold")
+
+        def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
+            if arg.is_positional and not arg.name:
                 inner = Text(arg.metavar, style="bold")
                 text = Text.assemble("<", inner, ">")
             elif arg.is_flag:
-                text = Text.assemble("--", (arg.names[-1], "bold"))
+                text = name_usage(arg.name, kind)
             else:
                 inner = arg.metavar
-                text = Text.assemble("--", (arg.names[-1], "bold")) + Text.assemble(
-                    " <", inner, ">"
-                )
+                text = name_usage(arg.name, kind) + Text.assemble(" <", inner, ">")
 
-            if not arg.required and show_optional:
+            if not arg.required and kind == "usage line":
                 text = Text.assemble("[", text, "]")
             return text
 
@@ -299,15 +327,10 @@ class Args:
         console.print(Text("Usage:", style="underline dim"))
         console.print(
             Text(f"  {name} ")
-            + Text(" ").join(
-                [usage(arg, show_optional=True) for arg in positional_only]
-            )
+            + Text(" ").join([usage(arg, "usage line") for arg in positional_only])
             + Text(" ")
             + Text(" ").join(
-                [
-                    usage(opt, show_optional=True)
-                    for opt in positional_and_named + named_only
-                ]
+                [usage(opt, "usage line") for opt in positional_and_named + named_only]
             )
         )
 
@@ -331,5 +354,5 @@ class Args:
         for arg in self._positional_args:
             rval += f"  <positional> {arg.metavar}: {arg._value}\n"
         for arg in self._named_args:
-            rval += f"  <named> {','.join(arg.names)}: {arg._value}\n"
+            rval += f"  <named> {arg.name.long}: {arg._value}\n"
         return rval
