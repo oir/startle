@@ -66,11 +66,14 @@ class Name:
     @property
     def long_or_short(self) -> str:
         return self.long or self.short
+    
+    def __str__(self) -> str:
+        return self.long_or_short
 
 
 @dataclass
 class Arg:
-    type_: type
+    type_: type  # for n-ary options, this is the type of the list elements
     help: str = ""
     metavar: str = ""
     default: Any = None
@@ -79,10 +82,9 @@ class Arg:
     # Note: an Arg can be both positional and named.
     name: Name | None = None
     is_positional: bool = False
+    is_nary: bool = False
 
     _parsed: bool = False  # if this is already parsed
-    _nargs: bool = False  # if this is n-ary
-
     _value: Any = None  # the parsed value
 
     @property
@@ -97,6 +99,13 @@ class Arg:
         if self.is_flag:
             assert value is None, "Flag options should not have values!"
             self._value = True
+            self._parsed = True
+        elif self.is_nary:
+            assert value is not None, "N-ary options should have values!"
+            assert self._value is None or isinstance(self._value, list), "Programming error!"
+            if self._value is None:
+                self._value = []
+            self._value.append(ValueParser(value).convert(self.type_))
             self._parsed = True
         else:
             assert value is not None, "Non-flag options should have values!"
@@ -140,6 +149,7 @@ class Args:
         help: str = "",
         required: bool = False,
         default: Any = None,
+        nary: bool = False,
     ):
         arg = Arg(
             type_=type_,
@@ -149,6 +159,7 @@ class Args:
             default=default,
             name=name,
             is_positional=positional,
+            is_nary=nary,
         )
         if not positional and not name:
             raise ParserConfigError(
@@ -180,12 +191,22 @@ class Args:
                     raise ParserOptionError(f"Unexpected option `{name}`!")
                 opt = self._named_args[self._name2idx[name]]
                 if opt._parsed:
-                    raise ParserOptionError(f"Option `{name}` is multiply given!")
+                    raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 
                 if opt.is_flag:
                     opt.parse()
                     idx += 1
-                # TODO: n-aries
+                elif opt.is_nary:
+                    # n-ary option
+                    values = []
+                    idx += 1
+                    while idx < len(args) and not self.is_name(args[idx]):
+                        values.append(args[idx])
+                        idx += 1
+                    if not values:
+                        raise ParserOptionError(f"Option `{name}` is missing argument!")
+                    for value in values:
+                        opt.parse(value)
                 else:
                     # not a flag, not n-ary
                     if idx + 1 >= len(args):
@@ -213,8 +234,18 @@ class Args:
                     raise ParserOptionError(
                         f"Positional argument `{args[idx]}` is multiply given!"
                     )
-                arg.parse(args[idx])
-                idx += 1
+                if arg.is_nary:
+                    # n-ary positional arg
+                    values = []
+                    while idx < len(args) and not self.is_name(args[idx]):
+                        values.append(args[idx])
+                        idx += 1
+                    for value in values:
+                        arg.parse(value)
+                else:
+                    # regular positional arg
+                    arg.parse(args[idx])
+                    idx += 1
                 positional_idx += 1
 
         # check if all required positional arguments are given
@@ -232,9 +263,7 @@ class Args:
         for opt in self._named_args:
             if not opt._parsed:
                 if opt.required:
-                    raise ParserOptionError(
-                        f"Required option <{opt.name.long_or_short}> is not provided!"
-                    )
+                    raise ParserOptionError(f"Required option `{opt.name}` is not provided!")
                 else:
                     opt._value = opt.default
                     opt._parsed = True

@@ -74,7 +74,7 @@ def test_args_without_defaults():
         ParserOptionError, match="Required positional argument <name> is not provided!"
     ):
         check_args(hi, [], [], {})
-    with raises(ParserOptionError, match="Required option <count> is not provided!"):
+    with raises(ParserOptionError, match="Required option `count` is not provided!"):
         check_args(hi, ["jane"], [], {})
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
@@ -233,3 +233,101 @@ def test_bool_but_not_flag(true: str, false: str):
         check_args(hi3, ["jane", "--verbose", "maybe"], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
         check_args(hi3, ["--verbose", "maybe", "jane"], [], {})
+
+
+@mark.parametrize("scalar", [int, float, str])
+@mark.parametrize("scalar2", [int, float, str])
+@mark.parametrize("short", [False, True])
+@mark.parametrize("short2", [False, True])
+def test_keyword_nargs(scalar: type, scalar2: type, short: bool, short2: bool):
+    def add(*, numbers: list[scalar]) -> None:
+        print(sum(numbers))
+
+    opt = "-n" if short else "--numbers"
+    cli = [opt, "0", "1", "2", "3", "4"]
+    check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
+
+    with raises(ParserOptionError, match="Required option `numbers` is not provided!"):
+        check_args(add, [], [], {})
+    with raises(ParserOptionError, match="Option `numbers` is multiply given!"):
+        check_args(add, ["--numbers", "0", "1", "-n", "2"], [], {})
+
+    if scalar in [int, float]:
+        with raises(ParserValueError, match=f"Cannot parse {'integer' if scalar == int else 'float'} from `x`!"):
+            check_args(add, [opt, "0", "1", "x"], [], {})
+    
+
+    def add2(*, widths: list[scalar], heights: list[scalar2] = []) -> None:
+        print(sum(widths))
+        print(sum(heights))
+    
+    wopt = "-w" if short else "--widths"
+    hopt = "-h" if short2 else "--heights"
+    cli = [wopt, "0", "1", "2", "3", "4", hopt, "5", "6", "7", "8", "9"]
+    check_args(add2, cli, [], {"widths": [scalar(i) for i in range(5)], "heights": [scalar2(i) for i in range(5, 10)]})
+
+    with raises(ParserOptionError, match=f"Required option `widths` is not provided!"):
+        check_args(add2, [], [], {})
+    with raises(ParserOptionError, match=f"Required option `widths` is not provided!"):
+        check_args(add2, [hopt, "0", "1"], [], {})
+
+    cli = [wopt, "0", "1", "2", "3", "4"]
+    check_args(add2, cli, [], {"widths": [scalar(i) for i in range(5)], "heights": []})
+
+    with raises(ParserOptionError, match=f"Option `{hopt.lstrip('-')}` is missing argument!"):
+        check_args(add2, cli + [hopt], [], {})
+    
+    if scalar in [int, float]:
+        with raises(ParserValueError, match=f"Cannot parse {'integer' if scalar == int else 'float'} from `x`!"):
+            check_args(add2, [wopt, "0", "1", "x"], [], {})
+    if scalar2 in [int, float]:
+        with raises(ParserValueError, match=f"Cannot parse {'integer' if scalar2 == int else 'float'} from `x`!"):
+            check_args(add2, [wopt, "0", "1", hopt, "0", "1", "x"], [], {})
+    
+
+@mark.parametrize("scalar", [int, float, str])
+def test_positional_nargs(scalar: type):
+    def add(numbers: list[scalar], /) -> None:
+        print(sum(numbers))
+
+    cli = ["0", "1", "2", "3", "4"]
+    check_args(add, cli, [[scalar(i) for i in range(5)]], {})
+
+    with raises(ParserOptionError, match="Unexpected option `numbers`!"):
+        check_args(add, ["--numbers", "0", "1", "2", "3", "4"], [], {})
+    with raises(ParserOptionError, match="Required positional argument <numbers> is not provided!"):
+        check_args(add, [], [], {})
+    
+    if scalar in [int, float]:
+        with raises(ParserValueError, match=f"Cannot parse {'integer' if scalar == int else 'float'} from `x`!"):
+            check_args(add, ["0", "1", "x"], [], {})
+    
+    def add2(numbers: list[scalar] = [scalar(3), scalar(5)], /) -> None:
+        print(sum(numbers))
+    
+    check_args(add2, cli, [[scalar(i) for i in range(5)]], {})
+    check_args(add2, [], [[scalar(3), scalar(5)]], {})
+
+@mark.parametrize("scalar", [int, float, str])
+def test_positional_nargs_infeasible(scalar: type):
+    """
+    Below case is ambiguous, because the parser cannot determine the end of the first positional argument.
+    TODO: Should there be a `--`-like split? Should we raise an error earlier?
+    """
+    def rectangle(widths: list[scalar], heights: list[scalar], /) -> None:
+        print(sum(widths))
+        print(sum(heights))
+    
+    cli = ["0", "1", "2", "3", "4", "5", "6"]
+    with raises(ParserOptionError, match="Required positional argument <heights> is not provided!"):
+        check_args(rectangle, cli, [], {})
+    
+    """
+    This one is oddly feasible 😅
+    """
+    def rectangle(widths: list[scalar], heights: list[scalar], /, verbose: bool) -> None:
+        if verbose:
+            print(sum(widths))
+            print(sum(heights))
+    cli = ["0", "1", "2", "3", "4", "-v", "yes", "5", "6"]
+    check_args(rectangle, cli, [[scalar(i) for i in range(5)], [scalar(i) for i in range(5, 7)]], {"verbose": True})

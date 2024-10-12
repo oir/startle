@@ -119,6 +119,7 @@ def make_args(func: Callable) -> Args:
         positional = False
         name: Name | None = None
         metavar = ""
+        nary = False
 
         if param.kind == inspect.Parameter.POSITIONAL_ONLY:
             metavar = param_name
@@ -139,6 +140,18 @@ def make_args(func: Callable) -> Args:
             else:
                 name = Name(long=param_name)
 
+        # for n-ary options, type should refer to the inner type
+        # if inner type is absent from the hint, assume str
+        if get_origin(normalized_annotation) is list:
+            nary = True
+            args_ = get_args(normalized_annotation)
+            normalized_annotation = args_[0] if args_ else str
+        elif normalized_annotation is list:
+            nary = True
+            normalized_annotation = str
+
+
+
         args.add(
             normalized_annotation,
             positional=positional,
@@ -146,6 +159,7 @@ def make_args(func: Callable) -> Args:
             name=name,
             required=required,
             default=default,
+            nary=nary,
             help=help,
         )
 
