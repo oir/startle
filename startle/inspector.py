@@ -150,8 +150,6 @@ def make_args(func: Callable) -> Args:
             nary = True
             normalized_annotation = str
 
-
-
         args.add(
             normalized_annotation,
             positional=positional,

@@ -66,7 +66,7 @@ class Name:
     @property
     def long_or_short(self) -> str:
         return self.long or self.short
-    
+
     def __str__(self) -> str:
         return self.long_or_short
 
@@ -102,7 +102,9 @@ class Arg:
             self._parsed = True
         elif self.is_nary:
             assert value is not None, "N-ary options should have values!"
-            assert self._value is None or isinstance(self._value, list), "Programming error!"
+            assert self._value is None or isinstance(
+                self._value, list
+            ), "Programming error!"
             if self._value is None:
                 self._value = []
             self._value.append(ValueParser(value).convert(self.type_))
@@ -263,7 +265,9 @@ class Args:
         for opt in self._named_args:
             if not opt._parsed:
                 if opt.required:
-                    raise ParserOptionError(f"Required option `{opt.name}` is not provided!")
+                    raise ParserOptionError(
+                        f"Required option `{opt.name}` is not provided!"
+                    )
                 else:
                     opt._value = opt.default
                     opt._parsed = True
