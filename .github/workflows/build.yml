@@ -23,4 +23,4 @@ jobs:
           pip install hatch
           pip install .[test]
       - name: Run tests
-        run: hatch run +py=${{ matrix.python-version }} test:pytest
+        run: hatch run test:pytest

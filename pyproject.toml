@@ -44,6 +44,3 @@ local_scheme = "no-local-version"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "startle/_version.py"
-
-[[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12"]
