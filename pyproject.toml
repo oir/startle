@@ -29,9 +29,6 @@ dependencies = [
   "rich",
 ]
 
-[project.optional-dependencies]
-test = ["pytest"]
-
 [project.urls]
 "Homepage" = "https://github.com/oir/startle"
 
@@ -45,5 +42,7 @@ local_scheme = "no-local-version"
 [tool.hatch.build.hooks.vcs]
 version-file = "startle/_version.py"
 
-[[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12"]
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest"
+]
