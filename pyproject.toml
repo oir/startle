@@ -29,9 +29,6 @@ dependencies = [
   "rich",
 ]
 
-[project.optional-dependencies]
-test = ["pytest"]
-
 [project.urls]
 "Homepage" = "https://github.com/oir/startle"
 
@@ -47,5 +44,5 @@ version-file = "startle/_version.py"
 
 [tool.hatch.envs.test]
 dependencies = [
-  ".[test]"
+  "pytest"
 ]
