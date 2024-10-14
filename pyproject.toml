@@ -44,3 +44,8 @@ local_scheme = "no-local-version"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "startle/_version.py"
+
+[tool.hatch.envs.test]
+dependencies = [
+  ".[test]"
+]
