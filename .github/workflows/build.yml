@@ -5,11 +5,16 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  release:
+    types:
+      - published
 jobs:
   test:
     name: "Run tests"
     timeout-minutes: 10
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -24,3 +29,8 @@ jobs:
           pip install .[test]
       - name: Run tests
         run: hatch run test:pytest
+      - name: Build dist
+        run: hatch build
+      - name: Publish
+        if: github.event_name == 'release' && github.event.action == 'published'
+        run: hatch publish
