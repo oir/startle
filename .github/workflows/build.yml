@@ -33,4 +33,4 @@ jobs:
         run: hatch build
       - name: Publish
         if: github.event_name == 'release' && github.event.action == 'published'
-        run: hatch publish
+        uses: pypa/gh-action-pypi-publish@release/v1
