@@ -109,20 +109,40 @@ def test_args_without_defaults():
 
 
 def test_args_both_positional_and_keyword():
-    def hi(name: str, count: int) -> None:
-        for _ in range(count):
-            print(f"hello, {name}!")
+    def hi(person_name: str, hello_count: int) -> None:
+        for _ in range(hello_count):
+            print(f"hello, {person_name}!")
 
-    check_args(hi, ["jane", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["jane", "--count", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--name", "jane", "--count", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--count", "3", "--name", "jane"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--name", "jane", "3"], [], {"name": "jane", "count": 3})
+    check_args(hi, ["jane", "3"], [], {"person_name": "jane", "hello_count": 3})
+    check_args(
+        hi,
+        ["jane", "--hello-count", "3"],
+        [],
+        {"person_name": "jane", "hello_count": 3},
+    )
+    check_args(
+        hi,
+        ["--person-name", "jane", "--hello-count", "3"],
+        [],
+        {"person_name": "jane", "hello_count": 3},
+    )
+    check_args(
+        hi,
+        ["--hello-count", "3", "--person-name", "jane"],
+        [],
+        {"person_name": "jane", "hello_count": 3},
+    )
+    check_args(
+        hi,
+        ["--person-name", "jane", "3"],
+        [],
+        {"person_name": "jane", "hello_count": 3},
+    )
 
-    with raises(ParserOptionError, match="Option `name` is multiply given!"):
-        check_args(hi, ["jane", "--name", "john", "--count", "3"], [], {})
+    with raises(ParserOptionError, match="Option `person-name` is multiply given!"):
+        check_args(hi, ["jane", "--person-name", "john", "--hello-count", "3"], [], {})
     with raises(ParserOptionError, match="Unexpected positional argument: `4`!"):
-        check_args(hi, ["jane", "--count", "3", "4"], [], {})
+        check_args(hi, ["jane", "--hello-count", "3", "4"], [], {})
 
 
 def test_args_both_positional_and_keyword_with_defaults():
