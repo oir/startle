@@ -53,6 +53,7 @@ class ValueParser:
 
 _default_metavars = {
     int: "int",
+    float: "float",
     str: "text",
     bool: "true|false",
 }
@@ -73,16 +74,35 @@ class Name:
 
 @dataclass
 class Arg:
+    """
+    Represents a command-line argument.
+
+    Attributes:
+        type_ (type): The type of the argument. For n-ary options, this is the type of the list elements.
+        help (str): The help text for the argument.
+        metavar (str): The name to use in help messages for the argument in place of the value that is fed.
+        default (Any): The default value for the argument.
+        required (bool): Whether the argument is required.
+        name (Name): The name of the argument.
+        is_positional (bool): Whether the argument is positional.
+        is_named (bool): Whether the argument is named.
+        is_nary (bool): Whether the argument can take multiple values.
+        _parsed (bool): Whether the argument has been parsed.
+        _value (Any): The parsed value of the argument.
+    """
+
+    # Note: an Arg can be both positional and named.
+    name: Name
     type_: type  # for n-ary options, this is the type of the list elements
+
+    is_positional: bool = False
+    is_named: bool = False
+    is_nary: bool = False
+
     help: str = ""
     metavar: str = ""
     default: Any = None
     required: bool = False
-
-    # Note: an Arg can be both positional and named.
-    name: Name | None = None
-    is_positional: bool = False
-    is_nary: bool = False
 
     _parsed: bool = False  # if this is already parsed
     _value: Any = None  # the parsed value
@@ -144,9 +164,10 @@ class Args:
 
     def add(
         self,
+        name: Name,
         type_: type,
         positional: bool = False,
-        name: Name | None = None,
+        named: bool = False,
         metavar: str = "",
         help: str = "",
         required: bool = False,
@@ -161,16 +182,17 @@ class Args:
             default=default,
             name=name,
             is_positional=positional,
+            is_named=named,
             is_nary=nary,
         )
-        if not positional and not name:
+        if not positional and not named:
             raise ParserConfigError(
-                "Either positional or named arguments should be provided!"
+                "An argument should be either positional or named (or both)!"
             )
         if positional:  # positional argument
             self._positional_args.append(arg)
-        if name is not None:  # named argument
-            if not name.short and not name.long:
+        if named:  # named argument
+            if not name.long_or_short:
                 raise ParserConfigError(
                     "Named arguments should have at least one name!"
                 )
@@ -255,7 +277,7 @@ class Args:
             if not arg._parsed:
                 if arg.required:
                     raise ParserOptionError(
-                        f"Required positional argument <{arg.metavar}> is not provided!"
+                        f"Required positional argument <{arg.name.long}> is not provided!"
                     )
                 else:
                     arg._value = arg.default
@@ -307,38 +329,57 @@ class Args:
         name = sys.argv[0]
 
         positional_only = [
-            arg for arg in self._positional_args if arg.is_positional and not arg.name
+            arg
+            for arg in self._positional_args
+            if arg.is_positional and not arg.is_named
         ]
         positional_and_named = [
-            arg for arg in self._positional_args if arg.is_positional and arg.name
+            arg for arg in self._positional_args if arg.is_positional and arg.is_named
         ]
         named_only = [
-            opt for opt in self._named_args if opt.name and not opt.is_positional
+            opt for opt in self._named_args if opt.is_named and not opt.is_positional
         ]
+
+        sty_name = "bold green"
+        sty_var = "blue"
+        sty_title = "bold underline dim"
 
         def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
             if kind == "listing":
                 name_list = []
                 if name.short:
-                    name_list.append(Text(f"-{name.short}", style="bold"))
+                    name_list.append(Text(f"-{name.short}", style=sty_name))
                 if name.long:
-                    name_list.append(Text(f"--{name.long}", style="bold"))
+                    name_list.append(Text(f"--{name.long}", style=sty_name))
                 return Text(",").join(name_list)
             else:
                 if name.long:
-                    return Text(f"--{name.long}", style="bold")
+                    return Text(f"--{name.long}", style=sty_name)
                 else:
-                    return Text(f"-{name.short}", style="bold")
+                    return Text(f"-{name.short}", style=sty_name)
 
         def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
-            if arg.is_positional and not arg.name:
-                inner = Text(arg.metavar, style="bold")
-                text = Text.assemble("<", inner, ">")
+            if arg.is_positional and not arg.is_named:
+                text = Text.assemble(
+                    ("<", sty_var),
+                    (arg.name.long, sty_name),
+                    (":", sty_name),
+                    (arg.metavar, sty_var),
+                    (">", sty_var),
+                )
+                if arg.is_nary and kind == "usage line":
+                    text += Text.assemble(
+                        (" [", "dim"), (str(text), "dim"), (" ...]", "dim")
+                    )
             elif arg.is_flag:
                 text = name_usage(arg.name, kind)
             else:
-                inner = arg.metavar
-                text = name_usage(arg.name, kind) + Text.assemble(" <", inner, ">")
+                option = Text(f"<{arg.metavar}>", style="blue")
+                if arg.is_nary:
+                    option += Text.assemble(
+                        (" [", "dim"), (str(option), "dim"), (" ...]", "dim")
+                    )
+                text = Text.assemble(name_usage(arg.name, kind), " ", option)
 
             if not arg.required and kind == "usage line":
                 text = Text.assemble("[", text, "]")
@@ -357,7 +398,7 @@ class Args:
         console = Console()
         if self.brief:
             console.print(self.brief + "\n")
-        console.print(Text("Usage:", style="underline dim"))
+        console.print(Text("Usage:", style=sty_title))
         console.print(
             Text(f"  {name} ")
             + Text(" ").join([usage(arg, "usage line") for arg in positional_only])
@@ -368,17 +409,16 @@ class Args:
         )
 
         if positional_only + positional_and_named + named_only:
-            console.print(Text("\nwhere", style="underline dim"))
+            console.print(Text("\nwhere", style=sty_title))
 
         table = Table(show_header=False, box=None, padding=(0, 0, 0, 2))
 
-        if positional_only:
-            for arg in positional_only:
-                table.add_row(usage(arg), help(arg))
-
-        if positional_and_named + named_only:
-            for opt in positional_and_named + named_only:
-                table.add_row(usage(opt), help(opt))
+        for arg in positional_only:
+            table.add_row("[dim](positional)[/dim]", usage(arg), help(arg))
+        for opt in positional_and_named:
+            table.add_row("[dim](pos. or opt.)[/dim]", usage(opt), help(opt))
+        for opt in named_only:
+            table.add_row("[dim](option)[/dim]", usage(opt), help(opt))
 
         console.print(table)
 

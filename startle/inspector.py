@@ -117,12 +117,11 @@ def make_args(func: Callable) -> Args:
         help = arg_helps.get(param_name, "")
 
         positional = False
-        name: Name | None = None
+        named = False
+        name = Name(long=param_name)
         metavar = ""
         nary = False
 
-        if param.kind == inspect.Parameter.POSITIONAL_ONLY:
-            metavar = param_name
         if (
             param.kind == inspect.Parameter.POSITIONAL_ONLY
             or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
@@ -132,6 +131,7 @@ def make_args(func: Callable) -> Args:
             param.kind == inspect.Parameter.KEYWORD_ONLY
             or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
         ):
+            named = True
             if len(param_name) == 1:
                 name = Name(short=param_name)
             elif param_name[0] not in used_short_names:
@@ -151,10 +151,11 @@ def make_args(func: Callable) -> Args:
             normalized_annotation = str
 
         args.add(
-            normalized_annotation,
-            positional=positional,
-            metavar=metavar,
             name=name,
+            type_=normalized_annotation,
+            positional=positional,
+            named=named,
+            metavar=metavar,
             required=required,
             default=default,
             nary=nary,
