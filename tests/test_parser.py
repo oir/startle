@@ -249,8 +249,7 @@ def test_bool_but_not_flag(true: str, false: str):
 
 
 @mark.parametrize("short", [False, True])
-@mark.parametrize("short2", [False, True])
-def test_keyword_nargs(short: bool, short2: bool):
+def test_keyword_nargs(short: bool):
     def add_int(*, numbers: list[int]) -> None:
         print(sum(numbers))
 
