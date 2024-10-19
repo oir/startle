@@ -323,14 +323,14 @@ class Args:
             self._parse(sys.argv[1:])
         return self
 
-    def print_help(self):
+    def print_help(self, console=None, program_name: str | None = None):
         from rich.console import Console
         from rich.table import Table
         from rich.text import Text
 
         import sys
 
-        name = sys.argv[0]
+        name = program_name or sys.argv[0]
 
         positional_only = [
             arg
@@ -366,23 +366,17 @@ class Args:
             if arg.is_positional and not arg.is_named:
                 text = Text.assemble(
                     ("<", sty_var),
-                    (arg.name.long, sty_name),
-                    (":", sty_name),
-                    (arg.metavar, sty_var),
-                    (">", sty_var),
+                    (f"{arg.name.long}:", sty_name),
+                    (f"{arg.metavar}>", sty_var),
                 )
                 if arg.is_nary and kind == "usage line":
-                    text += Text.assemble(
-                        (" [", "dim"), (str(text), "dim"), (" ...]", "dim")
-                    )
+                    text += Text.assemble(" ", (f"[{text} ...]", "dim"))
             elif arg.is_flag:
                 text = name_usage(arg.name, kind)
             else:
                 option = Text(f"<{arg.metavar}>", style="blue")
                 if arg.is_nary:
-                    option += Text.assemble(
-                        (" [", "dim"), (str(option), "dim"), (" ...]", "dim")
-                    )
+                    option += Text.assemble(" ", (f"[{option} ...]", "dim"))
                 text = Text.assemble(name_usage(arg.name, kind), " ", option)
 
             if not arg.required and kind == "usage line":
@@ -392,14 +386,14 @@ class Args:
         def help(arg: Arg) -> Text:
             helptext = Text(arg.help, style="italic")
             if arg.required:
-                helptext = Text.assemble(helptext, (" (required)", "yellow"))
+                helptext = Text.assemble(helptext, " ", ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
-                    helptext, (f" (default: {arg.default})", "green")
+                    helptext, " ", (f"(default: {arg.default})", "green")
                 )
             return helptext
 
-        console = Console()
+        console = console or Console()
         if self.brief:
             console.print(self.brief + "\n")
         console.print(Text("Usage:", style=sty_title))
