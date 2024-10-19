@@ -116,9 +116,10 @@ def make_args(func: Callable) -> Args:
 
         help = arg_helps.get(param_name, "")
 
+        param_name_sub = param_name.replace("_", "-")
         positional = False
         named = False
-        name = Name(long=param_name)
+        name = Name(long=param_name_sub)
         metavar = ""
         nary = False
 
@@ -133,12 +134,12 @@ def make_args(func: Callable) -> Args:
         ):
             named = True
             if len(param_name) == 1:
-                name = Name(short=param_name)
+                name = Name(short=param_name_sub)
             elif param_name[0] not in used_short_names:
-                name = Name(short=param_name[0], long=param_name)
-                used_short_names.add(param_name[0])
+                name = Name(short=param_name_sub[0], long=param_name_sub)
+                used_short_names.add(param_name_sub[0])
             else:
-                name = Name(long=param_name)
+                name = Name(long=param_name_sub)
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str

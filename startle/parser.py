@@ -302,7 +302,11 @@ class Args:
         For arguments that are both positional and named, the named argument
         is preferred.
         """
-        named_args = {opt.name.long_or_short: opt._value for opt in self._named_args}
+
+        def var(opt: Arg) -> str:
+            return opt.name.long_or_short.replace("-", "_")
+
+        named_args = {var(opt): opt._value for opt in self._named_args}
         named_arg_values = list(named_args.values())
         positional_args = [
             arg._value
