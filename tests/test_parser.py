@@ -1,5 +1,5 @@
 from startle.inspector import make_args
-from startle.error import ParserOptionError, ParserValueError
+from startle.error import ParserOptionError, ParserValueError, ParserConfigError
 from typing import Callable, Any
 
 from pytest import raises, mark
@@ -300,8 +300,7 @@ def test_keyword_nargs(short: bool):
 
 
 @mark.parametrize("short", [False, True])
-@mark.parametrize("short2", [False, True])
-def test_keyword_nargs_long(short: bool, short2: bool):
+def test_keyword_nargs_long(short: bool):
     def add1(*, widths: list[int], heights: list[float] = []) -> None:
         print(sum(widths))
         print(sum(heights))
@@ -320,7 +319,7 @@ def test_keyword_nargs_long(short: bool, short2: bool):
         (add3, str, int),
     ]:
         wopt = "-w" if short else "--widths"
-        hopt = "-h" if short2 else "--heights"
+        hopt = "--heights"
         cli = [wopt, "0", "1", "2", "3", "4", hopt, "5", "6", "7", "8", "9"]
         check_args(
             add,
@@ -503,3 +502,20 @@ def test_pathlib_path():
         check_args(
             transfer, ["./destination", "--destination", "./destination"], [], {}
         )
+
+
+def test_param_named_help():
+    def hi(help: str = "help", count: int = 3) -> None:
+        print(f"{help}!")
+
+    def hi2(h: str = "help", count: int = 3) -> None:
+        print(f"{h}!")
+
+    with raises(
+        ParserConfigError, match="Cannot use `h` or `help` as parameter names in hi!"
+    ):
+        make_args(hi)
+    with raises(
+        ParserConfigError, match="Cannot use `h` or `help` as parameter names in hi2!"
+    ):
+        make_args(hi2)

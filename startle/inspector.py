@@ -2,6 +2,7 @@ from typing import get_type_hints, Callable, Optional, Union, get_origin, get_ar
 import inspect
 from inspect import Parameter
 from .args import Arg, Args, Name
+from .error import ParserConfigError
 import types
 import re
 from textwrap import dedent
@@ -92,7 +93,13 @@ def make_args(func: Callable) -> Args:
                     return Optional[pod_type]
         return annotation
 
-    used_short_names = set()
+    used_short_names = {"h"}
+
+    for param_name, _ in sig.parameters.items():
+        if param_name in ["h", "help"]:
+            raise ParserConfigError(
+                f"Cannot use `h` or `help` as parameter names in {func.__name__}!"
+            )
 
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options

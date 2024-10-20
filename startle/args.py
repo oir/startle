@@ -63,7 +63,7 @@ class Args:
 
         while idx < len(args):
             if name := self._is_name(args[idx]):
-                if name == "help":
+                if name in ["help", "h"]:
                     self.print_help()
                     sys.exit(0)
                 if name not in self._name2idx:
