@@ -1,6 +1,6 @@
 from typing import get_type_hints, Callable, Optional, Union, get_origin, get_args
 import inspect
-from .parser import Args, Name
+from .parser import Arg, Args, Name
 import types
 import re
 from textwrap import dedent
@@ -151,16 +151,17 @@ def make_args(func: Callable) -> Args:
             nary = True
             normalized_annotation = str
 
-        args.add(
+        arg = Arg(
             name=name,
             type_=normalized_annotation,
-            positional=positional,
-            named=named,
             metavar=metavar,
+            help=help,
             required=required,
             default=default,
-            nary=nary,
-            help=help,
+            is_positional=positional,
+            is_named=named,
+            is_nary=nary,
         )
+        args.add(arg)
 
     return args

@@ -112,6 +112,10 @@ class Arg:
         return self.type_ is bool and self.default is False and not self.is_positional
 
     def __post_init__(self):
+        if not self.is_positional and not self.is_named:
+            raise ParserConfigError(
+                "An argument should be either positional or named (or both)!"
+            )
         if not self.metavar:
             self.metavar = _default_metavars.get(self.type_, "val")
 
@@ -162,45 +166,19 @@ class Args:
             return name
         return False
 
-    def add(
-        self,
-        name: Name,
-        type_: type,
-        positional: bool = False,
-        named: bool = False,
-        metavar: str = "",
-        help: str = "",
-        required: bool = False,
-        default: Any = None,
-        nary: bool = False,
-    ):
-        arg = Arg(
-            type_=type_,
-            metavar=metavar,
-            help=help,
-            required=required,
-            default=default,
-            name=name,
-            is_positional=positional,
-            is_named=named,
-            is_nary=nary,
-        )
-        if not positional and not named:
-            raise ParserConfigError(
-                "An argument should be either positional or named (or both)!"
-            )
-        if positional:  # positional argument
+    def add(self, arg: Arg):
+        if arg.is_positional:  # positional argument
             self._positional_args.append(arg)
-        if named:  # named argument
-            if not name.long_or_short:
+        if arg.is_named:  # named argument
+            if not arg.name.long_or_short:
                 raise ParserConfigError(
                     "Named arguments should have at least one name!"
                 )
             self._named_args.append(arg)
-            if name.short:
-                self._name2idx[name.short] = len(self._named_args) - 1
-            if name.long:
-                self._name2idx[name.long] = len(self._named_args) - 1
+            if arg.name.short:
+                self._name2idx[arg.name.short] = len(self._named_args) - 1
+            if arg.name.long:
+                self._name2idx[arg.name.long] = len(self._named_args) - 1
 
     def _parse(self, args: list[str]):
         idx = 0
