@@ -1,5 +1,5 @@
 from startle.inspector import make_args
-from startle.parser import ParserOptionError, ParserValueError
+from startle.error import ParserOptionError, ParserValueError
 from typing import Callable, Any
 
 from pytest import raises, mark

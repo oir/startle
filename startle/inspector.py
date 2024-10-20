@@ -1,6 +1,6 @@
 from typing import get_type_hints, Callable, Optional, Union, get_origin, get_args
 import inspect
-from .parser import Arg, Args, Name
+from .args import Arg, Args, Name
 import types
 import re
 from textwrap import dedent
