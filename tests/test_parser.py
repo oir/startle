@@ -25,7 +25,7 @@ def check_args(
     assert kwargs == expected_kwargs
 
     for arg, expected_arg in zip(args, expected_args):
-        assert type(arg) == type(expected_arg)
+        assert type(arg) == type(expected_arg)  # noqa: E721
 
     for key, value in kwargs.items():
         assert type(value) == type(expected_kwargs[key])  # noqa: E721
