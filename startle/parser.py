@@ -344,7 +344,8 @@ class Args:
             opt for opt in self._named_args if opt.is_named and not opt.is_positional
         ]
 
-        sty_name = "bold green"
+        sty_name = "bold"
+        sty_opt = "green"
         sty_var = "blue"
         sty_title = "bold underline dim"
 
@@ -352,23 +353,26 @@ class Args:
             if kind == "listing":
                 name_list = []
                 if name.short:
-                    name_list.append(Text(f"-{name.short}", style=sty_name))
+                    name_list.append(
+                        Text(f"-{name.short}", style=f"{sty_name} {sty_opt}")
+                    )
                 if name.long:
-                    name_list.append(Text(f"--{name.long}", style=sty_name))
+                    name_list.append(
+                        Text(f"--{name.long}", style=f"{sty_name} {sty_opt}")
+                    )
                 return Text(",").join(name_list)
             else:
                 if name.long:
-                    return Text(f"--{name.long}", style=sty_name)
+                    return Text(f"--{name.long}", style=f"{sty_name} {sty_opt}")
                 else:
-                    return Text(f"-{name.short}", style=sty_name)
+                    return Text(f"-{name.short}", style=f"{sty_name} {sty_opt}")
 
         def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
             if arg.is_positional and not arg.is_named:
                 text = Text.assemble(
-                    ("<", sty_var),
-                    (f"{arg.name.long}:", sty_name),
-                    (f"{arg.metavar}>", sty_var),
+                    "<", (f"{arg.name.long}:", sty_name), f"{arg.metavar}>"
                 )
+                text.stylize(sty_var)
                 if arg.is_nary and kind == "usage line":
                     text += Text.assemble(" ", (f"[{text} ...]", "dim"))
             elif arg.is_flag:

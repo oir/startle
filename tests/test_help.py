@@ -3,7 +3,8 @@ from startle.inspector import make_args
 from rich.console import Console
 
 vs = "blue"
-ns = "bold green"
+ns = "bold"
+os = "green"
 ts = "bold underline dim"
 
 
@@ -43,14 +44,14 @@ def test_simple():
 Fuse two monsters with polymerization.
 
 [{ts}]Usage:[/]
-  fuse.py [{vs}]<[/][{ns}]left-path:[/][{vs}]text>[/] [{vs}]<[/][{ns}]right-path:[/][{vs}]text>[/] [{ns}]--output-path[/] [{vs}]<text>[/] [[{ns}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]] [[{ns}]--alpha[/] [{vs}]<float>[/]]
+  fuse.py [{vs}]<[{ns}]left-path:[/]text>[/] [{vs}]<[{ns}]right-path:[/]text>[/] [{ns} {os}]--output-path[/] [{vs}]<text>[/] [[{ns} {os}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]] [[{ns} {os}]--alpha[/] [{vs}]<float>[/]]
 
 [{ts}]where[/]
-  [dim](positional)[/]    [{vs}]<[/][{ns}]left-path:[/][{vs}]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
-  [dim](positional)[/]    [{vs}]<[/][{ns}]right-path:[/][{vs}]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  [{ns}]-o[/],[{ns}]--output-path[/] [{vs}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        [{ns}]-c[/],[{ns}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
-  [dim](option)[/]        [{ns}]-a[/],[{ns}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
+  [dim](positional)[/]    [{vs}]<[{ns}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](positional)[/]    [{vs}]<[{ns}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](pos. or opt.)[/]  [{ns} {os}]-o[/],[{ns} {os}]--output-path[/] [{vs}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]        [{ns} {os}]-c[/],[{ns} {os}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        [{ns} {os}]-a[/],[{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
 
     console = Console(width=120, highlight=False)
     with console.capture() as capture:
