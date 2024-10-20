@@ -15,7 +15,14 @@ class Args:
     _name2idx: dict[str, int] = field(default_factory=dict)
 
     @staticmethod
-    def is_name(value: str) -> str | Literal[False]:
+    def _is_name(value: str) -> str | Literal[False]:
+        """
+        Check if a string, as provided in the command-line arguments, looks
+        like an option name (starts with - or --).
+
+        Returns:
+            The name of the option if it is an option, otherwise False.
+        """
         if value.startswith("--"):
             name = value[2:]
             if not name:
@@ -34,6 +41,9 @@ class Args:
         return False
 
     def add(self, arg: Arg):
+        """
+        Add an argument to the parser.
+        """
         if arg.is_positional:  # positional argument
             self._positional_args.append(arg)
         if arg.is_named:  # named argument
@@ -52,7 +62,7 @@ class Args:
         positional_idx = 0
 
         while idx < len(args):
-            if name := self.is_name(args[idx]):
+            if name := self._is_name(args[idx]):
                 if name == "help":
                     self.print_help()
                     sys.exit(0)
@@ -69,7 +79,7 @@ class Args:
                     # n-ary option
                     values = []
                     idx += 1
-                    while idx < len(args) and not self.is_name(args[idx]):
+                    while idx < len(args) and not self._is_name(args[idx]):
                         values.append(args[idx])
                         idx += 1
                     if not values:
@@ -106,7 +116,7 @@ class Args:
                 if arg.is_nary:
                     # n-ary positional arg
                     values = []
-                    while idx < len(args) and not self.is_name(args[idx]):
+                    while idx < len(args) and not self._is_name(args[idx]):
                         values.append(args[idx])
                         idx += 1
                     for value in values:
@@ -162,13 +172,19 @@ class Args:
         return positional_args, named_args
 
     def parse(self, args: list[str] | None = None) -> "Args":
+        """
+        Parse the command-line arguments.
+        """
         if args is not None:
             self._parse(args)
         else:
             self._parse(sys.argv[1:])
         return self
 
-    def print_help(self, console=None, program_name: str | None = None):
+    def print_help(self, console=None, program_name: str | None = None) -> None:
+        """
+        Print the help message to the console.
+        """
         from rich.console import Console
         from rich.table import Table
         from rich.text import Text

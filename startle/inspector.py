@@ -1,5 +1,6 @@
 from typing import get_type_hints, Callable, Optional, Union, get_origin, get_args
 import inspect
+from inspect import Parameter
 from .args import Arg, Args, Name
 import types
 import re
@@ -96,10 +97,7 @@ def make_args(func: Callable) -> Args:
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options
     for param_name, param in sig.parameters.items():
-        if (
-            param.kind == inspect.Parameter.KEYWORD_ONLY
-            or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-        ):
+        if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
             if len(param_name) == 1:
                 used_short_names.add(param_name)
 
@@ -123,15 +121,9 @@ def make_args(func: Callable) -> Args:
         metavar = ""
         nary = False
 
-        if (
-            param.kind == inspect.Parameter.POSITIONAL_ONLY
-            or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-        ):
+        if param.kind in [Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
             positional = True
-        if (
-            param.kind == inspect.Parameter.KEYWORD_ONLY
-            or param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-        ):
+        if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
             named = True
             if len(param_name) == 1:
                 name = Name(short=param_name_sub)
