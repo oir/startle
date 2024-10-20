@@ -1,3 +1,4 @@
+import typing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -36,11 +37,33 @@ class ValueParser:
     def to_pathlib__Path(self) -> Path:
         return Path(self.value)
 
+    @staticmethod
+    def _strip_optional(type_: type) -> type:
+        """
+        Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
+        return T1 | ... | Tn.
+        """
+        if typing.get_origin(type_) is typing.Union:
+            args = typing.get_args(type_)
+            if type(None) in args:
+                args = [arg for arg in args if arg is not type(None)]
+                if len(args) == 1:
+                    return args[0]
+                else:
+                    return typing.Union[tuple(args)]
+
+        return type_
+
     def convert(self, type_: type) -> Any:
+        # if type is Optional[T], convert to T
+        type_ = self._strip_optional(type_)
+
         # check if a method named `to_<fully qualified name>` exists
         method_name = f"to_{type_.__module__}__{type_.__qualname__}"
         if hasattr(self, method_name):
             return getattr(self, method_name)()
+
+        # otherwise it is unsupported
         raise ParserValueError(
             f"Unsupported type {type_.__module__}.{type_.__qualname__}!"
         )
