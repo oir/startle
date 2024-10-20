@@ -1,0 +1,13 @@
+name: ruff
+run-name: ${{ github.actor }} is ruffening startle
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  ruff:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v1
