@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, List
 
 from pytest import mark, raises
 
@@ -280,7 +280,23 @@ def test_keyword_nargs(short: bool):
     def add_str(*, numbers: list[str]) -> None:
         print(" ".join(numbers))
 
-    for add, scalar in [(add_int, int), (add_float, float), (add_str, str)]:
+    def add_int2(*, numbers: List[int]) -> None:
+        print(sum(numbers))
+
+    def add_float2(*, numbers: List[float]) -> None:
+        print(sum(numbers))
+
+    def add_str2(*, numbers: list[str]) -> None:
+        print(" ".join(numbers))
+
+    for add, scalar in [
+        (add_int, int),
+        (add_float, float),
+        (add_str, str),
+        (add_int2, int),
+        (add_float2, float),
+        (add_str2, str),
+    ]:
         opt = "-n" if short else "--numbers"
         cli = [opt, "0", "1", "2", "3", "4"]
         check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
@@ -375,7 +391,31 @@ def test_positional_nargs():
     def add_str(numbers: list[str], /) -> None:
         print(" ".join(numbers))
 
-    for add, scalar in [(add_int, int), (add_float, float), (add_str, str)]:
+    def add_int2(numbers: List[int], /) -> None:
+        print(sum(numbers))
+
+    def add_float2(numbers: List[float], /) -> None:
+        print(sum(numbers))
+
+    def add_str2(numbers: List[str], /) -> None:
+        print(" ".join(numbers))
+
+    def add_str3(numbers: list, /) -> None:
+        print(" ".join(numbers))
+
+    def add_str4(numbers: List, /) -> None:
+        print(" ".join(numbers))
+
+    for add, scalar in [
+        (add_int, int),
+        (add_float, float),
+        (add_str, str),
+        (add_int2, int),
+        (add_float2, float),
+        (add_str2, str),
+        (add_str3, str),
+        (add_str4, str),
+    ]:
         cli = ["0", "1", "2", "3", "4"]
         check_args(add, cli, [[scalar(i) for i in range(5)]], {})
 
@@ -405,7 +445,31 @@ def test_positional_nargs_with_defaults():
     def add_str(numbers: list[str] = ["3", "5"], /) -> None:
         print(" ".join(numbers))
 
-    for add, scalar in [(add_int, int), (add_float, float), (add_str, str)]:
+    def add_int2(numbers: List[int] = [3, 5], /) -> None:
+        print(sum(numbers))
+
+    def add_float2(numbers: List[float] = [3.0, 5.0], /) -> None:
+        print(sum(numbers))
+
+    def add_str2(numbers: List[str] = ["3", "5"], /) -> None:
+        print(" ".join(numbers))
+
+    def add_str3(numbers: list = ["3", "5"], /) -> None:
+        print(" ".join(numbers))
+
+    def add_str4(numbers: List = ["3", "5"], /) -> None:
+        print(" ".join(numbers))
+
+    for add, scalar in [
+        (add_int, int),
+        (add_float, float),
+        (add_str, str),
+        (add_int2, int),
+        (add_float2, float),
+        (add_str2, str),
+        (add_str3, str),
+        (add_str4, str),
+    ]:
         cli = ["0", "1", "2", "3", "4"]
         check_args(add, cli, [[scalar(i) for i in range(5)]], {})
         check_args(add, [], [[scalar(3), scalar(5)]], {})
