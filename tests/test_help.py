@@ -1,3 +1,4 @@
+from typing import Callable
 from startle.inspector import make_args
 
 from rich.console import Console
@@ -6,6 +7,20 @@ vs = "blue"
 ns = "bold"
 os = "green"
 ts = "bold underline dim"
+
+
+def check_help(f: Callable, program_name: str, expected: str):
+    console = Console(width=120, highlight=False)
+    with console.capture() as capture:
+        make_args(f).print_help(console, program_name)
+    result = capture.get()
+
+    console = Console(width=120, highlight=False)
+    with console.capture() as capture:
+        console.print(expected)
+    expected = capture.get()
+
+    assert result == expected
 
 
 def test_simple():
@@ -34,12 +49,6 @@ def test_simple():
         print(f"components: {components}")
         print(f"alpha: {alpha}")
 
-    args = make_args(fusion)
-    console = Console(width=120, highlight=False)
-    with console.capture() as capture:
-        args.print_help(console, "fuse.py")
-    result = capture.get()
-
     expected = f"""\
 Fuse two monsters with polymerization.
 
@@ -53,9 +62,4 @@ Fuse two monsters with polymerization.
   [dim](option)[/]        [{ns} {os}]-c[/],[{ns} {os}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
   [dim](option)[/]        [{ns} {os}]-a[/],[{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
 
-    console = Console(width=120, highlight=False)
-    with console.capture() as capture:
-        console.print(expected)
-    expected = capture.get()
-
-    assert result == expected
+    check_help(fusion, "fuse.py", expected)
