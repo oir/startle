@@ -25,10 +25,10 @@ def check_args(
     assert kwargs == expected_kwargs
 
     for arg, expected_arg in zip(args, expected_args):
-        assert type(arg) == type(expected_arg)  # noqa: E721
+        assert type(arg) is type(expected_arg)
 
     for key, value in kwargs.items():
-        assert type(value) == type(expected_kwargs[key])  # noqa: E721
+        assert type(value) is type(expected_kwargs[key])
 
 
 def test_args_with_defaults():
@@ -294,7 +294,7 @@ def test_keyword_nargs(short: bool):
         if scalar in [int, float]:
             with raises(
                 ParserValueError,
-                match=f"Cannot parse {'integer' if scalar == int else 'float'} from `x`!",
+                match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
             ):
                 check_args(add, [opt, "0", "1", "x"], [], {})
 
@@ -354,13 +354,13 @@ def test_keyword_nargs_long(short: bool, short2: bool):
         if scalar in [int, float]:
             with raises(
                 ParserValueError,
-                match=f"Cannot parse {'integer' if scalar == int else 'float'} from `x`!",
+                match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
             ):
                 check_args(add, [wopt, "0", "1", "x"], [], {})
         if scalar2 in [int, float]:
             with raises(
                 ParserValueError,
-                match=f"Cannot parse {'integer' if scalar2 == int else 'float'} from `x`!",
+                match=f"Cannot parse {'integer' if scalar2 is int else 'float'} from `x`!",
             ):
                 check_args(add, [wopt, "0", "1", hopt, "0", "1", "x"], [], {})
 
@@ -390,7 +390,7 @@ def test_positional_nargs():
         if scalar in [int, float]:
             with raises(
                 ParserValueError,
-                match=f"Cannot parse {'integer' if scalar == int else 'float'} from `x`!",
+                match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
             ):
                 check_args(add, ["0", "1", "x"], [], {})
 
