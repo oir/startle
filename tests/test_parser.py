@@ -15,10 +15,10 @@ def check_args(
     Check if the parser can parse the CLI arguments correctly.
 
     Args:
-        f (Callable): The function to parse the arguments for.
-        cli_args (list[str]): The CLI arguments to parse.
-        expected_args (list[str]): The expected positional arguments.
-        expected_kwargs (dict[str, Any]): The expected keyword arguments
+        f: The function to parse the arguments for.
+        cli_args: The CLI arguments to parse.
+        expected_args: The expected positional arguments.
+        expected_kwargs: The expected keyword arguments
     """
     args, kwargs = make_args(f).parse(cli_args).make_func_args()
     assert args == expected_args
@@ -453,3 +453,53 @@ def test_positional_nargs_infeasible():
         [list(range(5)), [5.0, 6.0]],
         {"verbose": True},
     )
+
+
+def test_pathlib_path():
+    from pathlib import Path
+
+    def transfer(destination: Path, source: Path = Path("./")) -> None:
+        print(f"Transferring from {source} to {destination}.")
+
+    check_args(
+        transfer,
+        ["./destination", "./source"],
+        [],
+        {"destination": Path("./destination"), "source": Path("./source")},
+    )
+    check_args(
+        transfer,
+        ["./destination"],
+        [],
+        {"destination": Path("./destination"), "source": Path("./")},
+    )
+    check_args(
+        transfer,
+        ["./destination", "--source", "./source"],
+        [],
+        {"destination": Path("./destination"), "source": Path("./source")},
+    )
+    check_args(
+        transfer,
+        ["--source", "./source", "./destination"],
+        [],
+        {"destination": Path("./destination"), "source": Path("./source")},
+    )
+    check_args(
+        transfer,
+        ["--source", "./source", "--destination", "./destination"],
+        [],
+        {"destination": Path("./destination"), "source": Path("./source")},
+    )
+
+    with raises(
+        ParserOptionError,
+        match="Required positional argument <destination> is not provided!",
+    ):
+        check_args(transfer, [], [], {})
+    with raises(ParserOptionError, match="Option `destination` is missing argument!"):
+        check_args(transfer, ["--destination"], [], {})
+    with raises(ParserOptionError, match="Option `destination` is multiply given!"):
+        check_args(
+            transfer, ["./destination", "--destination", "./destination"], [], {}
+        )
