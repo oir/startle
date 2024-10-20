@@ -1,5 +1,6 @@
 from typing import Any
 from dataclasses import dataclass
+from pathlib import Path
 
 from .error import ParserValueError, ParserConfigError
 
@@ -8,10 +9,10 @@ from .error import ParserValueError, ParserConfigError
 class ValueParser:
     value: str
 
-    def to_str(self) -> str:
+    def to_builtins__str(self) -> str:
         return self.value
 
-    def to_int(self) -> int:
+    def to_builtins__int(self) -> int:
         try:
             return int(self.value)
         except ValueError as err:
@@ -19,25 +20,30 @@ class ValueParser:
                 f"Cannot parse integer from `{self.value}`!"
             ) from err
 
-    def to_float(self) -> float:
+    def to_builtins__float(self) -> float:
         try:
             return float(self.value)
         except ValueError as err:
             raise ParserValueError(f"Cannot parse float from `{self.value}`!") from err
 
-    def to_bool(self) -> bool:
+    def to_builtins__bool(self) -> bool:
         if self.value.lower() in {"true", "t", "yes", "y", "1"}:
             return True
         if self.value.lower() in {"false", "f", "no", "n", "0"}:
             return False
         raise ParserValueError(f"Cannot parse boolean from `{self.value}`!")
 
+    def to_pathlib__Path(self) -> Path:
+        return Path(self.value)
+
     def convert(self, type_: type) -> Any:
-        # check if a method named `to_<type_.__name__>` exists
-        method_name = f"to_{type_.__name__}"
+        # check if a method named `to_<fully qualified name>` exists
+        method_name = f"to_{type_.__module__}__{type_.__qualname__}"
         if hasattr(self, method_name):
             return getattr(self, method_name)()
-        raise ParserValueError(f"Cannot parse argument to type {type_.__name__}!")
+        raise ParserValueError(
+            f"Unsupported type {type_.__module__}.{type_.__qualname__}!"
+        )
 
 
 _default_metavars = {
@@ -45,6 +51,7 @@ _default_metavars = {
     float: "float",
     str: "text",
     bool: "true|false",
+    Path: "path",
 }
 
 
