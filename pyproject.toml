@@ -43,6 +43,7 @@ local_scheme = "no-local-version"
 version-file = "startle/_version.py"
 
 [tool.hatch.envs.test]
-dependencies = [
-  "pytest"
-]
+dependencies = [ "pytest" ]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

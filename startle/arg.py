@@ -1,8 +1,8 @@
-from typing import Any
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
-from .error import ParserValueError, ParserConfigError
+from .error import ParserConfigError, ParserValueError
 
 
 @dataclass

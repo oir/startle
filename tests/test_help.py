@@ -1,7 +1,8 @@
 from typing import Callable
-from startle.inspector import make_args
 
 from rich.console import Console
+
+from startle.inspector import make_args
 
 vs = "blue"
 ns = "bold"

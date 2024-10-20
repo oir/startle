@@ -1,8 +1,9 @@
-from startle.inspector import make_args
-from startle.error import ParserOptionError, ParserValueError, ParserConfigError
-from typing import Callable, Any
+from typing import Any, Callable
 
-from pytest import raises, mark
+from pytest import mark, raises
+
+from startle.error import ParserConfigError, ParserOptionError, ParserValueError
+from startle.inspector import make_args
 
 
 def check_args(

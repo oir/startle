@@ -1,4 +1,5 @@
 from typing import Callable
+
 from .inspector import make_args
 
 

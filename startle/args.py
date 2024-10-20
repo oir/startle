@@ -1,9 +1,9 @@
 import sys
-from typing import Literal, Any
 from dataclasses import dataclass, field
+from typing import Any, Literal
 
-from .error import ParserOptionError, ParserConfigError
 from .arg import Arg, Name
+from .error import ParserConfigError, ParserOptionError
 
 
 @dataclass
@@ -185,11 +185,11 @@ class Args:
         """
         Print the help message to the console.
         """
+        import sys
+
         from rich.console import Console
         from rich.table import Table
         from rich.text import Text
-
-        import sys
 
         name = program_name or sys.argv[0]
 

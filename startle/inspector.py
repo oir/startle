@@ -1,11 +1,12 @@
-from typing import get_type_hints, Callable, Optional, Union, get_origin, get_args
 import inspect
+import re
+import types
 from inspect import Parameter
+from textwrap import dedent
+from typing import Callable, Optional, Union, get_args, get_origin, get_type_hints
+
 from .args import Arg, Args, Name
 from .error import ParserConfigError
-import types
-import re
-from textwrap import dedent
 
 
 def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
