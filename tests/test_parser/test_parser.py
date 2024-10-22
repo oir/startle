@@ -1,79 +1,56 @@
-from typing import Any, Callable, List
+from typing import Callable, List
 
+from _utils import check_args
 from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 from startle.inspector import make_args
 
 
-def check_args(
-    f: Callable,
-    cli_args: list[str],
-    expected_args: list[str],
-    expected_kwargs: dict[str, Any],
-):
-    """
-    Check if the parser can parse the CLI arguments correctly.
-
-    Args:
-        f: The function to parse the arguments for.
-        cli_args: The CLI arguments to parse.
-        expected_args: The expected positional arguments.
-        expected_kwargs: The expected keyword arguments
-    """
-    args, kwargs = make_args(f).parse(cli_args).make_func_args()
-    assert args == expected_args
-    assert kwargs == expected_kwargs
-
-    for arg, expected_arg in zip(args, expected_args):
-        assert type(arg) is type(expected_arg)
-
-    for key, value in kwargs.items():
-        assert type(value) is type(expected_kwargs[key])
+def hi_int(name: str = "john", /, *, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"hello, {name}!")
 
 
-def test_args_with_defaults():
-    def hi_int(name: str = "john", /, *, count: int = 1) -> None:
-        for _ in range(count):
-            print(f"hello, {name}!")
+def hi_float(name: str = "john", /, *, count: float = 1.0) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
 
-    def hi_float(name: str = "john", /, *, count: float = 1.0) -> None:
-        for _ in range(int(count)):
-            print(f"hello, {name}!")
 
-    for hi, count_t in [(hi_int, int), (hi_float, float)]:
-        typestr = "integer" if count_t is int else "float"
+@mark.parametrize("hi, count_t", [(hi_int, int), (hi_float, float)])
+def test_args_with_defaults(hi, count_t):
+    typestr = "integer" if count_t is int else "float"
 
-        check_args(hi, [], ["john"], {"count": count_t(1)})
-        check_args(hi, ["jane"], ["jane"], {"count": count_t(1)})
-        check_args(hi, ["jane", "--count", "3"], ["jane"], {"count": count_t(3)})
-        check_args(hi, ["--count", "3", "jane"], ["jane"], {"count": count_t(3)})
-        check_args(hi, ["--count", "3"], ["john"], {"count": count_t(3)})
+    check_args(hi, [], ["john"], {"count": count_t(1)})
+    check_args(hi, ["jane"], ["jane"], {"count": count_t(1)})
+    check_args(hi, ["jane", "--count", "3"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["--count", "3", "jane"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["--count", "3"], ["john"], {"count": count_t(3)})
 
-        with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
-            check_args(hi, ["jane", "--count", "x"], [], {})
-        with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
-            check_args(hi, ["--count", "x", "jane"], [], {})
+    with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
+        check_args(hi, ["jane", "--count", "x"], [], {})
+    with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
+        check_args(hi, ["--count", "x", "jane"], [], {})
 
-        with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
-            check_args(hi, ["john", "3"], [], {})
+    with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
+        check_args(hi, ["john", "3"], [], {})
 
-        with raises(ParserOptionError, match="Option `count` is missing argument!"):
-            check_args(hi, ["--count"], [], {})
-        with raises(ParserOptionError, match="Option `count` is missing argument!"):
-            check_args(hi, ["jane", "--count"], [], {})
+    with raises(ParserOptionError, match="Option `count` is missing argument!"):
+        check_args(hi, ["--count"], [], {})
+    with raises(ParserOptionError, match="Option `count` is missing argument!"):
+        check_args(hi, ["jane", "--count"], [], {})
 
-        with raises(ParserOptionError, match="Unexpected option `name`!"):
-            check_args(hi, ["--name", "jane"], [], {})
-        with raises(ParserOptionError, match="Unexpected option `name`!"):
-            check_args(hi, ["--name", "jane", "john"], [], {})
-        with raises(ParserOptionError, match="Unexpected option `name`!"):
-            check_args(hi, ["john", "--name", "jane"], [], {})
+    with raises(ParserOptionError, match="Unexpected option `name`!"):
+        check_args(hi, ["--name", "jane"], [], {})
+    with raises(ParserOptionError, match="Unexpected option `name`!"):
+        check_args(hi, ["--name", "jane", "john"], [], {})
+    with raises(ParserOptionError, match="Unexpected option `name`!"):
+        check_args(hi, ["john", "--name", "jane"], [], {})
 
-        with raises(ParserOptionError, match="Option `count` is multiply given!"):
-            check_args(hi, ["john", "--count", "3", "--count", "4"], [], {})
-        with raises(ParserOptionError, match="Option `count` is multiply given!"):
-            check_args(hi, ["--count", "3", "john", "--count", "4"], [], {})
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        check_args(hi, ["john", "--count", "3", "--count", "4"], [], {})
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        check_args(hi, ["--count", "3", "john", "--count", "4"], [], {})
 
 
 def test_args_without_defaults():
@@ -269,210 +246,241 @@ def test_bool_but_not_flag(true: str, false: str):
         check_args(hi3, ["--verbose", "maybe", "jane"], [], {})
 
 
+def add_int(*, numbers: list[int]) -> None:
+    print(sum(numbers))
+
+
+def add_float(*, numbers: list[float]) -> None:
+    print(sum(numbers))
+
+
+def add_str(*, numbers: list[str]) -> None:
+    print(" ".join(numbers))
+
+
+def add_int2(*, numbers: List[int]) -> None:
+    print(sum(numbers))
+
+
+def add_float2(*, numbers: List[float]) -> None:
+    print(sum(numbers))
+
+
+def add_str2(*, numbers: list[str]) -> None:
+    print(" ".join(numbers))
+
+
+@mark.parametrize(
+    "add, scalar",
+    [
+        (add_int, int),
+        (add_float, float),
+        (add_str, str),
+        (add_int2, int),
+        (add_float2, float),
+        (add_str2, str),
+    ],
+)
 @mark.parametrize("short", [False, True])
-def test_keyword_nargs(short: bool):
-    def add_int(*, numbers: list[int]) -> None:
-        print(sum(numbers))
+def test_keyword_nargs(add: Callable, scalar: type, short: bool):
+    opt = "-n" if short else "--numbers"
+    cli = [opt, "0", "1", "2", "3", "4"]
+    check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
 
-    def add_float(*, numbers: list[float]) -> None:
-        print(sum(numbers))
+    with raises(ParserOptionError, match="Required option `numbers` is not provided!"):
+        check_args(add, [], [], {})
+    with raises(ParserOptionError, match="Option `numbers` is multiply given!"):
+        check_args(add, ["--numbers", "0", "1", "-n", "2"], [], {})
 
-    def add_str(*, numbers: list[str]) -> None:
-        print(" ".join(numbers))
-
-    def add_int2(*, numbers: List[int]) -> None:
-        print(sum(numbers))
-
-    def add_float2(*, numbers: List[float]) -> None:
-        print(sum(numbers))
-
-    def add_str2(*, numbers: list[str]) -> None:
-        print(" ".join(numbers))
-
-    for add, scalar in [
-        (add_int, int),
-        (add_float, float),
-        (add_str, str),
-        (add_int2, int),
-        (add_float2, float),
-        (add_str2, str),
-    ]:
-        opt = "-n" if short else "--numbers"
-        cli = [opt, "0", "1", "2", "3", "4"]
-        check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
-
+    if scalar in [int, float]:
         with raises(
-            ParserOptionError, match="Required option `numbers` is not provided!"
+            ParserValueError,
+            match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
         ):
-            check_args(add, [], [], {})
-        with raises(ParserOptionError, match="Option `numbers` is multiply given!"):
-            check_args(add, ["--numbers", "0", "1", "-n", "2"], [], {})
-
-        if scalar in [int, float]:
-            with raises(
-                ParserValueError,
-                match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
-            ):
-                check_args(add, [opt, "0", "1", "x"], [], {})
+            check_args(add, [opt, "0", "1", "x"], [], {})
 
 
+def addwh1(*, widths: list[int], heights: list[float] = []) -> None:
+    print(sum(widths))
+    print(sum(heights))
+
+
+def addwh2(*, widths: list[float], heights: list[str] = []) -> None:
+    print(sum(widths))
+    print(sum(heights))
+
+
+def addwh3(*, widths: list[str], heights: list[int] = []) -> None:
+    print(" ".join(widths))
+    print(sum(heights))
+
+
+@mark.parametrize(
+    "add, wscalar, hscalar",
+    [
+        (addwh1, int, float),
+        (addwh2, float, str),
+        (addwh3, str, int),
+    ],
+)
 @mark.parametrize("short", [False, True])
-def test_keyword_nargs_long(short: bool):
-    def add1(*, widths: list[int], heights: list[float] = []) -> None:
-        print(sum(widths))
-        print(sum(heights))
+def test_keyword_nargs_long(
+    add: Callable, wscalar: type, hscalar: type, short: bool
+) -> None:
+    wopt = "-w" if short else "--widths"
+    hopt = "--heights"
+    cli = [wopt, "0", "1", "2", "3", "4", hopt, "5", "6", "7", "8", "9"]
+    check_args(
+        add,
+        cli,
+        [],
+        {
+            "widths": [wscalar(i) for i in range(5)],
+            "heights": [hscalar(i) for i in range(5, 10)],
+        },
+    )
 
-    def add2(*, widths: list[float], heights: list[str] = []) -> None:
-        print(sum(widths))
-        print(sum(heights))
+    with raises(ParserOptionError, match="Required option `widths` is not provided!"):
+        check_args(add, [], [], {})
+    with raises(ParserOptionError, match="Required option `widths` is not provided!"):
+        check_args(add, [hopt, "0", "1"], [], {})
 
-    def add3(*, widths: list[str], heights: list[int] = []) -> None:
-        print(" ".join(widths))
-        print(sum(heights))
+    cli = [wopt, "0", "1", "2", "3", "4"]
+    check_args(add, cli, [], {"widths": [wscalar(i) for i in range(5)], "heights": []})
 
-    for add, scalar, scalar2 in [
-        (add1, int, float),
-        (add2, float, str),
-        (add3, str, int),
-    ]:
-        wopt = "-w" if short else "--widths"
-        hopt = "--heights"
-        cli = [wopt, "0", "1", "2", "3", "4", hopt, "5", "6", "7", "8", "9"]
-        check_args(
-            add,
-            cli,
-            [],
-            {
-                "widths": [scalar(i) for i in range(5)],
-                "heights": [scalar2(i) for i in range(5, 10)],
-            },
-        )
+    with raises(
+        ParserOptionError, match=f"Option `{hopt.lstrip('-')}` is missing argument!"
+    ):
+        check_args(add, cli + [hopt], [], {})
 
+    if wscalar in [int, float]:
         with raises(
-            ParserOptionError, match="Required option `widths` is not provided!"
+            ParserValueError,
+            match=f"Cannot parse {'integer' if wscalar is int else 'float'} from `x`!",
         ):
-            check_args(add, [], [], {})
+            check_args(add, [wopt, "0", "1", "x"], [], {})
+    if hscalar in [int, float]:
         with raises(
-            ParserOptionError, match="Required option `widths` is not provided!"
+            ParserValueError,
+            match=f"Cannot parse {'integer' if hscalar is int else 'float'} from `x`!",
         ):
-            check_args(add, [hopt, "0", "1"], [], {})
+            check_args(add, [wopt, "0", "1", hopt, "0", "1", "x"], [], {})
 
-        cli = [wopt, "0", "1", "2", "3", "4"]
-        check_args(
-            add, cli, [], {"widths": [scalar(i) for i in range(5)], "heights": []}
-        )
 
+def add_list_pos_int(numbers: list[int], /) -> None:
+    print(sum(numbers))
+
+
+def add_list_pos_float(numbers: list[float], /) -> None:
+    print(sum(numbers))
+
+
+def add_list_pos_str(numbers: list[str], /) -> None:
+    print(" ".join(numbers))
+
+
+def add_list_pos_int2(numbers: List[int], /) -> None:
+    print(sum(numbers))
+
+
+def add_list_pos_float2(numbers: List[float], /) -> None:
+    print(sum(numbers))
+
+
+def add_list_pos_str2(numbers: List[str], /) -> None:
+    print(" ".join(numbers))
+
+
+def add_list_pos_str3(numbers: list, /) -> None:
+    print(" ".join(numbers))
+
+
+def add_list_pos_str4(numbers: List, /) -> None:
+    print(" ".join(numbers))
+
+
+@mark.parametrize(
+    "add, scalar",
+    [
+        (add_list_pos_int, int),
+        (add_list_pos_float, float),
+        (add_list_pos_str, str),
+        (add_list_pos_int2, int),
+        (add_list_pos_float2, float),
+        (add_list_pos_str2, str),
+        (add_list_pos_str3, str),
+        (add_list_pos_str4, str),
+    ],
+)
+def test_positional_nargs(add: Callable, scalar: type) -> None:
+    cli = ["0", "1", "2", "3", "4"]
+    check_args(add, cli, [[scalar(i) for i in range(5)]], {})
+
+    with raises(ParserOptionError, match="Unexpected option `numbers`!"):
+        check_args(add, ["--numbers", "0", "1", "2", "3", "4"], [], {})
+    with raises(
+        ParserOptionError,
+        match="Required positional argument <numbers> is not provided!",
+    ):
+        check_args(add, [], [], {})
+
+    if scalar in [int, float]:
         with raises(
-            ParserOptionError, match=f"Option `{hopt.lstrip('-')}` is missing argument!"
+            ParserValueError,
+            match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
         ):
-            check_args(add, cli + [hopt], [], {})
-
-        if scalar in [int, float]:
-            with raises(
-                ParserValueError,
-                match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
-            ):
-                check_args(add, [wopt, "0", "1", "x"], [], {})
-        if scalar2 in [int, float]:
-            with raises(
-                ParserValueError,
-                match=f"Cannot parse {'integer' if scalar2 is int else 'float'} from `x`!",
-            ):
-                check_args(add, [wopt, "0", "1", hopt, "0", "1", "x"], [], {})
+            check_args(add, ["0", "1", "x"], [], {})
 
 
-def test_positional_nargs():
-    def add_int(numbers: list[int], /) -> None:
-        print(sum(numbers))
-
-    def add_float(numbers: list[float], /) -> None:
-        print(sum(numbers))
-
-    def add_str(numbers: list[str], /) -> None:
-        print(" ".join(numbers))
-
-    def add_int2(numbers: List[int], /) -> None:
-        print(sum(numbers))
-
-    def add_float2(numbers: List[float], /) -> None:
-        print(sum(numbers))
-
-    def add_str2(numbers: List[str], /) -> None:
-        print(" ".join(numbers))
-
-    def add_str3(numbers: list, /) -> None:
-        print(" ".join(numbers))
-
-    def add_str4(numbers: List, /) -> None:
-        print(" ".join(numbers))
-
-    for add, scalar in [
-        (add_int, int),
-        (add_float, float),
-        (add_str, str),
-        (add_int2, int),
-        (add_float2, float),
-        (add_str2, str),
-        (add_str3, str),
-        (add_str4, str),
-    ]:
-        cli = ["0", "1", "2", "3", "4"]
-        check_args(add, cli, [[scalar(i) for i in range(5)]], {})
-
-        with raises(ParserOptionError, match="Unexpected option `numbers`!"):
-            check_args(add, ["--numbers", "0", "1", "2", "3", "4"], [], {})
-        with raises(
-            ParserOptionError,
-            match="Required positional argument <numbers> is not provided!",
-        ):
-            check_args(add, [], [], {})
-
-        if scalar in [int, float]:
-            with raises(
-                ParserValueError,
-                match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
-            ):
-                check_args(add, ["0", "1", "x"], [], {})
+def posd_add_list_int(numbers: list[int] = [3, 5], /) -> None:
+    print(sum(numbers))
 
 
-def test_positional_nargs_with_defaults():
-    def add_int(numbers: list[int] = [3, 5], /) -> None:
-        print(sum(numbers))
+def posd_add_list_float(numbers: list[float] = [3.0, 5.0], /) -> None:
+    print(sum(numbers))
 
-    def add_float(numbers: list[float] = [3.0, 5.0], /) -> None:
-        print(sum(numbers))
 
-    def add_str(numbers: list[str] = ["3", "5"], /) -> None:
-        print(" ".join(numbers))
+def posd_add_list_str(numbers: list[str] = ["3", "5"], /) -> None:
+    print(" ".join(numbers))
 
-    def add_int2(numbers: List[int] = [3, 5], /) -> None:
-        print(sum(numbers))
 
-    def add_float2(numbers: List[float] = [3.0, 5.0], /) -> None:
-        print(sum(numbers))
+def posd_add_list_int2(numbers: List[int] = [3, 5], /) -> None:
+    print(sum(numbers))
 
-    def add_str2(numbers: List[str] = ["3", "5"], /) -> None:
-        print(" ".join(numbers))
 
-    def add_str3(numbers: list = ["3", "5"], /) -> None:
-        print(" ".join(numbers))
+def posd_add_list_float2(numbers: List[float] = [3.0, 5.0], /) -> None:
+    print(sum(numbers))
 
-    def add_str4(numbers: List = ["3", "5"], /) -> None:
-        print(" ".join(numbers))
 
-    for add, scalar in [
-        (add_int, int),
-        (add_float, float),
-        (add_str, str),
-        (add_int2, int),
-        (add_float2, float),
-        (add_str2, str),
-        (add_str3, str),
-        (add_str4, str),
-    ]:
-        cli = ["0", "1", "2", "3", "4"]
-        check_args(add, cli, [[scalar(i) for i in range(5)]], {})
-        check_args(add, [], [[scalar(3), scalar(5)]], {})
+def posd_add_list_str2(numbers: List[str] = ["3", "5"], /) -> None:
+    print(" ".join(numbers))
+
+
+def posd_add_list_str3(numbers: list = ["3", "5"], /) -> None:
+    print(" ".join(numbers))
+
+
+def posd_add_list_str4(numbers: List = ["3", "5"], /) -> None:
+    print(" ".join(numbers))
+
+
+@mark.parametrize(
+    "add, scalar",
+    [
+        (posd_add_list_int, int),
+        (posd_add_list_float, float),
+        (posd_add_list_str, str),
+        (posd_add_list_int2, int),
+        (posd_add_list_float2, float),
+        (posd_add_list_str2, str),
+        (posd_add_list_str3, str),
+        (posd_add_list_str4, str),
+    ],
+)
+def test_positional_nargs_with_defaults(add: Callable, scalar: type) -> None:
+    cli = ["0", "1", "2", "3", "4"]
+    check_args(add, cli, [[scalar(i) for i in range(5)]], {})
+    check_args(add, [], [[scalar(3), scalar(5)]], {})
 
 
 def test_positional_nargs_infeasible():
@@ -569,18 +577,18 @@ def test_pathlib_path():
         )
 
 
-def test_param_named_help():
-    def hi(help: str = "help", count: int = 3) -> None:
-        print(f"{help}!")
+def hi_help_1(help: str = "help", count: int = 3) -> None:
+    print(f"{help}!")
 
-    def hi2(h: str = "help", count: int = 3) -> None:
-        print(f"{h}!")
 
+def hi_help_2(h: str = "help", count: int = 3) -> None:
+    print(f"{h}!")
+
+
+@mark.parametrize("hi", [hi_help_1, hi_help_2])
+def test_param_named_help(hi: Callable):
     with raises(
-        ParserConfigError, match="Cannot use `h` or `help` as parameter names in hi!"
+        ParserConfigError,
+        match=f"Cannot use `h` or `help` as parameter names in {hi.__name__}!",
     ):
         make_args(hi)
-    with raises(
-        ParserConfigError, match="Cannot use `h` or `help` as parameter names in hi2!"
-    ):
-        make_args(hi2)
