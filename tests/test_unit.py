@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from startle.arg import ValueParser
+from startle.arg import _strip_optional
 from startle.inspector import _normalize_type
 
 
@@ -16,7 +16,7 @@ def test_normalize_type():
 
 def test_strip_optional():
     def normalize_strip_optional(type_: type) -> type:
-        return ValueParser._strip_optional(_normalize_type(type_))
+        return _strip_optional(_normalize_type(type_))
 
     assert normalize_strip_optional(int) is int
     assert normalize_strip_optional(Union[int, None]) is int

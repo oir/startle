@@ -1,9 +1,45 @@
 import typing
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 from .error import ParserConfigError, ParserValueError
+
+
+def _strip_optional(type_: type) -> type:
+    """
+    Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
+    return T1 | ... | Tn.
+    """
+    if typing.get_origin(type_) is typing.Union:
+        args = typing.get_args(type_)
+        if type(None) in args:
+            args = [arg for arg in args if arg is not type(None)]
+            if len(args) == 1:
+                return args[0]
+            else:
+                return typing.Union[tuple(args)]
+
+    return type_
+
+
+def _get_metavar(type_: type) -> str:
+    """
+    Get the metavar for a type hint.
+    """
+    default_metavars = {
+        int: "int",
+        float: "float",
+        str: "text",
+        bool: "true|false",
+        Path: "path",
+    }
+
+    type_ = _strip_optional(type_)
+    if issubclass(type_, Enum):
+        return "|".join([member.value for member in type_])
+    return default_metavars.get(type_, "val")
 
 
 @dataclass
@@ -37,26 +73,21 @@ class ValueParser:
     def to_pathlib__Path(self) -> Path:
         return Path(self.value)
 
-    @staticmethod
-    def _strip_optional(type_: type) -> type:
-        """
-        Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
-        return T1 | ... | Tn.
-        """
-        if typing.get_origin(type_) is typing.Union:
-            args = typing.get_args(type_)
-            if type(None) in args:
-                args = [arg for arg in args if arg is not type(None)]
-                if len(args) == 1:
-                    return args[0]
-                else:
-                    return typing.Union[tuple(args)]
-
-        return type_
+    def _to_enum(self, type_: type) -> Enum:
+        try:
+            return type_(self.value)
+        except ValueError as err:
+            raise ParserValueError(
+                f"Cannot parse enum {type_} from `{self.value}`!"
+            ) from err
 
     def convert(self, type_: type) -> Any:
         # if type is Optional[T], convert to T
-        type_ = self._strip_optional(type_)
+        type_ = _strip_optional(type_)
+
+        # check if type_ is an Enum
+        if issubclass(type_, Enum):
+            return self._to_enum(type_)
 
         # check if a method named `to_<fully qualified name>` exists
         method_name = f"to_{type_.__module__}__{type_.__qualname__}"
@@ -67,15 +98,6 @@ class ValueParser:
         raise ParserValueError(
             f"Unsupported type {type_.__module__}.{type_.__qualname__}!"
         )
-
-
-_default_metavars = {
-    int: "int",
-    float: "float",
-    str: "text",
-    bool: "true|false",
-    Path: "path",
-}
 
 
 @dataclass
@@ -136,7 +158,7 @@ class Arg:
                 "An argument should be either positional or named (or both)!"
             )
         if not self.metavar:
-            self.metavar = _default_metavars.get(self.type_, "val")
+            self.metavar = _get_metavar(self.type_)
 
     def parse(self, value: str | None = None):
         if self.is_flag:
