@@ -1,5 +1,5 @@
 import sys
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Callable
 
 from _utils import check_args
@@ -85,3 +85,20 @@ def test_strenum(prefix: list[str]):
         print(f"Drawing a {shape.value}.")
 
     check_with_default(draw_with_default, Shape, prefix)
+
+
+@mark.parametrize("prefix", [[], ["--number"], ["-n"]])
+def test_intenum(prefix: list[str]):
+    class Number(IntEnum):
+        ONE = 1
+        TWO = 2
+        FOUR = 4
+
+    def count(number: Number):
+        print(f"Counting {number}.")
+
+    check_args(count, prefix + ["1"], [], {"number": Number.ONE})
+    check_args(count, prefix + ["2"], [], {"number": Number.TWO})
+    check_args(count, prefix + ["4"], [], {"number": Number.FOUR})
+    with raises(ParserValueError, match="Cannot parse enum Number from `3`!"):
+        check_args(count, prefix + ["3"], [], {})

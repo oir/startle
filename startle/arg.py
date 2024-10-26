@@ -1,6 +1,6 @@
 import typing
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, IntEnum
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +37,8 @@ def _get_metavar(type_: type) -> str:
     }
 
     type_ = _strip_optional(type_)
+    if issubclass(type_, IntEnum):
+        return "|".join([str(member.value) for member in type_])
     if issubclass(type_, Enum):
         return "|".join([member.value for member in type_])
     return default_metavars.get(type_, "val")
@@ -73,12 +75,15 @@ class ValueParser:
     def to_pathlib__Path(self) -> Path:
         return Path(self.value)
 
-    def _to_enum(self, type_: type) -> Enum:
+    def _to_enum(self, enum_type: type) -> Enum:
         try:
-            return type_(self.value)
+            # first convert string to member type, then member type to enum
+            member_type = enum_type._member_type_
+            value = self.value if member_type is object else member_type(self.value)
+            return enum_type(value)
         except ValueError as err:
             raise ParserValueError(
-                f"Cannot parse enum {type_.__name__} from `{self.value}`!"
+                f"Cannot parse enum {enum_type.__name__} from `{self.value}`!"
             ) from err
 
     def convert(self, type_: type) -> Any:
