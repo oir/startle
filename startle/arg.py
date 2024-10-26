@@ -78,7 +78,7 @@ class ValueParser:
             return type_(self.value)
         except ValueError as err:
             raise ParserValueError(
-                f"Cannot parse enum {type_} from `{self.value}`!"
+                f"Cannot parse enum {type_.__name__} from `{self.value}`!"
             ) from err
 
     def convert(self, type_: type) -> Any:
