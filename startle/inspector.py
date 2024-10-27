@@ -7,6 +7,7 @@ from typing import Callable, get_args, get_origin, get_type_hints
 from ._type_utils import _normalize_type
 from .args import Arg, Args, Name
 from .error import ParserConfigError
+from .value_parser import is_parsable
 
 
 def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
@@ -132,6 +133,12 @@ def make_args(func: Callable) -> Args:
         elif normalized_annotation is list:
             nary = True
             normalized_annotation = str
+
+        if not is_parsable(normalized_annotation):
+            raise ParserConfigError(
+                f"Unsupported type: {normalized_annotation.__name__} "
+                f"for parameter {param_name} in {func.__name__}!"
+            )
 
         arg = Arg(
             name=name,
