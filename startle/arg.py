@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .error import ParserConfigError
-from .value_parser import _get_metavar, convert
+from .value_parser import _get_metavar, parse
 
 
 @dataclass
@@ -77,9 +77,9 @@ class Arg:
             ), "Programming error!"
             if self._value is None:
                 self._value = []
-            self._value.append(convert(value, self.type_))
+            self._value.append(parse(value, self.type_))
             self._parsed = True
         else:
             assert value is not None, "Non-flag options should have values!"
-            self._value = convert(value, self.type_)
+            self._value = parse(value, self.type_)
             self._parsed = True

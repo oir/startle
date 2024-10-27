@@ -47,25 +47,25 @@ def _get_metavar(type_: type) -> str:
 # String to type conversion functions
 
 
-def to_builtins__str(value: str) -> str:
+def _to_str(value: str) -> str:
     return value
 
 
-def to_builtins__int(value: str) -> int:
+def _to_int(value: str) -> int:
     try:
         return int(value)
     except ValueError as err:
         raise ParserValueError(f"Cannot parse integer from `{value}`!") from err
 
 
-def to_builtins__float(value: str) -> float:
+def _to_float(value: str) -> float:
     try:
         return float(value)
     except ValueError as err:
         raise ParserValueError(f"Cannot parse float from `{value}`!") from err
 
 
-def to_builtins__bool(value: str) -> bool:
+def _to_bool(value: str) -> bool:
     if value.lower() in {"true", "t", "yes", "y", "1"}:
         return True
     if value.lower() in {"false", "f", "no", "n", "0"}:
@@ -73,11 +73,11 @@ def to_builtins__bool(value: str) -> bool:
     raise ParserValueError(f"Cannot parse boolean from `{value}`!")
 
 
-def to_pathlib__Path(value: str) -> Path:
+def _to_path(value: str) -> Path:
     return Path(value)  # can this raise?
 
 
-def to_enum(value: str, enum_type: type) -> Enum:
+def _to_enum(value: str, enum_type: type) -> Enum:
     try:
         # first convert string to member type, then member type to enum
         # e.g. member type for IntEnum is int
@@ -91,15 +91,15 @@ def to_enum(value: str, enum_type: type) -> Enum:
 
 
 _PARSERS: dict[type, Callable[[str], Any]] = {
-    str: to_builtins__str,
-    int: to_builtins__int,
-    float: to_builtins__float,
-    bool: to_builtins__bool,
-    Path: to_pathlib__Path,
+    str: _to_str,
+    int: _to_int,
+    float: _to_float,
+    bool: _to_bool,
+    Path: _to_path,
 }
 
 
-def get_parser(type_: type) -> Callable[[str], Any] | None:
+def _get_parser(type_: type) -> Callable[[str], Any] | None:
     """
     Get the parser function for a given type.
     """
@@ -121,7 +121,7 @@ def get_parser(type_: type) -> Callable[[str], Any] | None:
 
     # check if type_ is an Enum
     if isclass(type_) and issubclass(type_, Enum):
-        return lambda value: to_enum(value, type_)
+        return lambda value: _to_enum(value, type_)
 
     if fp := _PARSERS.get(type_):
         return fp
@@ -129,11 +129,11 @@ def get_parser(type_: type) -> Callable[[str], Any] | None:
     return None
 
 
-def convert(value: str, type_: type) -> Any:
+def parse(value: str, type_: type) -> Any:
     """
-    Parse / convert a string value to a given type.
+    Parse or convert a string value to a given type.
     """
-    if parser := get_parser(type_):
+    if parser := _get_parser(type_):
         return parser(value)
 
     # otherwise it is unsupported
@@ -144,4 +144,4 @@ def is_parsable(type_: type) -> bool:
     """
     Check if a type is parsable (supported).
     """
-    return get_parser(type_) is not None
+    return _get_parser(type_) is not None
