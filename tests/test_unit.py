@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
-from startle.arg import _strip_optional
 from startle.inspector import _normalize_type
+from startle.value_parser import _strip_optional
 
 
 def test_normalize_type():
