@@ -1,28 +1,12 @@
 import inspect
 import re
-import types
 from inspect import Parameter
 from textwrap import dedent
-from typing import Callable, Optional, Union, get_args, get_origin, get_type_hints
+from typing import Callable, get_args, get_origin, get_type_hints
 
+from ._type_utils import _normalize_type
 from .args import Arg, Args, Name
 from .error import ParserConfigError
-
-
-# Helper function to normalize type annotations
-def _normalize_type(annotation):
-    origin = get_origin(annotation)
-    args = get_args(annotation)
-    if origin is Union or origin is types.UnionType:
-        if type(None) in args:
-            args = [arg for arg in args if arg is not type(None)]
-            if len(args) == 1:
-                return Optional[args[0]]
-            else:
-                return Union[tuple(args)]
-        else:
-            return Union[tuple(args)]
-    return annotation
 
 
 def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:

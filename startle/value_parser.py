@@ -1,50 +1,15 @@
+"""
+String to type conversion functions.
+"""
+
 import typing
-from enum import Enum, IntEnum
+from enum import Enum
 from inspect import isclass
 from pathlib import Path
 from typing import Any, Callable, Literal
 
+from ._type_utils import _strip_optional
 from .error import ParserValueError
-
-
-def _strip_optional(type_: type) -> type:
-    """
-    Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
-    return T1 | ... | Tn.
-    """
-    if typing.get_origin(type_) is typing.Union:
-        args = typing.get_args(type_)
-        if type(None) in args:
-            args = [arg for arg in args if arg is not type(None)]
-            if len(args) == 1:
-                return args[0]
-            else:
-                return typing.Union[tuple(args)]
-
-    return type_
-
-
-def _get_metavar(type_: type) -> str:
-    """
-    Get the metavar for a type hint.
-    """
-    default_metavars = {
-        int: "int",
-        float: "float",
-        str: "text",
-        bool: "true|false",
-        Path: "path",
-    }
-
-    type_ = _strip_optional(type_)
-    if isclass(type_) and issubclass(type_, IntEnum):
-        return "|".join([str(member.value) for member in type_])
-    if isclass(type_) and issubclass(type_, Enum):
-        return "|".join([member.value for member in type_])
-    return default_metavars.get(type_, "val")
-
-
-# String to type conversion functions
 
 
 def _to_str(value: str) -> str:

@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from .error import ParserConfigError
-from .value_parser import _get_metavar, parse
+from .metavar import _get_metavar
+from .value_parser import parse
 
 
 @dataclass
