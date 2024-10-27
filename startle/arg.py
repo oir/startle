@@ -1,6 +1,7 @@
 import typing
 from dataclasses import dataclass
 from enum import Enum, IntEnum
+from inspect import isclass
 from pathlib import Path
 from typing import Any
 
@@ -37,9 +38,9 @@ def _get_metavar(type_: type) -> str:
     }
 
     type_ = _strip_optional(type_)
-    if issubclass(type_, IntEnum):
+    if isclass(type_) and issubclass(type_, IntEnum):
         return "|".join([str(member.value) for member in type_])
-    if issubclass(type_, Enum):
+    if isclass(type_) and issubclass(type_, Enum):
         return "|".join([member.value for member in type_])
     return default_metavars.get(type_, "val")
 
@@ -87,11 +88,14 @@ class ValueParser:
             ) from err
 
     def convert(self, type_: type) -> Any:
+        """
+        Main entry point of ValueParser to convert a string to a value of a given type.
+        """
         # if type is Optional[T], convert to T
         type_ = _strip_optional(type_)
 
         # check if type_ is an Enum
-        if issubclass(type_, Enum):
+        if isclass(type_) and issubclass(type_, Enum):
             return self._to_enum(type_)
 
         # check if a method named `to_<fully qualified name>` exists

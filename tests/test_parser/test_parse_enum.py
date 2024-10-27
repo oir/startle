@@ -104,6 +104,24 @@ def test_intenum(prefix: list[str]):
         check_args(count, prefix + ["3"], [], {})
 
 
+@mark.parametrize("prefix", [[], ["--shape"], ["-s"]])
+def test_optional_enum(prefix: list[str]):
+    class Shape(Enum):
+        SQUARE = "square"
+        CIRCLE = "circle"
+        TRIANGLE = "triangle"
+
+    def draw(shape: Shape | None = None):
+        if shape is None:
+            print("No shape to draw.")
+        else:
+            print(f"Drawing a {shape.value}.")
+
+    check(draw, Shape, prefix)
+    if not prefix:
+        check_args(draw, [], [], {"shape": None})
+
+
 @mark.parametrize("prefix", [[], ["--shapes"], ["-s"]])
 def test_enum_list(prefix: list[str]):
     class Shape(Enum):
