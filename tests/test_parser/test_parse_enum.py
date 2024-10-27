@@ -5,7 +5,7 @@ from typing import Callable
 from _utils import check_args
 from pytest import mark, raises
 
-from startle.error import ParserValueError
+from startle.error import ParserOptionError, ParserValueError
 
 
 def check(draw: Callable, shape: type[Enum], prefix: list[str]):
@@ -102,3 +102,36 @@ def test_intenum(prefix: list[str]):
     check_args(count, prefix + ["4"], [], {"number": Number.FOUR})
     with raises(ParserValueError, match="Cannot parse enum Number from `3`!"):
         check_args(count, prefix + ["3"], [], {})
+
+
+@mark.parametrize("prefix", [[], ["--shapes"], ["-s"]])
+def test_enum_list(prefix: list[str]):
+    class Shape(Enum):
+        SQUARE = "square"
+        CIRCLE = "circle"
+        TRIANGLE = "triangle"
+
+    def draw(shapes: list[Shape]):
+        for shape in shapes:
+            print(f"Drawing a {shape.value}.")
+
+    check_args(draw, prefix + ["square"], [], {"shapes": [Shape.SQUARE]})
+    check_args(
+        draw,
+        prefix + ["circle", "square"],
+        [],
+        {"shapes": [Shape.CIRCLE, Shape.SQUARE]},
+    )
+    check_args(
+        draw,
+        prefix + ["triangle", "circle", "square", "circle"],
+        [],
+        {"shapes": [Shape.TRIANGLE, Shape.CIRCLE, Shape.SQUARE, Shape.CIRCLE]},
+    )
+
+    with raises(ParserValueError, match="Cannot parse enum Shape from `rectangle`!"):
+        check_args(draw, prefix + ["rectangle"], [], {})
+    with raises(ParserValueError, match="Cannot parse enum Shape from `rectangle`!"):
+        check_args(draw, prefix + ["triangle", "circle", "rectangle"], [], {})
+    with raises(ParserOptionError, match="Required option `shapes` is not provided!"):
+        check_args(draw, [], [], {})

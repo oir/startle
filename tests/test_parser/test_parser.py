@@ -566,7 +566,7 @@ def test_pathlib_path():
 
     with raises(
         ParserOptionError,
-        match="Required positional argument <destination> is not provided!",
+        match="Required option `destination` is not provided!",
     ):
         check_args(transfer, [], [], {})
     with raises(ParserOptionError, match="Option `destination` is missing argument!"):

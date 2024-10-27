@@ -131,9 +131,15 @@ class Args:
         for arg in self._positional_args:
             if not arg._parsed:
                 if arg.required:
-                    raise ParserOptionError(
-                        f"Required positional argument <{arg.name.long}> is not provided!"
-                    )
+                    if arg.is_named:
+                        # if a positional arg is also named, prefer this type of error message
+                        raise ParserOptionError(
+                            f"Required option `{arg.name}` is not provided!"
+                        )
+                    else:
+                        raise ParserOptionError(
+                            f"Required positional argument <{arg.name.long}> is not provided!"
+                        )
                 else:
                     arg._value = arg.default
                     arg._parsed = True
