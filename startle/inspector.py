@@ -136,7 +136,7 @@ def make_args(func: Callable) -> Args:
 
         if not is_parsable(normalized_annotation):
             raise ParserConfigError(
-                f"Unsupported type: {normalized_annotation.__name__} "
+                f"Unsupported type: {param.annotation} "
                 f"for parameter {param_name} in {func.__name__}!"
             )
 
