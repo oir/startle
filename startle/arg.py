@@ -47,7 +47,7 @@ class Arg:
     is_nary: bool = False
 
     help: str = ""
-    metavar: str = ""
+    metavar: str | list[str] = ""
     default: Any = None
     required: bool = False
 

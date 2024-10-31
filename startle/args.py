@@ -212,8 +212,10 @@ class Args:
         ]
 
         sty_name = "bold"
+        sty_pos_name = "bold"
         sty_opt = "green"
         sty_var = "blue"
+        sty_literal_var = ""
         sty_title = "bold underline dim"
 
         def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
@@ -221,13 +223,13 @@ class Args:
                 name_list = []
                 if name.short:
                     name_list.append(
-                        Text(f"-{name.short}", style=f"{sty_name} {sty_opt}")
+                        Text(f"-{name.short}", style=f"{sty_name} {sty_opt} not dim")
                     )
                 if name.long:
                     name_list.append(
-                        Text(f"--{name.long}", style=f"{sty_name} {sty_opt}")
+                        Text(f"--{name.long}", style=f"{sty_name} {sty_opt} not dim")
                     )
-                return Text(",").join(name_list)
+                return Text("|", style=f"{sty_opt} dim").join(name_list)
             else:
                 if name.long:
                     return Text(f"--{name.long}", style=f"{sty_name} {sty_opt}")
@@ -235,17 +237,26 @@ class Args:
                     return Text(f"-{name.short}", style=f"{sty_name} {sty_opt}")
 
         def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
-            if arg.is_positional and not arg.is_named:
-                text = Text.assemble(
-                    "<", (f"{arg.name.long}:", sty_name), f"{arg.metavar}>"
+            meta = (
+                arg.metavar
+                if isinstance(arg.metavar, str)
+                else Text("|", style="dim").join(
+                    [Text(m, style=f"{sty_literal_var} not dim") for m in arg.metavar]
                 )
+            )
+            if arg.is_positional and not arg.is_named:
+                text = Text.assemble("<", (f"{arg.name}:", sty_pos_name), meta, ">")
                 text.stylize(sty_var)
                 if arg.is_nary and kind == "usage line":
                     text += Text.assemble(" ", (f"[{text} ...]", "dim"))
             elif arg.is_flag:
                 text = name_usage(arg.name, kind)
             else:
-                option = Text(f"<{arg.metavar}>", style="blue")
+                if isinstance(arg.metavar, list):
+                    option = meta
+                    option.stylize(sty_var)
+                else:
+                    option = Text(f"<{arg.metavar}>", style=sty_var)
                 if arg.is_nary:
                     option += Text.assemble(" ", (f"[{option} ...]", "dim"))
                 text = Text.assemble(name_usage(arg.name, kind), " ", option)
@@ -260,7 +271,7 @@ class Args:
                 helptext = Text.assemble(helptext, " ", ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
-                    helptext, " ", (f"(default: {arg.default})", "green")
+                    helptext, " ", (f"(default: {arg.default})", sty_opt)
                 )
             return helptext
 

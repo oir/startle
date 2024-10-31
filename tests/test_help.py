@@ -59,8 +59,8 @@ Fuse two monsters with polymerization.
 [{ts}]where[/]
   [dim](positional)[/]    [{vs}]<[{ns}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](positional)[/]    [{vs}]<[{ns}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  [{ns} {os}]-o[/],[{ns} {os}]--output-path[/] [{vs}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        [{ns} {os}]-c[/],[{ns} {os}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
-  [dim](option)[/]        [{ns} {os}]-a[/],[{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
+  [dim](pos. or opt.)[/]  [{ns} {os}]-o[/][{os} dim]|[/][{ns} {os}]--output-path[/] [{vs}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]        [{ns} {os}]-c[/][{os} dim]|[/][{ns} {os}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        [{ns} {os}]-a[/][{os} dim]|[/][{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
 
     check_help(fusion, "fuse.py", expected)
