@@ -247,8 +247,10 @@ class Args:
             if arg.is_positional and not arg.is_named:
                 text = Text.assemble("<", (f"{arg.name}:", sty_pos_name), meta, ">")
                 text.stylize(sty_var)
-                if arg.is_nary and kind == "usage line":
-                    text += Text.assemble(" ", (f"[{text} ...]", "dim"))
+                if arg.is_nary:
+                    repeat = Text("[") + text.copy() + " ...]"
+                    repeat.stylize(f"{sty_var} dim")
+                    text += Text(" ") + repeat
             elif arg.is_flag:
                 text = name_usage(arg.name, kind)
             else:
