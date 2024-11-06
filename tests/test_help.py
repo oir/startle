@@ -21,6 +21,8 @@ def check_help(f: Callable, program_name: str, expected: str):
         console.print(expected)
     expected = capture.get()
 
+    # for i in range(min(len(result), len(expected))):
+    #    assert result[i] == expected[i], f"index: {i}, [{result[i-20:i+10]}] != [{expected[i-20:i+10]}]"
     assert result == expected
 
 
@@ -64,3 +66,39 @@ Fuse two monsters with polymerization.
   [dim](option)[/]        [{ns} {os}]-a[/][{os} dim]|[/][{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
 
     check_help(fusion, "fuse.py", expected)
+
+
+def test_nargs():
+    def count_chars(
+        words: list[str],
+        /,
+        *,
+        extra_words: list[str] = [],
+        verbose: bool = False,
+    ) -> None:
+        """
+        Count the characters in a list of words.
+
+        Args:
+            words: List of words to count characters in.
+            extra_words: Extra words to count characters in.
+            verbose: If true, print extra information.
+        """
+        for word in words:
+            print(f"{word}: {len(word)}")
+        if verbose:
+            for word in extra_words:
+                print(f"{word}: {len(word)}")
+
+    expected = f"""\
+Count the characters in a list of words.
+
+[{ts}]Usage:[/]
+  count_chars.py [{vs}]<[{ns}]words:[/]text>[/] [{vs} dim][[/][{vs} dim]<[{ns}]words:[/]text>[/][{vs} dim] ...][/] [[{ns} {os}]--extra-words[/] [{vs}]<text> [dim][<text> ...][/][/]] [[{ns} {os}]--verbose[/]]
+
+[{ts}]where[/]
+  [dim](positional)[/]  [{vs}]<[{ns}]words:[/]text>[/] [{vs} dim][[/][{vs} dim]<[{ns}]words:[/]text>[/][{vs} dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
+  [dim](option)[/]      [{ns} {os}]-e[/][{os} dim]|[/][{ns} {os}]--extra-words[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Extra words to count characters in.[/] [green](default: [])[/]
+  [dim](option)[/]      [{ns} {os}]-v[/][{os} dim]|[/][{ns} {os}]--verbose[/][{os} dim]                        [/]  [i]If true, print extra information.[/] [green](flag)[/]         """
+
+    check_help(count_chars, "count_chars.py", expected)

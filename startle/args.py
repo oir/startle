@@ -269,7 +269,9 @@ class Args:
 
         def help(arg: Arg) -> Text:
             helptext = Text(arg.help, style="italic")
-            if arg.required:
+            if arg.is_flag:
+                helptext = Text.assemble(helptext, " ", ("(flag)", sty_opt))
+            elif arg.required:
                 helptext = Text.assemble(helptext, " ", ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
