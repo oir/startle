@@ -8,9 +8,9 @@ from startle.error import ParserValueError
 
 
 def check(draw: Callable, prefix: list[str]):
-    check_args(draw, prefix + ["square"], [], {"shape": "square"})
-    check_args(draw, prefix + ["circle"], [], {"shape": "circle"})
-    check_args(draw, prefix + ["triangle"], [], {"shape": "triangle"})
+    check_args(draw, prefix + ["square"], ["square"], {})
+    check_args(draw, prefix + ["circle"], ["circle"], {})
+    check_args(draw, prefix + ["triangle"], ["triangle"], {})
 
     with raises(
         ParserValueError,
@@ -23,10 +23,10 @@ def check(draw: Callable, prefix: list[str]):
 
 def check_with_default(draw: Callable, prefix: list[str]):
     if not prefix:
-        check_args(draw, [], [], {"shape": "circle"})
-    check_args(draw, prefix + ["square"], [], {"shape": "square"})
-    check_args(draw, prefix + ["circle"], [], {"shape": "circle"})
-    check_args(draw, prefix + ["triangle"], [], {"shape": "triangle"})
+        check_args(draw, [], ["circle"], {})
+    check_args(draw, prefix + ["square"], ["square"], {})
+    check_args(draw, prefix + ["circle"], ["circle"], {})
+    check_args(draw, prefix + ["triangle"], ["triangle"], {})
 
     with raises(
         ParserValueError,
@@ -38,7 +38,7 @@ def check_with_default(draw: Callable, prefix: list[str]):
 
 
 @mark.parametrize("prefix", [[], ["--shape"], ["-s"]])
-def test_enum(prefix: list[str]):
+def test_literal(prefix: list[str]):
     def draw(shape: Literal["square", "circle", "triangle"]):
         print(f"Drawing a {shape}.")
 

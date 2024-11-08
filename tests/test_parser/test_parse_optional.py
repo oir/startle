@@ -22,9 +22,9 @@ def hi4(msg: Union[str, None] = None) -> None:
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4])
 def test_optional_str(hi: Callable):
-    check_args(hi, [], [], {"msg": None})
-    check_args(hi, ["hello"], [], {"msg": "hello"})
-    check_args(hi, ["--msg", "hello"], [], {"msg": "hello"})
+    check_args(hi, [], [None], {})
+    check_args(hi, ["hello"], ["hello"], {})
+    check_args(hi, ["--msg", "hello"], ["hello"], {})
 
 
 def int_digits1(number: int | None = None) -> None:
@@ -45,9 +45,9 @@ def int_digits4(number: Union[int, None] = None) -> None:
 
 @mark.parametrize("int_digits", [int_digits1, int_digits2, int_digits3, int_digits4])
 def test_optional_int(int_digits: Callable):
-    check_args(int_digits, [], [], {"number": None})
-    check_args(int_digits, ["3"], [], {"number": 3})
-    check_args(int_digits, ["--number", "3"], [], {"number": 3})
+    check_args(int_digits, [], [None], {})
+    check_args(int_digits, ["3"], [3], {})
+    check_args(int_digits, ["--number", "3"], [3], {})
 
 
 def float_digits1(number: float | None = None) -> None:
@@ -70,9 +70,9 @@ def float_digits4(number: Union[float, None] = None) -> None:
     "float_digits", [float_digits1, float_digits2, float_digits3, float_digits4]
 )
 def test_optional_float(float_digits: Callable):
-    check_args(float_digits, [], [], {"number": None})
-    check_args(float_digits, ["3.14"], [], {"number": 3.14})
-    check_args(float_digits, ["--number", "3.14"], [], {"number": 3.14})
+    check_args(float_digits, [], [None], {})
+    check_args(float_digits, ["3.14"], [3.14], {})
+    check_args(float_digits, ["--number", "3.14"], [3.14], {})
 
 
 def maybe1(predicate: bool | None = None) -> None:
@@ -99,8 +99,8 @@ def maybe4(predicate: Union[bool, None] = None) -> None:
     "false", ["false", "False", "FALSE", "f", "F", "no", "No", "NO", "n", "N", "0"]
 )
 def test_optional_bool(maybe: Callable, true: str, false: str):
-    check_args(maybe, [], [], {"predicate": None})
-    check_args(maybe, [true], [], {"predicate": True})
-    check_args(maybe, [false], [], {"predicate": False})
-    check_args(maybe, ["--predicate", true], [], {"predicate": True})
-    check_args(maybe, ["--predicate", false], [], {"predicate": False})
+    check_args(maybe, [], [None], {})
+    check_args(maybe, [true], [True], {})
+    check_args(maybe, [false], [False], {})
+    check_args(maybe, ["--predicate", true], [True], {})
+    check_args(maybe, ["--predicate", false], [False], {})

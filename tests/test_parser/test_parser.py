@@ -91,31 +91,11 @@ def test_args_both_positional_and_keyword():
         for _ in range(hello_count):
             print(f"hello, {person_name}!")
 
-    check_args(hi, ["jane", "3"], [], {"person_name": "jane", "hello_count": 3})
-    check_args(
-        hi,
-        ["jane", "--hello-count", "3"],
-        [],
-        {"person_name": "jane", "hello_count": 3},
-    )
-    check_args(
-        hi,
-        ["--person-name", "jane", "--hello-count", "3"],
-        [],
-        {"person_name": "jane", "hello_count": 3},
-    )
-    check_args(
-        hi,
-        ["--hello-count", "3", "--person-name", "jane"],
-        [],
-        {"person_name": "jane", "hello_count": 3},
-    )
-    check_args(
-        hi,
-        ["--person-name", "jane", "3"],
-        [],
-        {"person_name": "jane", "hello_count": 3},
-    )
+    check_args(hi, ["jane", "3"], ["jane", 3], {})
+    check_args(hi, ["jane", "--hello-count", "3"], ["jane", 3], {})
+    check_args(hi, ["--person-name", "jane", "--hello-count", "3"], ["jane", 3], {})
+    check_args(hi, ["--hello-count", "3", "--person-name", "jane"], ["jane", 3], {})
+    check_args(hi, ["--person-name", "jane", "3"], ["jane", 3], {})
 
     with raises(ParserOptionError, match="Option `person-name` is multiply given!"):
         check_args(hi, ["jane", "--person-name", "john", "--hello-count", "3"], [], {})
@@ -128,19 +108,19 @@ def test_args_both_positional_and_keyword_with_defaults():
         for _ in range(count):
             print(f"hello, {name}!")
 
-    check_args(hi, [], [], {"name": "john", "count": 1})
+    check_args(hi, [], ["john", 1], {})
 
-    check_args(hi, ["jane"], [], {"name": "jane", "count": 1})
-    check_args(hi, ["--name", "jane"], [], {"name": "jane", "count": 1})
+    check_args(hi, ["jane"], ["jane", 1], {})
+    check_args(hi, ["--name", "jane"], ["jane", 1], {})
 
-    check_args(hi, ["jane", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["jane", "--count", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--name", "jane", "--count", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--name", "jane", "3"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--count", "3", "--name", "jane"], [], {"name": "jane", "count": 3})
-    check_args(hi, ["--count", "3", "jane"], [], {"name": "jane", "count": 3})
+    check_args(hi, ["jane", "3"], ["jane", 3], {})
+    check_args(hi, ["jane", "--count", "3"], ["jane", 3], {})
+    check_args(hi, ["--name", "jane", "--count", "3"], ["jane", 3], {})
+    check_args(hi, ["--name", "jane", "3"], ["jane", 3], {})
+    check_args(hi, ["--count", "3", "--name", "jane"], ["jane", 3], {})
+    check_args(hi, ["--count", "3", "jane"], ["jane", 3], {})
 
-    check_args(hi, ["--count", "3"], [], {"name": "john", "count": 3})
+    check_args(hi, ["--count", "3"], ["john", 3], {})
 
 
 def test_flag():
@@ -201,42 +181,18 @@ def test_bool_but_not_flag(true: str, false: str):
         if verbose:
             print("verbose mode")
 
-    check_args(hi3, ["jane", true], [], {"name": "jane", "verbose": True})
-    check_args(hi3, ["jane", false], [], {"name": "jane", "verbose": False})
-    check_args(hi3, ["--name", "jane", true], [], {"name": "jane", "verbose": True})
-    check_args(hi3, ["--name", "jane", false], [], {"name": "jane", "verbose": False})
-    check_args(hi3, ["jane", "--verbose", true], [], {"name": "jane", "verbose": True})
-    check_args(
-        hi3, ["jane", "--verbose", false], [], {"name": "jane", "verbose": False}
-    )
-    check_args(hi3, ["--verbose", true, "jane"], [], {"name": "jane", "verbose": True})
-    check_args(
-        hi3, ["--verbose", false, "jane"], [], {"name": "jane", "verbose": False}
-    )
-    check_args(
-        hi3,
-        ["--name", "jane", "--verbose", true],
-        [],
-        {"name": "jane", "verbose": True},
-    )
-    check_args(
-        hi3,
-        ["--name", "jane", "--verbose", false],
-        [],
-        {"name": "jane", "verbose": False},
-    )
-    check_args(
-        hi3,
-        ["--verbose", true, "--name", "jane"],
-        [],
-        {"name": "jane", "verbose": True},
-    )
-    check_args(
-        hi3,
-        ["--verbose", false, "--name", "jane"],
-        [],
-        {"name": "jane", "verbose": False},
-    )
+    check_args(hi3, ["jane", true], ["jane", True], {})
+    check_args(hi3, ["jane", false], ["jane", False], {})
+    check_args(hi3, ["--name", "jane", true], ["jane", True], {})
+    check_args(hi3, ["--name", "jane", false], ["jane", False], {})
+    check_args(hi3, ["jane", "--verbose", true], ["jane", True], {})
+    check_args(hi3, ["jane", "--verbose", false], ["jane", False], {})
+    check_args(hi3, ["--verbose", true, "jane"], ["jane", True], {})
+    check_args(hi3, ["--verbose", false, "jane"], ["jane", False], {})
+    check_args(hi3, ["--name", "jane", "--verbose", true], ["jane", True], {})
+    check_args(hi3, ["--name", "jane", "--verbose", false], ["jane", False], {})
+    check_args(hi3, ["--verbose", true, "--name", "jane"], ["jane", True], {})
+    check_args(hi3, ["--verbose", false, "--name", "jane"], ["jane", False], {})
 
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
         check_args(hi3, ["jane", "maybe"], [], {})
@@ -522,8 +478,8 @@ def test_positional_nargs_infeasible():
     check_args(
         rectangle,
         cli,
-        [list(range(5)), [5.0, 6.0]],
-        {"verbose": True},
+        [list(range(5)), [5.0, 6.0], True],
+        {},
     )
 
 
@@ -536,32 +492,32 @@ def test_pathlib_path():
     check_args(
         transfer,
         ["./destination", "./source"],
-        [],
-        {"destination": Path("./destination"), "source": Path("./source")},
+        [Path("./destination"), Path("./source")],
+        {},
     )
     check_args(
         transfer,
         ["./destination"],
-        [],
-        {"destination": Path("./destination"), "source": Path("./")},
+        [Path("./destination"), Path("./")],
+        {},
     )
     check_args(
         transfer,
         ["./destination", "--source", "./source"],
-        [],
-        {"destination": Path("./destination"), "source": Path("./source")},
+        [Path("./destination"), Path("./source")],
+        {},
     )
     check_args(
         transfer,
         ["--source", "./source", "./destination"],
-        [],
-        {"destination": Path("./destination"), "source": Path("./source")},
+        [Path("./destination"), Path("./source")],
+        {},
     )
     check_args(
         transfer,
         ["--source", "./source", "--destination", "./destination"],
-        [],
-        {"destination": Path("./destination"), "source": Path("./source")},
+        [Path("./destination"), Path("./source")],
+        {},
     )
 
     with raises(

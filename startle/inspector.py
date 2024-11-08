@@ -112,7 +112,11 @@ def make_args(func: Callable) -> Args:
         metavar = ""
         nary = False
 
-        if param.kind in [Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
+        if param.kind in [
+            Parameter.POSITIONAL_ONLY,
+            Parameter.POSITIONAL_OR_KEYWORD,
+            Parameter.VAR_POSITIONAL,
+        ]:
             positional = True
         if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
             named = True
@@ -123,6 +127,10 @@ def make_args(func: Callable) -> Args:
                 used_short_names.add(param_name_sub[0])
             else:
                 name = Name(long=param_name_sub)
+
+        if param.kind is Parameter.VAR_POSITIONAL:
+            nary = True
+            normalized_annotation = str
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str
@@ -151,6 +159,9 @@ def make_args(func: Callable) -> Args:
             is_named=named,
             is_nary=nary,
         )
-        args.add(arg)
+        if param.kind is Parameter.VAR_POSITIONAL:
+            args.add_remaining_args(arg)
+        else:
+            args.add(arg)
 
     return args

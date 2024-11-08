@@ -14,6 +14,8 @@ class Args:
     _named_args: list[Arg] = field(default_factory=list)
     _name2idx: dict[str, int] = field(default_factory=dict)
 
+    _var_args: Arg | None = None  # remaining args for functions with *args
+
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
         """
@@ -57,6 +59,16 @@ class Args:
             if arg.name.long:
                 self._name2idx[arg.name.long] = len(self._named_args) - 1
 
+    def add_remaining_args(self, arg: Arg):
+        """
+        Add the argument that will store the remaining command-line arguments.
+        """
+        if self._var_args:
+            raise ParserConfigError(
+                "Only one argument can be marked as var args (with `*args` syntax)!"
+            )
+        self._var_args = arg
+
     def _parse(self, args: list[str]):
         idx = 0
         positional_idx = 0
@@ -67,7 +79,12 @@ class Args:
                     self.print_help()
                     sys.exit(0)
                 if name not in self._name2idx:
-                    raise ParserOptionError(f"Unexpected option `{name}`!")
+                    if self._var_args:
+                        self._var_args.parse(args[idx])
+                        idx += 1
+                        continue
+                    else:
+                        raise ParserOptionError(f"Unexpected option `{name}`!")
                 opt = self._named_args[self._name2idx[name]]
                 if opt._parsed:
                     raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
@@ -104,9 +121,14 @@ class Args:
                     positional_idx += 1
 
                 if not positional_idx < len(self._positional_args):
-                    raise ParserOptionError(
-                        f"Unexpected positional argument: `{args[idx]}`!"
-                    )
+                    if self._var_args:
+                        self._var_args.parse(args[idx])
+                        idx += 1
+                        continue
+                    else:
+                        raise ParserOptionError(
+                            f"Unexpected positional argument: `{args[idx]}`!"
+                        )
 
                 arg = self._positional_args[positional_idx]
                 if arg._parsed:
@@ -160,20 +182,22 @@ class Args:
         Returns a tuple of positional arguments and named arguments, such that
         the function can be called like `func(*positional_args, **named_args)`.
 
-        For arguments that are both positional and named, the named argument
-        is preferred.
+        For arguments that are both positional and named, the positional argument
+        is preferred, to handle variadic args correctly.
         """
 
         def var(opt: Arg) -> str:
             return opt.name.long_or_short.replace("-", "_")
 
-        named_args = {var(opt): opt._value for opt in self._named_args}
-        named_arg_values = list(named_args.values())
-        positional_args = [
-            arg._value
-            for arg in self._positional_args
-            if arg._value not in named_arg_values
-        ]
+        positional_args = [arg._value for arg in self._positional_args]
+        named_args = {
+            var(opt): opt._value
+            for opt in self._named_args
+            if opt not in self._positional_args
+        }
+
+        if self._var_args:
+            positional_args += self._var_args._value
 
         return positional_args, named_args
 

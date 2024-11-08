@@ -9,9 +9,9 @@ from startle.error import ParserOptionError, ParserValueError
 
 
 def check(draw: Callable, shape: type[Enum], prefix: list[str]):
-    check_args(draw, prefix + ["square"], [], {"shape": shape.SQUARE})
-    check_args(draw, prefix + ["circle"], [], {"shape": shape.CIRCLE})
-    check_args(draw, prefix + ["triangle"], [], {"shape": shape.TRIANGLE})
+    check_args(draw, prefix + ["square"], [shape.SQUARE], {})
+    check_args(draw, prefix + ["circle"], [shape.CIRCLE], {})
+    check_args(draw, prefix + ["triangle"], [shape.TRIANGLE], {})
 
     with raises(ParserValueError, match="Cannot parse enum Shape from `rectangle`!"):
         check_args(draw, prefix + ["rectangle"], [], {})
@@ -19,10 +19,10 @@ def check(draw: Callable, shape: type[Enum], prefix: list[str]):
 
 def check_with_default(draw: Callable, shape: type[Enum], prefix: list[str]):
     if not prefix:
-        check_args(draw, [], [], {"shape": shape.CIRCLE})
-    check_args(draw, prefix + ["square"], [], {"shape": shape.SQUARE})
-    check_args(draw, prefix + ["circle"], [], {"shape": shape.CIRCLE})
-    check_args(draw, prefix + ["triangle"], [], {"shape": shape.TRIANGLE})
+        check_args(draw, [], [shape.CIRCLE], {})
+    check_args(draw, prefix + ["square"], [shape.SQUARE], {})
+    check_args(draw, prefix + ["circle"], [shape.CIRCLE], {})
+    check_args(draw, prefix + ["triangle"], [shape.TRIANGLE], {})
 
     with raises(ParserValueError, match="Cannot parse enum Shape from `rectangle`!"):
         check_args(draw, prefix + ["rectangle"], [], {})
@@ -97,9 +97,9 @@ def test_intenum(prefix: list[str]):
     def count(number: Number):
         print(f"Counting {number}.")
 
-    check_args(count, prefix + ["1"], [], {"number": Number.ONE})
-    check_args(count, prefix + ["2"], [], {"number": Number.TWO})
-    check_args(count, prefix + ["4"], [], {"number": Number.FOUR})
+    check_args(count, prefix + ["1"], [Number.ONE], {})
+    check_args(count, prefix + ["2"], [Number.TWO], {})
+    check_args(count, prefix + ["4"], [Number.FOUR], {})
     with raises(ParserValueError, match="Cannot parse enum Number from `3`!"):
         check_args(count, prefix + ["3"], [], {})
 
@@ -119,7 +119,7 @@ def test_optional_enum(prefix: list[str]):
 
     check(draw, Shape, prefix)
     if not prefix:
-        check_args(draw, [], [], {"shape": None})
+        check_args(draw, [], [None], {})
 
 
 @mark.parametrize("prefix", [[], ["--shapes"], ["-s"]])
@@ -133,18 +133,18 @@ def test_enum_list(prefix: list[str]):
         for shape in shapes:
             print(f"Drawing a {shape.value}.")
 
-    check_args(draw, prefix + ["square"], [], {"shapes": [Shape.SQUARE]})
+    check_args(draw, prefix + ["square"], [[Shape.SQUARE]], {})
     check_args(
         draw,
         prefix + ["circle", "square"],
-        [],
-        {"shapes": [Shape.CIRCLE, Shape.SQUARE]},
+        [[Shape.CIRCLE, Shape.SQUARE]],
+        {},
     )
     check_args(
         draw,
         prefix + ["triangle", "circle", "square", "circle"],
-        [],
-        {"shapes": [Shape.TRIANGLE, Shape.CIRCLE, Shape.SQUARE, Shape.CIRCLE]},
+        [[Shape.TRIANGLE, Shape.CIRCLE, Shape.SQUARE, Shape.CIRCLE]],
+        {},
     )
 
     with raises(ParserValueError, match="Cannot parse enum Shape from `rectangle`!"):
