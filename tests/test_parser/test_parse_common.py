@@ -273,13 +273,20 @@ def add_str2(*, numbers: list[str]) -> None:
 )
 @mark.parametrize("opt", ["-n", "--numbers"])
 def test_keyword_nargs(add: Callable, scalar: type, opt: str) -> None:
-    cli = [opt, "0", "1", "2", "3", "4"]
+    cli = [opt] + [str(i) for i in range(5)]
     check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
+    cli = [f"{opt}={i}" for i in range(5)]
+    check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
+
+    check_args(
+        add,
+        ["--numbers", "0", "1", "-n", "2"],
+        [],
+        {"numbers": [scalar(i) for i in range(3)]},
+    )
 
     with raises(ParserOptionError, match="Required option `numbers` is not provided!"):
         check_args(add, [], [], {})
-    with raises(ParserOptionError, match="Option `numbers` is multiply given!"):
-        check_args(add, ["--numbers", "0", "1", "-n", "2"], [], {})
 
     if scalar in [int, float]:
         with raises(

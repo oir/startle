@@ -74,7 +74,7 @@ class Args:
         Parse a cli arg as a named argument using the equals syntax (e.g. `--name=value`).
         Return new index after consuming the argument.
         This requires the argument to be not a flag.
-        If the argument is n-ary, it can be repeated (TODO).
+        If the argument is n-ary, it can be repeated.
         """
         name, value = name.split("=", 1)
         if name not in self._name2idx:
@@ -84,7 +84,7 @@ class Args:
                 return idx + 1
             raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
-        if opt._parsed:
+        if opt._parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
         if opt.is_flag:
             raise ParserOptionError(
@@ -109,7 +109,7 @@ class Args:
                 return idx + 1
             raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
-        if opt._parsed:
+        if opt._parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 
         if opt.is_flag:
