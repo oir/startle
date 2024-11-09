@@ -165,8 +165,8 @@ class Args:
                 # this must be a positional argument
                 idx, positional_idx = self._parse_positional(args, idx, positional_idx)
 
-        # check if all required positional arguments are given
-        for arg in self._positional_args:
+        # check if all required arguments are given, assign defaults otherwise
+        for arg in self._positional_args + self._named_args:
             if not arg._parsed:
                 if arg.required:
                     if arg.is_named:
@@ -181,17 +181,6 @@ class Args:
                 else:
                     arg._value = arg.default
                     arg._parsed = True
-
-        # check if all required named options are given
-        for opt in self._named_args:
-            if not opt._parsed:
-                if opt.required:
-                    raise ParserOptionError(
-                        f"Required option `{opt.name}` is not provided!"
-                    )
-                else:
-                    opt._value = opt.default
-                    opt._parsed = True
 
     def make_func_args(self) -> tuple[list[Any], dict[str, Any]]:
         """
