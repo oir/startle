@@ -69,85 +69,101 @@ class Args:
             )
         self._var_args = arg
 
+    def _parse_named(self, name: str, args: list[str], idx: int) -> int:
+        """
+        Parse a cli arg as a named argument.
+        Return new index after consuming the argument.
+        """
+        if name in ["help", "h"]:
+            self.print_help()
+            sys.exit(0)
+        if name not in self._name2idx:
+            if self._var_args:
+                self._var_args.parse(args[idx])
+                return idx + 1
+            else:
+                raise ParserOptionError(f"Unexpected option `{name}`!")
+        opt = self._named_args[self._name2idx[name]]
+        if opt._parsed:
+            raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
+
+        if opt.is_flag:
+            opt.parse()
+            return idx + 1
+        if opt.is_nary:
+            # n-ary option
+            values = []
+            idx += 1
+            while idx < len(args) and not self._is_name(args[idx]):
+                values.append(args[idx])
+                idx += 1
+            if not values:
+                raise ParserOptionError(f"Option `{name}` is missing argument!")
+            for value in values:
+                opt.parse(value)
+            return idx
+
+        # not a flag, not n-ary
+        if idx + 1 >= len(args):
+            raise ParserOptionError(f"Option `{name}` is missing argument!")
+        opt.parse(args[idx + 1])
+        return idx + 2
+
+    def _parse_positional(
+        self, args: list[str], idx: int, positional_idx: int
+    ) -> tuple[int, int]:
+        """
+        Parse a cli arg as a positional argument.
+        Return new indices after consuming the argument.
+        """
+
+        # skip already parsed positional arguments
+        # (because they could have also been named)
+        while (
+            positional_idx < len(self._positional_args)
+            and self._positional_args[positional_idx]._parsed
+        ):
+            positional_idx += 1
+
+        if not positional_idx < len(self._positional_args):
+            if self._var_args:
+                self._var_args.parse(args[idx])
+                return idx + 1, positional_idx
+            else:
+                raise ParserOptionError(
+                    f"Unexpected positional argument: `{args[idx]}`!"
+                )
+
+        arg = self._positional_args[positional_idx]
+        if arg._parsed:
+            raise ParserOptionError(
+                f"Positional argument `{args[idx]}` is multiply given!"
+            )
+        if arg.is_nary:
+            # n-ary positional arg
+            values = []
+            while idx < len(args) and not self._is_name(args[idx]):
+                values.append(args[idx])
+                idx += 1
+            for value in values:
+                arg.parse(value)
+        else:
+            # regular positional arg
+            arg.parse(args[idx])
+            idx += 1
+        return idx, positional_idx + 1
+
     def _parse(self, args: list[str]):
         idx = 0
         positional_idx = 0
 
         while idx < len(args):
             if name := self._is_name(args[idx]):
-                if name in ["help", "h"]:
-                    self.print_help()
-                    sys.exit(0)
-                if name not in self._name2idx:
-                    if self._var_args:
-                        self._var_args.parse(args[idx])
-                        idx += 1
-                        continue
-                    else:
-                        raise ParserOptionError(f"Unexpected option `{name}`!")
-                opt = self._named_args[self._name2idx[name]]
-                if opt._parsed:
-                    raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
-
-                if opt.is_flag:
-                    opt.parse()
-                    idx += 1
-                elif opt.is_nary:
-                    # n-ary option
-                    values = []
-                    idx += 1
-                    while idx < len(args) and not self._is_name(args[idx]):
-                        values.append(args[idx])
-                        idx += 1
-                    if not values:
-                        raise ParserOptionError(f"Option `{name}` is missing argument!")
-                    for value in values:
-                        opt.parse(value)
-                else:
-                    # not a flag, not n-ary
-                    if idx + 1 >= len(args):
-                        raise ParserOptionError(f"Option `{name}` is missing argument!")
-                    opt.parse(args[idx + 1])
-                    idx += 2
+                # this must be a named argument / option
+                idx = self._parse_named(name, args, idx)
             else:
                 # this must be a positional argument
-
-                # skip already parsed positional arguments
-                # (because they could have also been named)
-                while (
-                    positional_idx < len(self._positional_args)
-                    and self._positional_args[positional_idx]._parsed
-                ):
-                    positional_idx += 1
-
-                if not positional_idx < len(self._positional_args):
-                    if self._var_args:
-                        self._var_args.parse(args[idx])
-                        idx += 1
-                        continue
-                    else:
-                        raise ParserOptionError(
-                            f"Unexpected positional argument: `{args[idx]}`!"
-                        )
-
-                arg = self._positional_args[positional_idx]
-                if arg._parsed:
-                    raise ParserOptionError(
-                        f"Positional argument `{args[idx]}` is multiply given!"
-                    )
-                if arg.is_nary:
-                    # n-ary positional arg
-                    values = []
-                    while idx < len(args) and not self._is_name(args[idx]):
-                        values.append(args[idx])
-                        idx += 1
-                    for value in values:
-                        arg.parse(value)
-                else:
-                    # regular positional arg
-                    arg.parse(args[idx])
-                    idx += 1
-                positional_idx += 1
+                idx, positional_idx = self._parse_positional(args, idx, positional_idx)
 
         # check if all required positional arguments are given
         for arg in self._positional_args:
