@@ -24,13 +24,20 @@ def test_args_with_defaults(hi, count_t):
     check_args(hi, [], ["john"], {"count": count_t(1)})
     check_args(hi, ["jane"], ["jane"], {"count": count_t(1)})
     check_args(hi, ["jane", "--count", "3"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["jane", "--count=3"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["--count", "3", "jane"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["--count", "3"], ["john"], {"count": count_t(3)})
+    check_args(hi, ["jane", "-c", "3"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["jane", "-c=3"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["-c", "3", "jane"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["-c", "3"], ["john"], {"count": count_t(3)})
 
     with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
         check_args(hi, ["jane", "--count", "x"], [], {})
     with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
         check_args(hi, ["--count", "x", "jane"], [], {})
+    with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
+        check_args(hi, ["jane", "--count=x"], [], {})
 
     with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
         check_args(hi, ["john", "3"], [], {})
@@ -46,20 +53,31 @@ def test_args_with_defaults(hi, count_t):
         check_args(hi, ["--name", "jane", "john"], [], {})
     with raises(ParserOptionError, match="Unexpected option `name`!"):
         check_args(hi, ["john", "--name", "jane"], [], {})
+    with raises(ParserOptionError, match="Unexpected option `name`!"):
+        check_args(hi, ["--name=jane"], [], {})
 
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
         check_args(hi, ["john", "--count", "3", "--count", "4"], [], {})
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        check_args(hi, ["john", "--count", "3", "-c", "4"], [], {})
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        check_args(hi, ["john", "--count=3", "--count", "4"], [], {})
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        check_args(hi, ["john", "--count", "3", "-count=4"], [], {})
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
         check_args(hi, ["--count", "3", "john", "--count", "4"], [], {})
 
 
-def test_args_without_defaults():
+@mark.parametrize("opt", ["-c", "--count"])
+def test_args_without_defaults(opt):
     def hi(name: str, /, *, count: int) -> None:
         for _ in range(count):
             print(f"hello, {name}!")
 
-    check_args(hi, ["jane", "--count", "3"], ["jane"], {"count": 3})
-    check_args(hi, ["--count", "3", "jane"], ["jane"], {"count": 3})
+    check_args(hi, ["jane", opt, "3"], ["jane"], {"count": 3})
+    check_args(hi, [opt, "3", "jane"], ["jane"], {"count": 3})
+    check_args(hi, ["jane", f"{opt}=3"], ["jane"], {"count": 3})
+    check_args(hi, [f"{opt}=3", "jane"], ["jane"], {"count": 3})
 
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
@@ -70,12 +88,12 @@ def test_args_without_defaults():
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
     ):
-        check_args(hi, ["--count", "3"], [], {})
+        check_args(hi, [opt, "3"], [], {})
 
     with raises(ParserOptionError, match="Unexpected positional argument: `jane`!"):
-        check_args(hi, ["jane", "jane", "--count", "3"], [], {})
+        check_args(hi, ["jane", "jane", opt, "3"], [], {})
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
-        check_args(hi, ["jane", "--count", "3", "--count", "4"], [], {})
+        check_args(hi, ["jane", opt, "3", "-c", "4"], [], {})
 
     with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
         check_args(hi, ["jane", "3"], [], {})
@@ -123,21 +141,29 @@ def test_args_both_positional_and_keyword_with_defaults():
     check_args(hi, ["--count", "3"], ["john", 3], {})
 
 
-def test_flag():
+@mark.parametrize("opt", ["-v", "--verbose"])
+def test_flag(opt):
     def hi(name: str, /, *, verbose: bool = False) -> None:
         print(f"hello, {name}!")
         if verbose:
             print("verbose mode")
 
     check_args(hi, ["jane"], ["jane"], {"verbose": False})
-    check_args(hi, ["jane", "--verbose"], ["jane"], {"verbose": True})
-    check_args(hi, ["--verbose", "jane"], ["jane"], {"verbose": True})
+    check_args(hi, ["jane", opt], ["jane"], {"verbose": True})
+    check_args(hi, [opt, "jane"], ["jane"], {"verbose": True})
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
     ):
-        check_args(hi, ["--verbose"], [], {"verbose": True})
+        check_args(hi, [opt], [], {})
     with raises(ParserOptionError, match="Unexpected positional argument: `true`!"):
-        check_args(hi, ["jane", "--verbose", "true"], [], {"verbose": False})
+        check_args(hi, ["jane", opt, "true"], [], {})
+    with raises(ParserOptionError, match="Option `verbose` is multiply given!"):
+        check_args(hi, ["jane", opt, opt], [], {})
+    with raises(
+        ParserOptionError,
+        match="Option `verbose` is a flag and cannot be assigned a value!",
+    ):
+        check_args(hi, ["jane", f"{opt}=true"], [], {})
 
 
 @mark.parametrize(
@@ -146,23 +172,31 @@ def test_flag():
 @mark.parametrize(
     "false", ["false", "False", "FALSE", "f", "F", "no", "No", "NO", "n", "N", "0"]
 )
-def test_bool_but_not_flag(true: str, false: str):
+@mark.parametrize("optv", ["-v", "--verbose"])
+@mark.parametrize("optn", ["-n", "--name"])
+def test_bool_but_not_flag(true: str, false: str, optv: str, optn: str):
     def hi(name: str, /, *, verbose: bool = True) -> None:
         print(f"hello, {name}!")
         if verbose:
             print("verbose mode")
 
     check_args(hi, ["jane"], ["jane"], {"verbose": True})
-    check_args(hi, ["jane", "--verbose", true], ["jane"], {"verbose": True})
-    check_args(hi, ["--verbose", true, "jane"], ["jane"], {"verbose": True})
-    check_args(hi, ["jane", "--verbose", false], ["jane"], {"verbose": False})
-    check_args(hi, ["--verbose", false, "jane"], ["jane"], {"verbose": False})
+    for verbose in [True, False]:
+        value = true if verbose else false
+        check_args(hi, ["jane", optv, value], ["jane"], {"verbose": verbose})
+        check_args(hi, [optv, value, "jane"], ["jane"], {"verbose": verbose})
+        check_args(hi, ["jane", f"{optv}={value}"], ["jane"], {"verbose": verbose})
+        check_args(hi, [f"{optv}={value}", "jane"], ["jane"], {"verbose": verbose})
     with raises(ParserOptionError, match="Option `verbose` is missing argument!"):
-        check_args(hi, ["jane", "--verbose"], [], {})
+        check_args(hi, ["jane", optv], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `yeah`!"):
-        check_args(hi, ["jane", "--verbose", "yeah"], [], {})
+        check_args(hi, ["jane", optv, "yeah"], [], {})
+    with raises(ParserValueError, match="Cannot parse boolean from `yeah`!"):
+        check_args(hi, ["jane", f"{optv}=yeah"], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `nah`!"):
-        check_args(hi, ["--verbose", "nah", "jane"], [], {})
+        check_args(hi, [optv, "nah", "jane"], [], {})
+    with raises(ParserValueError, match="Cannot parse boolean from `nah`!"):
+        check_args(hi, [f"{optv}=nah", "jane"], [], {})
 
     def hi2(name: str, verbose: bool = False, /) -> None:
         print(f"hello, {name}!")
@@ -181,25 +215,25 @@ def test_bool_but_not_flag(true: str, false: str):
         if verbose:
             print("verbose mode")
 
-    check_args(hi3, ["jane", true], ["jane", True], {})
-    check_args(hi3, ["jane", false], ["jane", False], {})
-    check_args(hi3, ["--name", "jane", true], ["jane", True], {})
-    check_args(hi3, ["--name", "jane", false], ["jane", False], {})
-    check_args(hi3, ["jane", "--verbose", true], ["jane", True], {})
-    check_args(hi3, ["jane", "--verbose", false], ["jane", False], {})
-    check_args(hi3, ["--verbose", true, "jane"], ["jane", True], {})
-    check_args(hi3, ["--verbose", false, "jane"], ["jane", False], {})
-    check_args(hi3, ["--name", "jane", "--verbose", true], ["jane", True], {})
-    check_args(hi3, ["--name", "jane", "--verbose", false], ["jane", False], {})
-    check_args(hi3, ["--verbose", true, "--name", "jane"], ["jane", True], {})
-    check_args(hi3, ["--verbose", false, "--name", "jane"], ["jane", False], {})
+    for verbose in [True, False]:
+        value = true if verbose else false
+        check_args(hi3, ["jane", value], ["jane", verbose], {})
+        check_args(hi3, [optn, "jane", value], ["jane", verbose], {})
+        check_args(hi3, ["jane", optv, value], ["jane", verbose], {})
+        check_args(hi3, [optv, value, "jane"], ["jane", verbose], {})
+        check_args(hi3, [optn, "jane", optv, value], ["jane", verbose], {})
+        check_args(hi3, [optv, value, optn, "jane"], ["jane", verbose], {})
 
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
         check_args(hi3, ["jane", "maybe"], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
-        check_args(hi3, ["jane", "--verbose", "maybe"], [], {})
+        check_args(hi3, ["jane", optv, "maybe"], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
-        check_args(hi3, ["--verbose", "maybe", "jane"], [], {})
+        check_args(hi3, ["jane", f"{optv}=maybe"], [], {})
+    with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
+        check_args(hi3, [optv, "maybe", "jane"], [], {})
+    with raises(ParserValueError, match="Cannot parse boolean from `maybe`!"):
+        check_args(hi3, [f"{optv}=maybe", "jane"], [], {})
 
 
 def add_int(*, numbers: list[int]) -> None:
@@ -237,9 +271,8 @@ def add_str2(*, numbers: list[str]) -> None:
         (add_str2, str),
     ],
 )
-@mark.parametrize("short", [False, True])
-def test_keyword_nargs(add: Callable, scalar: type, short: bool):
-    opt = "-n" if short else "--numbers"
+@mark.parametrize("opt", ["-n", "--numbers"])
+def test_keyword_nargs(add: Callable, scalar: type, opt: str) -> None:
     cli = [opt, "0", "1", "2", "3", "4"]
     check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
 

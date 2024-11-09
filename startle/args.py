@@ -69,6 +69,30 @@ class Args:
             )
         self._var_args = arg
 
+    def _parse_equals_syntax(self, name: str, args: list[str], idx: int) -> int:
+        """
+        Parse a cli arg as a named argument using the equals syntax (e.g. `--name=value`).
+        Return new index after consuming the argument.
+        This requires the argument to be not a flag.
+        If the argument is n-ary, it can be repeated (TODO).
+        """
+        name, value = name.split("=", 1)
+        if name not in self._name2idx:
+            if self._var_args:
+                self._var_args.parse(args[idx])
+                self._var_args.parse(value)
+                return idx + 1
+            raise ParserOptionError(f"Unexpected option `{name}`!")
+        opt = self._named_args[self._name2idx[name]]
+        if opt._parsed:
+            raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
+        if opt.is_flag:
+            raise ParserOptionError(
+                f"Option `{opt.name}` is a flag and cannot be assigned a value!"
+            )
+        opt.parse(value)
+        return idx + 1
+
     def _parse_named(self, name: str, args: list[str], idx: int) -> int:
         """
         Parse a cli arg as a named argument.
@@ -77,12 +101,13 @@ class Args:
         if name in ["help", "h"]:
             self.print_help()
             sys.exit(0)
+        if "=" in name:
+            return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
             if self._var_args:
                 self._var_args.parse(args[idx])
                 return idx + 1
-            else:
-                raise ParserOptionError(f"Unexpected option `{name}`!")
+            raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
         if opt._parsed:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
@@ -98,14 +123,14 @@ class Args:
                 values.append(args[idx])
                 idx += 1
             if not values:
-                raise ParserOptionError(f"Option `{name}` is missing argument!")
+                raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
             for value in values:
                 opt.parse(value)
             return idx
 
         # not a flag, not n-ary
         if idx + 1 >= len(args):
-            raise ParserOptionError(f"Option `{name}` is missing argument!")
+            raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
         opt.parse(args[idx + 1])
         return idx + 2
 
