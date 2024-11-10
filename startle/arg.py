@@ -34,14 +34,12 @@ class Arg:
         is_positional (bool): Whether the argument is positional.
         is_named (bool): Whether the argument is named.
         is_nary (bool): Whether the argument can take multiple values.
-        _parsed (bool): Whether the argument has been parsed.
-        _value (Any): The parsed value of the argument.
     """
 
-    # Note: an Arg can be both positional and named.
     name: Name
     type_: type  # for n-ary options, this is the type of the list elements
 
+    # Note: an Arg can be both positional and named.
     is_positional: bool = False
     is_named: bool = False
     is_nary: bool = False
