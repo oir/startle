@@ -2,33 +2,10 @@ import sys
 from enum import Enum, IntEnum
 from typing import Callable
 
-from _utils import check_args
+from _utils import Opt, Opts, check_args
 from pytest import mark, raises
 
 from startle.error import ParserOptionError, ParserValueError
-
-
-def positional(name: str, value: list[str]) -> list[str]:
-    return value
-
-
-def short(name: str, value: list[str]) -> list[str]:
-    return [f"-{name[0]}"] + value
-
-
-def long(name: str, value: list[str]) -> list[str]:
-    return [f"--{name}"] + value
-
-
-def short_eq(name: str, value: list[str]) -> list[str]:
-    return [f"-{name[0]}={item}" for item in value]
-
-
-def long_eq(name: str, value: list[str]) -> list[str]:
-    return [f"--{name}={item}" for item in value]
-
-
-Opt = Callable[[str, list[str]], list[str]]
 
 
 def check(draw: Callable, shape: type[Enum], opt: Opt):
@@ -45,7 +22,7 @@ def check_with_default(draw: Callable, shape: type[Enum], opt: Opt):
     check(draw, shape, opt)
 
 
-@mark.parametrize("opt", [positional, short, long, short_eq, long_eq])
+@mark.parametrize("opt", Opts())
 def test_enum(opt: Opt):
     class Shape(Enum):
         SQUARE = "square"
@@ -63,7 +40,7 @@ def test_enum(opt: Opt):
     check_with_default(draw_with_default, Shape, opt)
 
 
-@mark.parametrize("opt", [positional, short, long, short_eq, long_eq])
+@mark.parametrize("opt", Opts())
 def test_str_enum_multi_inheritance(opt: Opt):
     class Shape(str, Enum):
         SQUARE = "square"
@@ -84,7 +61,7 @@ def test_str_enum_multi_inheritance(opt: Opt):
 @mark.skipif(
     sys.version_info < (3, 11), reason="Requires Python 3.11 or higher for StrEnum"
 )
-@mark.parametrize("opt", [positional, short, long, short_eq, long_eq])
+@mark.parametrize("opt", Opts())
 def test_strenum(opt: Opt):
     from enum import StrEnum
 
@@ -104,7 +81,7 @@ def test_strenum(opt: Opt):
     check_with_default(draw_with_default, Shape, opt)
 
 
-@mark.parametrize("opt", [positional, short, long, short_eq, long_eq])
+@mark.parametrize("opt", Opts())
 def test_intenum(opt: Opt):
     class Number(IntEnum):
         ONE = 1
@@ -121,7 +98,7 @@ def test_intenum(opt: Opt):
         check_args(count, opt("number", ["3"]), [], {})
 
 
-@mark.parametrize("opt", [positional, short, long, short_eq, long_eq])
+@mark.parametrize("opt", Opts())
 def test_optional_enum(opt: Opt):
     class Shape(Enum):
         SQUARE = "square"
@@ -138,7 +115,7 @@ def test_optional_enum(opt: Opt):
     check_args(draw, [], [None], {})
 
 
-@mark.parametrize("opt", [positional, short, long, short_eq, long_eq])
+@mark.parametrize("opt", Opts())
 def test_enum_list(opt: Opt):
     class Shape(Enum):
         SQUARE = "square"

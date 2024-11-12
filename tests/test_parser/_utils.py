@@ -27,3 +27,33 @@ def check_args(
 
     for key, value in kwargs.items():
         assert type(value) is type(expected_kwargs[key])
+
+
+class Opts:
+    @staticmethod
+    def positional(name: str, value: list[str]) -> list[str]:
+        return value
+
+    @staticmethod
+    def short(name: str, value: list[str]) -> list[str]:
+        return [f"-{name[0]}"] + value
+
+    @staticmethod
+    def long(name: str, value: list[str]) -> list[str]:
+        return [f"--{name}"] + value
+
+    @staticmethod
+    def short_eq(name: str, value: list[str]) -> list[str]:
+        return [f"-{name[0]}={item}" for item in value]
+
+    @staticmethod
+    def long_eq(name: str, value: list[str]) -> list[str]:
+        return [f"--{name}={item}" for item in value]
+
+    # iterate over the different options
+    def __iter__(self):
+        for name in ["positional", "short", "long", "short_eq", "long_eq"]:
+            yield getattr(self, name)
+
+
+Opt = Callable[[str, list[str]], list[str]]

@@ -1,6 +1,6 @@
 from typing import Callable, Optional, Union
 
-from _utils import check_args
+from _utils import Opt, Opts, check_args
 from pytest import mark
 
 
@@ -21,10 +21,10 @@ def hi4(msg: Union[str, None] = None) -> None:
 
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4])
-def test_optional_str(hi: Callable):
+@mark.parametrize("opt", Opts())
+def test_optional_str(hi: Callable, opt: Opt):
     check_args(hi, [], [None], {})
-    check_args(hi, ["hello"], ["hello"], {})
-    check_args(hi, ["--msg", "hello"], ["hello"], {})
+    check_args(hi, opt("msg", ["hello"]), ["hello"], {})
 
 
 def int_digits1(number: int | None = None) -> None:
@@ -44,10 +44,10 @@ def int_digits4(number: Union[int, None] = None) -> None:
 
 
 @mark.parametrize("int_digits", [int_digits1, int_digits2, int_digits3, int_digits4])
-def test_optional_int(int_digits: Callable):
+@mark.parametrize("opt", Opts())
+def test_optional_int(int_digits: Callable, opt: Opt):
     check_args(int_digits, [], [None], {})
-    check_args(int_digits, ["3"], [3], {})
-    check_args(int_digits, ["--number", "3"], [3], {})
+    check_args(int_digits, opt("number", ["3"]), [3], {})
 
 
 def float_digits1(number: float | None = None) -> None:
@@ -69,10 +69,10 @@ def float_digits4(number: Union[float, None] = None) -> None:
 @mark.parametrize(
     "float_digits", [float_digits1, float_digits2, float_digits3, float_digits4]
 )
-def test_optional_float(float_digits: Callable):
+@mark.parametrize("opt", Opts())
+def test_optional_float(float_digits: Callable, opt: Opt):
     check_args(float_digits, [], [None], {})
-    check_args(float_digits, ["3.14"], [3.14], {})
-    check_args(float_digits, ["--number", "3.14"], [3.14], {})
+    check_args(float_digits, opt("number", ["3.14"]), [3.14], {})
 
 
 def maybe1(predicate: bool | None = None) -> None:
@@ -98,9 +98,8 @@ def maybe4(predicate: Union[bool, None] = None) -> None:
 @mark.parametrize(
     "false", ["false", "False", "FALSE", "f", "F", "no", "No", "NO", "n", "N", "0"]
 )
-def test_optional_bool(maybe: Callable, true: str, false: str):
+@mark.parametrize("opt", Opts())
+def test_optional_bool(maybe: Callable, true: str, false: str, opt: Opt):
     check_args(maybe, [], [None], {})
-    check_args(maybe, [true], [True], {})
-    check_args(maybe, [false], [False], {})
-    check_args(maybe, ["--predicate", true], [True], {})
-    check_args(maybe, ["--predicate", false], [False], {})
+    check_args(maybe, opt("predicate", [true]), [True], {})
+    check_args(maybe, opt("predicate", [false]), [False], {})
