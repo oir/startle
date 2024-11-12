@@ -1,5 +1,5 @@
 """
-String to type conversion functions.
+String-to-type conversion functions.
 """
 
 import typing

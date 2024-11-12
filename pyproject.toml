@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "startle"
-description = "A description"
+description = "Instantly start a CLI from a function"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {file = "LICENSE"}
-keywords = ["sample", "setuptools", "development"]
+license = { file = "LICENSE" }
+keywords = ["cli", "command line interface", "argparse"]
 authors = [
-  {name = "Ozan Irsoy" }
+  { name = "Ozan Irsoy" }
 ]
 dynamic = ["version"]
 
