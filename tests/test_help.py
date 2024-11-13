@@ -50,6 +50,31 @@ def test_simple():
         print(f"components: {components}")
         print(f"alpha: {alpha}")
 
+    def fusion2(
+        left_path: str,
+        right_path: str,
+        /,
+        output_path: str,
+        *,
+        components: list[str] = ["fang", "claw"],
+        alpha: float = 0.5,
+    ):
+        """
+        Fuse two monsters with polymerization.
+
+        Args:
+            left_path (str): Path to the first monster.
+            right_path (str): Path to the second monster.
+            output_path (str): Path to store the fused monster.
+            components (list[str]): Components to fuse.
+            alpha (float): Weighting factor for the first monster.
+        """
+        print(f"left_path: {left_path}")
+        print(f"right_path: {right_path}")
+        print(f"output_path: {output_path}")
+        print(f"components: {components}")
+        print(f"alpha: {alpha}")
+
     expected = f"""\
 Fuse two monsters with polymerization.
 
@@ -65,6 +90,7 @@ Fuse two monsters with polymerization.
   [dim](option)[/]        [{ns} {os} dim]-h[/][{os} dim]|[/][{ns} {os} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      """
 
     check_help(fusion, "fuse.py", expected)
+    check_help(fusion2, "fuse.py", expected)
 
 
 def test_nargs():
