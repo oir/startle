@@ -358,6 +358,16 @@ class Args:
         for opt in named_only:
             table.add_row("[dim](option)[/dim]", usage(opt), help(opt))
 
+        table.add_row(
+            "[dim](option)[/dim]",
+            Text.assemble(
+                ("-h", f"{sty_name} {sty_opt} dim"),
+                ("|", f"{sty_opt} dim"),
+                ("--help", f"{sty_name} {sty_opt} dim"),
+            ),
+            "[i dim]Show this help message and exit.[/]",
+        )
+
         console.print(table)
 
     def __repr__(self) -> str:

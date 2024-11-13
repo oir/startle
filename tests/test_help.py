@@ -21,8 +21,6 @@ def check_help(f: Callable, program_name: str, expected: str):
         console.print(expected)
     expected = capture.get()
 
-    # for i in range(min(len(result), len(expected))):
-    #    assert result[i] == expected[i], f"index: {i}, [{result[i-20:i+10]}] != [{expected[i-20:i+10]}]"
     assert result == expected
 
 
@@ -63,7 +61,8 @@ Fuse two monsters with polymerization.
   [dim](positional)[/]    [{vs}]<[{ns}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
   [dim](pos. or opt.)[/]  [{ns} {os}]-o[/][{os} dim]|[/][{ns} {os}]--output-path[/] [{vs}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
   [dim](option)[/]        [{ns} {os}]-c[/][{os} dim]|[/][{ns} {os}]--components[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
-  [dim](option)[/]        [{ns} {os}]-a[/][{os} dim]|[/][{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]"""
+  [dim](option)[/]        [{ns} {os}]-a[/][{os} dim]|[/][{ns} {os}]--alpha[/] [{vs}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
+  [dim](option)[/]        [{ns} {os} dim]-h[/][{os} dim]|[/][{ns} {os} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      """
 
     check_help(fusion, "fuse.py", expected)
 
@@ -99,6 +98,7 @@ Count the characters in a list of words.
 [{ts}]where[/]
   [dim](positional)[/]  [{vs}]<[{ns}]words:[/]text>[/] [{vs} dim][[/][{vs} dim]<[{ns}]words:[/]text>[/][{vs} dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
   [dim](option)[/]      [{ns} {os}]-e[/][{os} dim]|[/][{ns} {os}]--extra-words[/] [{vs}]<text> [dim][<text> ...][/][/]  [i]Extra words to count characters in.[/] [green](default: [])[/]
-  [dim](option)[/]      [{ns} {os}]-v[/][{os} dim]|[/][{ns} {os}]--verbose[/][{os} dim]                        [/]  [i]If true, print extra information.[/] [green](flag)[/]         """
+  [dim](option)[/]      [{ns} {os}]-v[/][{os} dim]|[/][{ns} {os}]--verbose[/][{os} dim]                        [/]  [i]If true, print extra information.[/] [green](flag)[/]         
+  [dim](option)[/]      [{ns} {os} dim]-h[/][{os} dim]|[/][{ns} {os} dim]--help[/]                             [i dim]Show this help message and exit.[/]                 """
 
     check_help(count_chars, "count_chars.py", expected)
