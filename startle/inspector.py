@@ -111,6 +111,7 @@ def make_args(func: Callable) -> Args:
         name = Name(long=param_name_sub)
         metavar = ""
         nary = False
+        container_type = None
 
         if param.kind in [
             Parameter.POSITIONAL_ONLY,
@@ -131,15 +132,18 @@ def make_args(func: Callable) -> Args:
         if param.kind is Parameter.VAR_POSITIONAL:
             nary = True
             normalized_annotation = str
+            container_type = list
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str
-        if get_origin(normalized_annotation) is list:
+        if get_origin(normalized_annotation) in [list, tuple]:
             nary = True
             args_ = get_args(normalized_annotation)
+            container_type = get_origin(normalized_annotation)
             normalized_annotation = args_[0] if args_ else str
-        elif normalized_annotation is list:
+        elif normalized_annotation in [list, tuple]:
             nary = True
+            container_type = normalized_annotation
             normalized_annotation = str
 
         if not is_parsable(normalized_annotation):
@@ -151,6 +155,7 @@ def make_args(func: Callable) -> Args:
         arg = Arg(
             name=name,
             type_=normalized_annotation,
+            container_type=container_type,
             metavar=metavar,
             help=help,
             required=required,
