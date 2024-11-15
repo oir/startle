@@ -136,12 +136,12 @@ def make_args(func: Callable) -> Args:
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str
-        if get_origin(normalized_annotation) in [list, tuple]:
+        if get_origin(normalized_annotation) in [list, tuple, set]:
             nary = True
             args_ = get_args(normalized_annotation)
             container_type = get_origin(normalized_annotation)
             normalized_annotation = args_[0] if args_ else str
-        elif normalized_annotation in [list, tuple]:
+        elif normalized_annotation in [list, tuple, set]:
             nary = True
             container_type = normalized_annotation
             normalized_annotation = str
