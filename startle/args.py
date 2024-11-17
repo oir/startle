@@ -14,7 +14,8 @@ class Args:
     _named_args: list[Arg] = field(default_factory=list)
     _name2idx: dict[str, int] = field(default_factory=dict)
 
-    _var_args: Arg | None = None  # remaining args for functions with *args
+    _var_args: Arg | None = None  # remaining unk args for functions with *args
+    _var_kwargs: Arg | None = None  # remaining unk kwargs for functions with **kwargs
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -59,15 +60,25 @@ class Args:
             if arg.name.long:
                 self._name2idx[arg.name.long] = len(self._named_args) - 1
 
-    def add_remaining_args(self, arg: Arg):
+    def add_unknown_args(self, arg: Arg) -> None:
         """
-        Add the argument that will store the remaining command-line arguments.
+        Add the argument that will store the remaining unknown command-line positional arguments.
         """
         if self._var_args:
             raise ParserConfigError(
                 "Only one argument can be marked as var args (with `*args` syntax)!"
             )
         self._var_args = arg
+
+    def add_unknown_kwargs(self, arg: Arg) -> None:
+        """
+        Add the argument that will store the remaining unknown command-line named options.
+        """
+        if self._var_kwargs:
+            raise ParserConfigError(
+                "Only one argument can be marked as var kwargs (with `**kwargs` syntax)!"
+            )
+        self._var_kwargs = arg
 
     def _parse_equals_syntax(self, name: str, args: list[str], idx: int) -> int:
         """
@@ -78,6 +89,9 @@ class Args:
         """
         name, value = name.split("=", 1)
         if name not in self._name2idx:
+            if self._var_kwargs:
+                self._var_kwargs.parse_with_key(name, value)
+                return idx + 1
             if self._var_args:
                 self._var_args.parse(args[idx])
                 self._var_args.parse(value)
@@ -104,6 +118,17 @@ class Args:
         if "=" in name:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
+            if self._var_kwargs:
+                values = []
+                idx += 1
+                while idx < len(args) and not self._is_name(args[idx]):
+                    values.append(args[idx])
+                    idx += 1
+                if not values:
+                    raise ParserOptionError(f"Option `{name}` is missing argument!")
+                for value in values:
+                    self._var_kwargs.parse_with_key(name, value)
+                return idx
             if self._var_args:
                 self._var_args.parse(args[idx])
                 return idx + 1
@@ -216,7 +241,9 @@ class Args:
         is preferred, to handle variadic args correctly.
         """
 
-        def var(opt: Arg) -> str:
+        def var(opt: Arg | str) -> str:
+            if isinstance(opt, str):
+                return opt.replace("-", "_")
             return opt.name.long_or_short.replace("-", "_")
 
         positional_args = [arg._value for arg in self._positional_args]
@@ -226,8 +253,18 @@ class Args:
             if opt not in self._positional_args
         }
 
-        if self._var_args:
+        if self._var_args and self._var_args._value:
             positional_args += self._var_args._value
+        if self._var_kwargs and self._var_kwargs._value:
+            for key, value in self._var_kwargs._value.items():
+                assert var(key) not in named_args, "Programming error!"
+                if len(value) == 0:
+                    value_ = None
+                elif len(value) == 1:
+                    value_ = value[0]
+                else:
+                    value_ = value
+                named_args[var(key)] = value_
 
         return positional_args, named_args
 

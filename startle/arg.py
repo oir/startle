@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any
 
@@ -66,7 +67,23 @@ class Arg:
         if not self.metavar:
             self.metavar = _get_metavar(self.type_)
 
+    def parse_with_key(self, key: str, value: str) -> None:
+        """
+        Parse the value with the given key.
+        This method is only applicable to argument that stores **kwargs.
+        """
+        assert self.container_type is dict, "parse_with_key is only for dict options!"
+        assert self._value is None or isinstance(
+            self._value, self.container_type
+        ), "Programming error!"
+        if self._value is None:
+            self._value = defaultdict(list)
+        self._value[key].append(value)  # TODO: take hints for kwargs into account
+
     def parse(self, value: str | None = None):
+        """
+        Parse the value into the appropriate type and store.
+        """
         if self.is_flag:
             assert value is None, "Flag options should not have values!"
             self._value = True

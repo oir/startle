@@ -119,7 +119,11 @@ def make_args(func: Callable) -> Args:
             Parameter.VAR_POSITIONAL,
         ]:
             positional = True
-        if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
+        if param.kind in [
+            Parameter.KEYWORD_ONLY,
+            Parameter.POSITIONAL_OR_KEYWORD,
+            Parameter.VAR_KEYWORD,
+        ]:
             named = True
             if len(param_name) == 1:
                 name = Name(short=param_name_sub)
@@ -133,6 +137,10 @@ def make_args(func: Callable) -> Args:
             nary = True
             normalized_annotation = str
             container_type = list
+        elif param.kind is Parameter.VAR_KEYWORD:
+            nary = True
+            normalized_annotation = str
+            container_type = dict  # this is the only case that can be a dict
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str
@@ -146,7 +154,9 @@ def make_args(func: Callable) -> Args:
             container_type = normalized_annotation
             normalized_annotation = str
 
-        if not is_parsable(normalized_annotation):
+        if param.kind is not Parameter.VAR_KEYWORD and not is_parsable(
+            normalized_annotation
+        ):
             raise ParserConfigError(
                 f"Unsupported type: {param.annotation} "
                 f"for parameter {param_name} in {func.__name__}!"
@@ -165,7 +175,9 @@ def make_args(func: Callable) -> Args:
             is_nary=nary,
         )
         if param.kind is Parameter.VAR_POSITIONAL:
-            args.add_remaining_args(arg)
+            args.add_unknown_args(arg)
+        elif param.kind is Parameter.VAR_KEYWORD:
+            args.add_unknown_kwargs(arg)
         else:
             args.add(arg)
 
