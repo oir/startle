@@ -1,3 +1,5 @@
+from typing import Callable
+
 from _utils import check_args
 from pytest import mark, raises
 
@@ -12,26 +14,40 @@ def hi_w_kwargs(msg: str, n: int, **kwargs) -> None:
     pass
 
 
+def hi_w_args_kwargs(msg: str, n: int, *args, **kwargs) -> None:
+    pass
+
+
+@mark.parametrize("hi", [hi_w_args, hi_w_args_kwargs])
 @mark.parametrize("unks", [[], ["arg1"], ["arg1", "arg2"], ["arg1", "arg2", "arg3"]])
-def test_var_args(unks: list[str]):
+def test_var_args(hi: Callable, unks: list[str]):
     check_args(
-        hi_w_args,
+        hi,
         ["hello", "3", *unks],
         ["hello", 3, *unks],
         {},
     )
 
 
+@mark.parametrize("hi", [hi_w_kwargs, hi_w_args_kwargs])
 @mark.parametrize("unks", [{}, {"arg-a": "val1"}, {"arg-a": "val1", "arg-b": "val2"}])
-def test_var_kwargs(unks: dict[str, str]):
+def test_var_kwargs(hi: Callable, unks: dict[str, str]):
     check_args(
-        hi_w_kwargs,
+        hi,
         ["hello", "3"] + [f"--{k}={v}" for k, v in unks.items()],
+        ["hello", 3],
+        {k.replace("-", "_"): v for k, v in unks.items()},
+    )
+    check_args(
+        hi,
+        ["hello", "3"]
+        + [item for kv in unks.items() for item in (f"--{kv[0]}", kv[1])],
         ["hello", 3],
         {k.replace("-", "_"): v for k, v in unks.items()},
     )
 
 
+@mark.parametrize("hi", [hi_w_kwargs, hi_w_args_kwargs])
 @mark.parametrize(
     "cli_args",
     [
@@ -44,8 +60,8 @@ def test_var_kwargs(unks: dict[str, str]):
         ["--arg-a", "val1", "val2", "--n", "3", "hello"],
     ],
 )
-def test_var_kwargs_list(cli_args: list[str]):
-    check_args(hi_w_kwargs, cli_args, ["hello", 3], {"arg_a": ["val1", "val2"]})
+def test_var_kwargs_list(hi: Callable, cli_args: list[str]):
+    check_args(hi, cli_args, ["hello", 3], {"arg_a": ["val1", "val2"]})
 
 
 def test_var_kwargs_errors():
@@ -60,3 +76,36 @@ def test_var_kwargs_errors():
         check_args(
             hi_w_kwargs, ["hello", "--arg-a=val1", "--arg-a=val2", "3", "world"], [], {}
         )
+
+
+def test_var_args_kwargs():
+    check_args(
+        hi_w_args_kwargs,
+        ["hello", "3"],
+        ["hello", 3],
+        {},
+    )
+    check_args(
+        hi_w_args_kwargs,
+        ["hello", "3", "arg1", "arg2", "--arg-a=val1", "--arg-b=val2"],
+        ["hello", 3, "arg1", "arg2"],
+        {"arg_a": "val1", "arg_b": "val2"},
+    )
+    check_args(
+        hi_w_args_kwargs,
+        ["hello", "3", "arg1", "arg2", "--arg-a=val1", "--arg-b=val2", "arg3"],
+        ["hello", 3, "arg1", "arg2", "arg3"],
+        {"arg_a": "val1", "arg_b": "val2"},
+    )
+    check_args(
+        hi_w_args_kwargs,
+        ["hello", "3", "arg1", "arg2", "arg3", "--arg-a=val1", "--arg-b", "val2"],
+        ["hello", 3, "arg1", "arg2", "arg3"],
+        {"arg_a": "val1", "arg_b": "val2"},
+    )
+    check_args(
+        hi_w_args_kwargs,
+        ["hello", "3", "arg1", "arg2", "--arg-a=val1", "--arg-b", "val2", "arg3"],
+        ["hello", 3, "arg1", "arg2"],
+        {"arg_a": "val1", "arg_b": ["val2", "arg3"]},
+    )
