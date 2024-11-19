@@ -1,6 +1,6 @@
 from typing import Callable, TypeVar
 
-from .inspector import make_args
+from .inspect import make_args
 
 T = TypeVar("T")
 

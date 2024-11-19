@@ -1,6 +1,6 @@
 from typing import Any, Callable
 
-from startle.inspector import make_args
+from startle.inspect import make_args
 
 
 def check_args(
