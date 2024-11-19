@@ -77,7 +77,7 @@ def make_args(func: Callable) -> Args:
 
     args = Args(brief=brief)
 
-    used_short_names = {"h"}
+    used_short_names = set()
 
     for param_name, _ in sig.parameters.items():
         if param_name in ["h", "help"]:

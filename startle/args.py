@@ -112,7 +112,7 @@ class Args:
         Parse a cli arg as a named argument.
         Return new index after consuming the argument.
         """
-        if name in ["help", "h"]:
+        if name in ["help", "?"]:
             self.print_help()
             sys.exit(0)
         if "=" in name:
@@ -398,7 +398,7 @@ class Args:
         table.add_row(
             "[dim](option)[/dim]",
             Text.assemble(
-                ("-h", f"{sty_name} {sty_opt} dim"),
+                ("-?", f"{sty_name} {sty_opt} dim"),
                 ("|", f"{sty_opt} dim"),
                 ("--help", f"{sty_name} {sty_opt} dim"),
             ),
