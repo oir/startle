@@ -46,7 +46,7 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
             args_section = dedent(args_section).strip()
 
             # then, merge indented lines together
-            merged_lines = []
+            merged_lines: list[str] = []
             for line in args_section.split("\n"):
                 # if a line is indented, merge it with the previous line
                 if line.lstrip() != line:
@@ -58,12 +58,12 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
 
             # now each line should be an arg description
             for line in merged_lines:
-                args_desc = re.search(r"(\S+)(?:\s+\(.*?\))?:(.*)", line)
-                param, desc = args_desc.groups()
-                param = param.strip()
-                desc = desc.strip()
-                if param in hints:
-                    arg_helps[param] = desc
+                if args_desc := re.search(r"(\S+)(?:\s+\(.*?\))?:(.*)", line):
+                    param, desc = args_desc.groups()
+                    param = param.strip()
+                    desc = desc.strip()
+                    if param in hints:
+                        arg_helps[param] = desc
 
     return brief, arg_helps
 
@@ -111,7 +111,7 @@ def make_args(func: Callable) -> Args:
         name = Name(long=param_name_sub)
         metavar = ""
         nary = False
-        container_type = None
+        container_type: type | None = None
 
         if param.kind in [
             Parameter.POSITIONAL_ONLY,

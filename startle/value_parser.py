@@ -3,7 +3,7 @@ String-to-type conversion functions.
 """
 
 import typing
-from enum import Enum
+from enum import Enum, EnumType
 from inspect import isclass
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -42,12 +42,13 @@ def _to_path(value: str) -> Path:
     return Path(value)  # can this raise?
 
 
-def _to_enum(value: str, enum_type: type) -> Enum:
+def _to_enum(value: str, enum_type: EnumType) -> Enum:
     try:
         # first convert string to member type, then member type to enum
         # e.g. member type for IntEnum is int
-        member_type = enum_type._member_type_
-        value = value if member_type is object else member_type(value)
+        member_type: type = getattr(enum_type, "_member_type_", object)
+        if member_type is not object:
+            return enum_type(member_type(value))
         return enum_type(value)
     except ValueError as err:
         raise ParserValueError(
@@ -73,13 +74,14 @@ def _get_parser(type_: type) -> Callable[[str], Any] | None:
     type_ = _strip_optional(type_)
 
     if typing.get_origin(type_) is Literal:
-        if all(isinstance(arg, str) for arg in type_.__args__):
+        type_args = typing.get_args(type_)
+        if all(isinstance(arg, str) for arg in type_args):
 
             def parser(value: str) -> str:
-                if value in type_.__args__:
+                if value in type_args:
                     return value
                 raise ParserValueError(
-                    f"Cannot parse literal {type_.__args__} from `{value}`!"
+                    f"Cannot parse literal {type_args} from `{value}`!"
                 )
 
             return parser
