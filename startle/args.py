@@ -8,6 +8,11 @@ from .error import ParserConfigError, ParserOptionError
 
 @dataclass
 class Args:
+    """
+    A parser class to parse command-line arguments.
+    Contains positional and named arguments, as well as var args and var kwargs.
+    """
+
     brief: str = ""
 
     _positional_args: list[Arg] = field(default_factory=list)
@@ -82,7 +87,7 @@ class Args:
 
     def _parse_equals_syntax(self, name: str, args: list[str], idx: int) -> int:
         """
-        Parse a cli arg as a named argument using the equals syntax (e.g. `--name=value`).
+        Parse a cli argument as a named argument using the equals syntax (e.g. `--name=value`).
         Return new index after consuming the argument.
         This requires the argument to be not a flag.
         If the argument is n-ary, it can be repeated.
@@ -109,7 +114,7 @@ class Args:
 
     def _parse_named(self, name: str, args: list[str], idx: int) -> int:
         """
-        Parse a cli arg as a named argument.
+        Parse a cli argument as a named argument / option.
         Return new index after consuming the argument.
         """
         if name in ["help", "?"]:
@@ -163,7 +168,7 @@ class Args:
         self, args: list[str], idx: int, positional_idx: int
     ) -> tuple[int, int]:
         """
-        Parse a cli arg as a positional argument.
+        Parse a cli argument as a positional argument.
         Return new indices after consuming the argument.
         """
 
@@ -234,6 +239,8 @@ class Args:
 
     def make_func_args(self) -> tuple[list[Any], dict[str, Any]]:
         """
+        Transform parsed arguments into function arguments.
+
         Returns a tuple of positional arguments and named arguments, such that
         the function can be called like `func(*positional_args, **named_args)`.
 
@@ -271,6 +278,11 @@ class Args:
     def parse(self, args: list[str] | None = None) -> "Args":
         """
         Parse the command-line arguments.
+
+        Args:
+            args: The arguments to parse. If None, uses the arguments from the CLI.
+        Returns:
+            Self, for chaining.
         """
         if args is not None:
             self._parse(args)
@@ -283,6 +295,11 @@ class Args:
     ) -> None:
         """
         Print the help message to the console.
+
+        Args:
+            console: A rich console to print to. If None, uses the default console.
+            program_name: The name of the program to use in the help message.
+            usage_only: Whether to print only the usage line.
         """
         import sys
 

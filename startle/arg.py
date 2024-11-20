@@ -9,6 +9,11 @@ from .value_parser import parse
 
 @dataclass
 class Name:
+    """
+    Name of a command-line argument.
+    Includes either a short form (e.g., `f`) or a long form (e.g., `file`), or both.
+    """
+
     short: str = ""
     long: str = ""
 

@@ -11,6 +11,16 @@ T = TypeVar("T")
 def start(
     func: Callable[..., T], args: list[str] | None = None, caught: bool = True
 ) -> T:
+    """
+    Given a function `func`, parse its arguments from the CLI and call it.
+
+    Args:
+        func: The function to parse the arguments for and invoke.
+        args: The arguments to parse. If None, uses the arguments from the CLI.
+        caught: Whether to catch and print errors instead of raising.
+    Returns:
+        The return value of the function `func`.
+    """
     try:
         # first, make Args object from the function
         args_ = make_args(func)
@@ -23,8 +33,13 @@ def start(
             raise e
 
     try:
+        # then, parse the arguments from the CLI
         args_.parse(args)
+
+        # then turn the parsed arguments into function arguments
         f_args, f_kwargs = args_.make_func_args()
+
+        # finally, call the function with the arguments
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if caught:
