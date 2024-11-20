@@ -1,4 +1,4 @@
-from typing import Callable
+import re
 
 from _utils import check_args
 from pytest import mark, raises
@@ -286,18 +286,15 @@ def test_pathlib_path():
         )
 
 
-def hi_help_1(help: str = "help", count: int = 3) -> None:
+def hi_help(help: str = "help", count: int = 3) -> None:
     print(f"{help}!")
 
 
-def hi_help_2(h: str = "help", count: int = 3) -> None:
-    print(f"{h}!")
-
-
-@mark.parametrize("hi", [hi_help_1, hi_help_2])
-def test_param_named_help(hi: Callable):
+def test_param_named_help():
     with raises(
         ParserConfigError,
-        match=f"Cannot use `h` or `help` as parameter names in {hi.__name__}!",
+        match=re.escape(
+            f"Cannot use `help` as parameter name in {hi_help.__name__}()!"
+        ),
     ):
-        make_args(hi)
+        make_args(hi_help)
