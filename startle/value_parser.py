@@ -3,7 +3,7 @@ String-to-type conversion functions.
 """
 
 import typing
-from enum import Enum, EnumType
+from enum import Enum
 from inspect import isclass
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -42,7 +42,7 @@ def _to_path(value: str) -> Path:
     return Path(value)  # can this raise?
 
 
-def _to_enum(value: str, enum_type: EnumType) -> Enum:
+def _to_enum(value: str, enum_type: type) -> Enum:
     try:
         # first convert string to member type, then member type to enum
         # e.g. member type for IntEnum is int
