@@ -348,7 +348,7 @@ class Args:
 
         def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
             meta = (
-                arg.metavar
+                Text(arg.metavar)
                 if isinstance(arg.metavar, str)
                 else Text("|", style="dim").join(
                     [Text(m, style=f"{sty_literal_var} not dim") for m in arg.metavar]

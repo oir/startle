@@ -20,7 +20,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: |
-          pip install hatch
-          pip install .[test]
+          pip install hatch mypy .[test]
       - name: Run tests
         run: hatch run test:pytest
+      - name: Run static checks
+        run: hatch run test:mypy startle/

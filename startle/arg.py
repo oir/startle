@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from .error import ParserConfigError
 from .metavar import _get_metavar
@@ -81,8 +81,11 @@ class Arg:
         assert self._value is None or isinstance(
             self._value, self.container_type
         ), "Programming error!"
+
         if self._value is None:
             self._value = defaultdict(list)
+
+        self._value = cast(dict[str, list[str]], self._value)
         self._value[key].append(value)  # TODO: take hints for kwargs into account
 
     def parse(self, value: str | None = None):

@@ -3,7 +3,7 @@ import typing
 from typing import Optional, Union, get_args, get_origin
 
 
-def _strip_optional(type_: type) -> type:
+def _strip_optional(type_: type):
     """
     Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
     return T1 | ... | Tn.
@@ -11,11 +11,11 @@ def _strip_optional(type_: type) -> type:
     if typing.get_origin(type_) is typing.Union:
         args = typing.get_args(type_)
         if type(None) in args:
-            args = [arg for arg in args if arg is not type(None)]
+            args = tuple([arg for arg in args if arg is not type(None)])
             if len(args) == 1:
                 return args[0]
             else:
-                return typing.Union[tuple(args)]
+                return typing.Union[args]
 
     return type_
 
