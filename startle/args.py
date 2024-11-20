@@ -114,7 +114,7 @@ class Args:
         """
         if name in ["help", "?"]:
             self.print_help()
-            sys.exit(0)
+            raise SystemExit(0)
         if "=" in name:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
@@ -278,7 +278,9 @@ class Args:
             self._parse(sys.argv[1:])
         return self
 
-    def print_help(self, console=None, program_name: str | None = None) -> None:
+    def print_help(
+        self, console=None, program_name: str | None = None, usage_only: bool = False
+    ) -> None:
         """
         Print the help message to the console.
         """
@@ -371,7 +373,7 @@ class Args:
             return helptext
 
         console = console or Console()
-        if self.brief:
+        if self.brief and not usage_only:
             console.print(self.brief + "\n")
         console.print(Text("Usage:", style=sty_title))
         console.print(
@@ -382,6 +384,9 @@ class Args:
                 [usage(opt, "usage line") for opt in positional_and_named + named_only]
             )
         )
+
+        if usage_only:
+            return
 
         if positional_only + positional_and_named + named_only:
             console.print(Text("\nwhere", style=sty_title))

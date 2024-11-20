@@ -80,9 +80,10 @@ def make_args(func: Callable) -> Args:
     used_short_names = set()
 
     for param_name, _ in sig.parameters.items():
-        if param_name in ["h", "help"]:
+        if param_name == "help":
             raise ParserConfigError(
-                f"Cannot use `h` or `help` as parameter names in {func.__name__}!"
+                f"Cannot use `help` as parameter name in [b blue]{func.__name__}()[/] "
+                "since it is reserved for [b green]--help[/] flag!"
             )
 
     # Discover if there are any named options that are of length 1
