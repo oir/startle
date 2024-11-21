@@ -7,6 +7,8 @@
 > **startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
 
 **startle** lets you transform a python function into a command line entry point:
+
+`hello.py`:
 ```python
 from pathlib import Path
 from typing import Literal
