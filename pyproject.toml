@@ -25,9 +25,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 
-dependencies = [
-  "rich",
-]
+dependencies = [ "rich" ]
 
 [project.urls]
 "Homepage" = "https://github.com/oir/startle"
@@ -43,7 +41,10 @@ local_scheme = "no-local-version"
 version-file = "startle/_version.py"
 
 [tool.hatch.envs.test]
-dependencies = [ "pytest" ]
+dependencies = [ "pytest", "pytest-cov" ]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=startle --cov-report=term-missing --cov-report=lcov"
