@@ -25,3 +25,9 @@ jobs:
         run: hatch run test:pytest
       - name: Run static checks
         run: hatch run test:mypy startle/
+      - name: Coverage
+        if: matrix.python-version == '3.12'
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          format: python
