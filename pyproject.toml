@@ -47,4 +47,4 @@ dependencies = [ "pytest", "pytest-cov" ]
 select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=startle --cov-report=term-missing --cov-report=html"
+addopts = "--cov=startle --cov-report=term-missing --cov-report=lcov"
