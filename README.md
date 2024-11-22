@@ -6,9 +6,9 @@
 > [!WARNING]  
 > **startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
 
-**startle** lets you transform a python function into a command line entry point:
+**startle** lets you transform a python function into a command line entry point, e.g:
 
-`hello.py`:
+`wc.py`:
 ```python
 from pathlib import Path
 from typing import Literal
@@ -37,7 +37,7 @@ def word_count(
 start(word_count)
 ```
 
-`python hello.py --help`:
+`python wc.py --help`:
 
 <picture>
 <source media="(prefers-color-scheme: dark)" srcset="docs/img/help-dark.svg" width="100%">
