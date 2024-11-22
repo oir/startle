@@ -37,10 +37,21 @@ def word_count(
 start(word_count)
 ```
 
-`python wc.py --help`:
+`❯ python wc.py --help`:
 
 <picture>
-<source media="(prefers-color-scheme: dark)" srcset="docs/img/help-dark.svg" width="100%">
-<source media="(prefers-color-scheme: light)" srcset="docs/img/help-light.svg" width="100%">
-<img src="docs/img/help-light.svg" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/help-dark.svg" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="docs/img/help-light.svg" width="100%">
+  <img src="docs/img/help-light.svg" width="100%">
+</picture>
+
+When you invoke `start`, it will construct an argparser (based on type hints and docstring),
+parse the arguments, and invoke `word_count`.
+
+`❯ python wc.py wc.py -k char --verbose`:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/out-dark.svg" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="docs/img/out-light.svg" width="100%">
+  <img src="docs/img/out-light.svg" width="100%">
 </picture>
