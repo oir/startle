@@ -30,7 +30,7 @@
         .fa3 { fill: #a89c14; }
         .fa4 { fill: #008ec4; }
     </style>
-    <rect width="100%" height="100%" x="0" y="0" style="fill: #000000; opacity: 0.5"/>
+    <rect width="100%" height="100%" x="0" y="0" style="fill: #000000; opacity: 0.1"/>
 <text x="1ch" y="1.5em"><tspan>Count the number of words or characters in a file.</tspan></text>
 <text x="1ch" y="3.5em"><tspan class="bold dim underline">Usage:</tspan></text>
 <text x="1ch" y="4.5em"><tspan>  hello.py </tspan><tspan class="fa4">&lt;</tspan><tspan class="bold fa4">fname:</tspan><tspan class="fa4">path&gt; </tspan><tspan>[</tspan><tspan class="bold fa2">--kind </tspan><tspan class="fa4">word</tspan><tspan class="dim fa4">|</tspan><tspan class="fa4">char</tspan><tspan>] [</tspan><tspan class="bold fa2">--verbose</tspan><tspan>]</tspan></text>
