@@ -40,7 +40,7 @@ start(word_count)
 `python hello.py --help`:
 
 <picture>
-<source media="(prefers-color-scheme: dark)" srcset="docs/img/help-dark.svg" width="700">
-<source media="(prefers-color-scheme: light)" srcset="docs/img/help-light.svg" width="700">
-<img src="docs/img/help-light.svg" width="700">
+<source media="(prefers-color-scheme: dark)" srcset="docs/img/help-dark.svg" width="100%">
+<source media="(prefers-color-scheme: light)" srcset="docs/img/help-light.svg" width="100%">
+<img src="docs/img/help-light.svg" width="100%">
 </picture>
