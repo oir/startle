@@ -55,3 +55,17 @@ parse the arguments, and invoke `word_count`.
   <source media="(prefers-color-scheme: light)" srcset="docs/img/out-light.svg" width="100%">
   <img src="docs/img/out-light.svg" width="100%">
 </picture>
+
+---
+<br>
+
+**startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire), but some decisions are done differently:
+
+- Use of positional-only or keyword-only argument separators (`/`, `*`, see PEP 570, 3102) are naturally translated into positional arguments or options.
+- Like Typer and unlike Fire, type hints strictly determine how the individual arguments are parsed and typed.
+- Short forms (e.g. `-k`, `-v` above) are automatically provided based on the initial of the argument.
+- Variable length arguments are more intuitively handled.
+  You can use `--things a b c` (in addition to `--things=a --things=b --things=c`).
+- Like Typer and unlike Fire, help is simply printed and not displayed in pager mode by default, so you can keep referring to it as you type your command.
+- Like Fire and unlike Typer, docstrings determine the description of each argument in the help text, instead of individually adding extra type annotations. This allows for a very non-intrusive design, you can adopt (or un-adopt) **startle** with no changes to your function.
+- `*args` but also `**kwargs` are supported, to parse unknown arguments as well as unknown options (`--unknown-key unknown-value`).
