@@ -20,5 +20,9 @@ venv/
 # PyCharm
 .idea/
 
+# Coverage
+.coverage
+coverage.lcov
+
 # hatchling autogenerates version
 /startle/_version.py
