@@ -67,6 +67,11 @@ def test_args_with_defaults(hi, count_t):
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
         check_args(hi, ["--count", "3", "john", "--count", "4"], [], {})
 
+    with raises(ParserOptionError, match="Prefix `--` is not followed by an option!"):
+        check_args(hi, ["john", "-c", "3", "--"], [], {})
+    with raises(ParserOptionError, match="Prefix `-` is not followed by an option!"):
+        check_args(hi, ["john", "-"], [], {})
+
 
 @mark.parametrize("opt", ["-c", "--count"])
 def test_args_without_defaults(opt):

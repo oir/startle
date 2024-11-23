@@ -34,12 +34,12 @@ class Args:
         if value.startswith("--"):
             name = value[2:]
             if not name:
-                raise ValueError("Prefix `--` not followed by an option!")
+                raise ParserOptionError("Prefix `--` is not followed by an option!")
             return name
         if value.startswith("-"):
             name = value[1:]
             if not name:
-                raise ValueError("Prefix `-` not followed by an option!")
+                raise ParserOptionError("Prefix `-` is not followed by an option!")
             # ensure(
             #    len(name) == 1,
             #    "Options prefixed by `-` have to be short names! "
@@ -99,7 +99,6 @@ class Args:
                 return idx + 1
             if self._var_args:
                 self._var_args.parse(args[idx])
-                self._var_args.parse(value)
                 return idx + 1
             raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]

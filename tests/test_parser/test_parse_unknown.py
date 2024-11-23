@@ -29,6 +29,16 @@ def test_var_args(hi: Callable, unks: list[str]):
     )
 
 
+@mark.parametrize("unks", [["arg1", "--arg2"], ["arg1", "arg2", "--arg3=val"]])
+def test_var_args_2(unks: list[str]):
+    check_args(
+        hi_w_args,
+        ["hello", "3", *unks],
+        ["hello", 3, *unks],
+        {},
+    )
+
+
 @mark.parametrize("hi", [hi_w_kwargs, hi_w_args_kwargs])
 @mark.parametrize("unks", [{}, {"arg-a": "val1"}, {"arg-a": "val1", "arg-b": "val2"}])
 def test_var_kwargs(hi: Callable, unks: dict[str, str]):
