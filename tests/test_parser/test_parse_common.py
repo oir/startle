@@ -1,10 +1,11 @@
 import re
 
-from _utils import check_args
 from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 from startle.inspect import make_args
+
+from ._utils import check_args
 
 
 def hi_int(name: str = "john", /, *, count: int = 1) -> None:

@@ -1,9 +1,10 @@
 from typing import Callable
 
-from _utils import check_args
 from pytest import mark, raises
 
 from startle.error import ParserOptionError
+
+from ._utils import check_args
 
 
 def hi_w_args(msg: str, n: int, *args) -> None:

@@ -1,7 +1,8 @@
 from typing import Callable, Optional, Union
 
-from _utils import Opt, Opts, check_args
 from pytest import mark
+
+from ._utils import Opt, Opts, check_args
 
 
 def hi1(msg: str | None = None) -> None:

@@ -24,5 +24,8 @@ venv/
 .coverage
 coverage.lcov
 
+# Mypy
+.mypy_cache/
+
 # hatchling autogenerates version
 /startle/_version.py

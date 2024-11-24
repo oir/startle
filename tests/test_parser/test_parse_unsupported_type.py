@@ -1,10 +1,11 @@
 import re
 from typing import Callable
 
-from _utils import check_args
 from pytest import mark, raises
 
 from startle.error import ParserConfigError
+
+from ._utils import check_args
 
 
 class Spell:
