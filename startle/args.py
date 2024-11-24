@@ -14,10 +14,12 @@ class Args:
     """
 
     brief: str = ""
+    program_name: str = ""
 
     _positional_args: list[Arg] = field(default_factory=list)
     _named_args: list[Arg] = field(default_factory=list)
     _name2idx: dict[str, int] = field(default_factory=dict)
+    # note that _name2idx is many to one, because a name can be both short and long
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
     _var_kwargs: Arg | None = None  # remaining unk kwargs for functions with **kwargs
@@ -274,30 +276,27 @@ class Args:
 
         return positional_args, named_args
 
-    def parse(self, args: list[str] | None = None) -> "Args":
+    def parse(self, cli_args: list[str] | None = None) -> "Args":
         """
         Parse the command-line arguments.
 
         Args:
-            args: The arguments to parse. If None, uses the arguments from the CLI.
+            cli_args: The arguments to parse. If None, uses the arguments from the CLI.
         Returns:
             Self, for chaining.
         """
-        if args is not None:
-            self._parse(args)
+        if cli_args is not None:
+            self._parse(cli_args)
         else:
             self._parse(sys.argv[1:])
         return self
 
-    def print_help(
-        self, console=None, program_name: str | None = None, usage_only: bool = False
-    ) -> None:
+    def print_help(self, console=None, usage_only: bool = False) -> None:
         """
         Print the help message to the console.
 
         Args:
             console: A rich console to print to. If None, uses the default console.
-            program_name: The name of the program to use in the help message.
             usage_only: Whether to print only the usage line.
         """
         import sys
@@ -306,7 +305,7 @@ class Args:
         from rich.table import Table
         from rich.text import Text
 
-        name = program_name or sys.argv[0]
+        name = self.program_name or sys.argv[0]
 
         positional_only = [
             arg
@@ -392,14 +391,19 @@ class Args:
         if self.brief and not usage_only:
             console.print(self.brief + "\n")
         console.print(Text("Usage:", style=sty_title))
-        console.print(
-            Text(f"  {name} ")
-            + Text(" ").join([usage(arg, "usage line") for arg in positional_only])
-            + Text(" ")
-            + Text(" ").join(
-                [usage(opt, "usage line") for opt in positional_and_named + named_only]
-            )
+
+        usage_line = Text(f"  {name}")
+        pos_only_str = Text(" ").join(
+            [usage(arg, "usage line") for arg in positional_only]
         )
+        if pos_only_str:
+            usage_line += Text(" ") + pos_only_str
+        named_str = Text(" ").join(
+            [usage(opt, "usage line") for opt in positional_and_named + named_only]
+        )
+        if named_str:
+            usage_line += Text(" ") + named_str
+        console.print(usage_line)
 
         if usage_only:
             return
@@ -427,11 +431,3 @@ class Args:
         )
 
         console.print(table)
-
-    def __repr__(self) -> str:
-        rval = "<Args object>\n"
-        for arg in self._positional_args:
-            rval += f"  <positional> {arg.metavar}: {arg._value}\n"
-        for arg in self._named_args:
-            rval += f"  <named> {arg.name.long}: {arg._value}\n"
-        return rval

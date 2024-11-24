@@ -68,14 +68,14 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     return brief, arg_helps
 
 
-def make_args(func: Callable) -> Args:
+def make_args(func: Callable, program_name: str = "") -> Args:
     # Get the signature of the function
     sig = inspect.signature(func)
 
     # Attempt to parse brief and arg descriptions from docstring
     brief, arg_helps = _parse_docstring(func)
 
-    args = Args(brief=brief)
+    args = Args(brief=brief, program_name=program_name)
 
     used_short_names = set()
 

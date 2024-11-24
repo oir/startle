@@ -13,7 +13,7 @@ ts = "bold underline dim"
 def check_help(f: Callable, program_name: str, expected: str):
     console = Console(width=120, highlight=False)
     with console.capture() as capture:
-        make_args(f).print_help(console, program_name)
+        make_args(f, program_name).print_help(console)
     result = capture.get()
 
     console = Console(width=120, highlight=False)
