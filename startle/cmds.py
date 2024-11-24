@@ -21,7 +21,7 @@ class Cmds:
         cli_args = cli_args or sys.argv[1:]
 
         if not cli_args:
-            # TODO: improve
+            print("Error: No command given!")
             self.print_help()
             raise SystemExit(1)
 
@@ -31,7 +31,7 @@ class Cmds:
             raise SystemExit(0)
 
         if cmd not in self.cmd_parsers:
-            print(f"Unknown command: {cmd}")
+            print(f"Error: Unknown command {cmd}!")
             self.print_help()
             raise SystemExit(1)
 

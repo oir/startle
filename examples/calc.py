@@ -1,4 +1,4 @@
-from startle import start2
+from startle import start
 
 
 def add(a: int, b: int) -> None:
@@ -46,4 +46,4 @@ def div(a: int, b: int) -> None:
 
 
 if __name__ == "__main__":
-    start2([add, sub, mul, div])
+    start([add, sub, mul, div])

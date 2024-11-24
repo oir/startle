@@ -387,11 +387,13 @@ class Args:
                 )
             return helptext
 
+        # print brief if it exists
         console = console or Console()
         if self.brief and not usage_only:
             console.print(self.brief + "\n")
-        console.print(Text("Usage:", style=sty_title))
 
+        # then print usage line
+        console.print(Text("Usage:", style=sty_title))
         usage_line = Text(f"  {name}")
         pos_only_str = Text(" ").join(
             [usage(arg, "usage line") for arg in positional_only]
@@ -408,6 +410,7 @@ class Args:
         if usage_only:
             return
 
+        # then print help message for each argument
         if positional_only + positional_and_named + named_only:
             console.print(Text("\nwhere", style=sty_title))
 

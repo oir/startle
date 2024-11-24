@@ -10,8 +10,14 @@ from .inspect import make_args
 
 T = TypeVar("T")
 
+def start(obj: Callable | list[Callable], args: list[str] | None = None, caught: bool = True):
+    if isinstance(obj, list):
+        return _start_cmds(obj, args, caught)
+    else:
+        return _start_func(obj, args, caught)
 
-def start(
+
+def _start_func(
     func: Callable[..., T], args: list[str] | None = None, caught: bool = True
 ) -> T:
     """
@@ -57,7 +63,7 @@ def start(
             raise e
 
 
-def start2(
+def _start_cmds(
     funcs: list[Callable], cli_args: list[str] | None = None, caught: bool = True
 ):
     """ """
@@ -85,8 +91,8 @@ def start2(
 
     try:
         # then, parse the arguments from the CLI
-        cmd: str
-        args: Args
+        cmd: str | None = None
+        args: Args | None = None
         cmd, args = cmds.parse(cli_args)
 
         # then turn the parsed arguments into function arguments
@@ -96,5 +102,16 @@ def start2(
         func = cmd2func[cmd]
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
-        # TODO
-        raise e
+        if caught:
+            console = Console()
+            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
+            if args: # error happened after parsing the command
+                args.print_help(console, usage_only=True)
+            else:  # error happened before parsing the command
+                cmds.print_help(console, usage_only=True)
+            console.print(
+                "\n[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]"
+            )
+            raise SystemExit(1)
+        else:
+            raise e

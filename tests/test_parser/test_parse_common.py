@@ -1,6 +1,6 @@
 import re
 
-from _utils import check_args
+from ._utils import check_args
 from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError

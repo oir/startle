@@ -1,6 +1,6 @@
 from typing import Callable, Optional, Union
 
-from _utils import Opt, Opts, check_args
+from ._utils import Opt, Opts, check_args
 from pytest import mark
 
 

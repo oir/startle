@@ -1,7 +1,7 @@
 import re
 from typing import Callable, Literal
 
-from _utils import Opt, Opts, check_args
+from ._utils import Opt, Opts, check_args
 from pytest import mark, raises
 
 from startle.error import ParserValueError

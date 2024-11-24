@@ -1,36 +1,8 @@
-import sys
 from typing import Callable
 
-from pytest import mark, raises
+from pytest import mark
 
-from startle import start
-
-
-def run1(func: Callable[..., None], args: list[str]) -> None:
-    start(func, args)
-
-
-def run2(func: Callable[..., None], args: list[str]) -> None:
-    old_argv = sys.argv[1:]
-    sys.argv[1:] = args
-    start(func)
-    sys.argv[1:] = old_argv
-
-
-def check(capsys, run: Callable, f: Callable, args: list[str], expected: str) -> None:
-    run(f, args)
-    captured = capsys.readouterr()
-    assert captured.out == expected
-
-
-def check_exits(
-    capsys, run: Callable, f: Callable, args: list[str], expected: str
-) -> None:
-    with raises(SystemExit) as excinfo:
-        run(f, args)
-    assert str(excinfo.value) == "1"
-    captured = capsys.readouterr()
-    assert captured.out.startswith(expected)
+from ._utils import check, check_exits, run_w_explicit_args, run_w_sys_argv
 
 
 def hi1(name: str, count: int = 1) -> None:
@@ -64,7 +36,7 @@ def hi6(*, name: str, count: int = 1) -> None:
 
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4, hi5, hi6])
-@mark.parametrize("run", [run1, run2])
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
 def test_hi(capsys, run: Callable, hi: Callable) -> None:
     if hi in [hi1, hi2, hi3, hi4]:
         check(capsys, run, hi, ["Alice"], "Hello, Alice!\n")
@@ -116,7 +88,7 @@ def test_hi(capsys, run: Callable, hi: Callable) -> None:
 
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4, hi5, hi6])
-@mark.parametrize("run", [run1, run2])
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
 def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
     if hi in [hi1, hi5, hi6]:
         check_exits(
@@ -146,7 +118,7 @@ def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
         )
 
 
-@mark.parametrize("run", [run1, run2])
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
 def test_config_err(capsys, run: Callable) -> None:
     def f(help: bool = False) -> None:
         pass

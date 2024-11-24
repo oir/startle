@@ -2,7 +2,7 @@ import sys
 from enum import Enum, IntEnum
 from typing import Callable
 
-from _utils import Opt, Opts, check_args
+from ._utils import Opt, Opts, check_args
 from pytest import mark, raises
 
 from startle.error import ParserOptionError, ParserValueError
