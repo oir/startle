@@ -71,19 +71,22 @@ def _start_cmds(
 ):
     """ """
 
-    def cmd_name(func: Callable[..., T]) -> str:
+    def cmd_name(func: Callable) -> str:
         return func.__name__.replace("_", "-")
+
+    def prog_name(func: Callable) -> str:
+        return f"{sys.argv[0]} {cmd_name(func)}"
 
     cmd2func: dict[str, Callable] = {cmd_name(func): func for func in funcs}
 
     try:
         # first, make Cmds object from the functions
-        args = {}
-        for func in funcs:
-            cmd = cmd_name(func)
-            arg = make_args(func, program_name=f"{sys.argv[0]} {cmd}")
-            args[cmd] = arg
-        cmds = Cmds(args)
+        cmds = Cmds(
+            {
+                cmd_name(func): make_args(func, program_name=prog_name(func))
+                for func in funcs
+            }
+        )
     except ParserConfigError as e:
         if caught:
             console = Console()
@@ -94,7 +97,6 @@ def _start_cmds(
 
     try:
         # then, parse the arguments from the CLI
-        cmd: str | None = None
         args: Args | None = None
         cmd, args = cmds.parse(cli_args)
 
