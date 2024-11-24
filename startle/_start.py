@@ -10,7 +10,10 @@ from .inspect import make_args
 
 T = TypeVar("T")
 
-def start(obj: Callable | list[Callable], args: list[str] | None = None, caught: bool = True):
+
+def start(
+    obj: Callable | list[Callable], args: list[str] | None = None, caught: bool = True
+):
     if isinstance(obj, list):
         return _start_cmds(obj, args, caught)
     else:
@@ -105,7 +108,7 @@ def _start_cmds(
         if caught:
             console = Console()
             console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
-            if args: # error happened after parsing the command
+            if args:  # error happened after parsing the command
                 args.print_help(console, usage_only=True)
             else:  # error happened before parsing the command
                 cmds.print_help(console, usage_only=True)

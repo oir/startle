@@ -1,9 +1,10 @@
 from typing import Callable, Set
 
-from ._utils import check_args
 from pytest import mark, raises
 
 from startle.error import ParserOptionError, ParserValueError
+
+from ._utils import check_args
 
 
 def add_int(*, numbers: set[int]) -> None:

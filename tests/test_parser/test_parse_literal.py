@@ -1,10 +1,11 @@
 import re
 from typing import Callable, Literal
 
-from ._utils import Opt, Opts, check_args
 from pytest import mark, raises
 
 from startle.error import ParserValueError
+
+from ._utils import Opt, Opts, check_args
 
 
 def check(draw: Callable, opt: Opt):
