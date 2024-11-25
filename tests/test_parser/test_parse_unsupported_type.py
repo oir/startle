@@ -32,17 +32,17 @@ def read_too_many_spellbooks(spellbook: list[list[str]]):
 @mark.parametrize(
     "cast,name,type_",
     [
-        (cast_one, "spell", Spell),
-        (cast_maybe, "spell", Spell | None),
-        (cast_many, "spells", list[Spell]),
-        (read_too_many_spellbooks, "spellbook", list[list[str]]),
+        (cast_one, "spell", "Spell"),
+        (cast_maybe, "spell", "Spell | None"),
+        (cast_many, "spells", "list[Spell]"),
+        (read_too_many_spellbooks, "spellbook", "list[list[str]]"),
     ],
 )
-def test_unsupported_type(cast: Callable, name: str, type_: type):
+def test_unsupported_type(cast: Callable, name: str, type_: str):
     with raises(
         ParserConfigError,
         match=re.escape(
-            f"Unsupported type: {type_} for parameter {name} in {cast.__name__}!"
+            f"Unsupported type `{type_}` for parameter `{name}` in `{cast.__name__}()`!"
         ),
     ):
         check_args(cast, [], [], {})

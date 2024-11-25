@@ -4,7 +4,7 @@ from inspect import Parameter
 from textwrap import dedent
 from typing import Callable, get_args, get_origin, get_type_hints
 
-from ._type_utils import _normalize_type
+from ._type_utils import _normalize_type, _shorten_type_annotation
 from .args import Arg, Args, Name
 from .error import ParserConfigError
 from .value_parser import is_parsable
@@ -158,8 +158,8 @@ def make_args(func: Callable, program_name: str = "") -> Args:
             normalized_annotation
         ):
             raise ParserConfigError(
-                f"Unsupported type: {param.annotation} "
-                f"for parameter {param_name} in {func.__name__}!"
+                f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
+                f"for parameter `{param_name}` in `{func.__name__}()`!"
             )
 
         arg = Arg(
