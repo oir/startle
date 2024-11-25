@@ -50,7 +50,7 @@ def _shorten_type_annotation(annotation: Any) -> str:
     if origin is Union or origin is types.UnionType:
         args = get_args(annotation)
         if type(None) in args:
-            args = [arg for arg in args if arg is not type(None)]
+            args = tuple([arg for arg in args if arg is not type(None)])
             if len(args) == 1:
                 return f"{_shorten_type_annotation(args[0])} | None"
             return " | ".join(_shorten_type_annotation(arg) for arg in args) + " | None"
