@@ -9,5 +9,6 @@ you can inspect with `python <example> --help`.
 | -- | -- |
 | `wc.py` | "Word count." Most basic example showing the library use. |
 | `cat.py` | Shows an example with a list argument (similar to `nargs` from `argparse`). |
+| `color.py` | Using enums or Literals to represent "choices". |
 | `calc.py` | How to use multiple (free) functions as commands, instead of invoking a single function. |
 | `rational.py` | How to register a perser for a custom user type to make it parsable. |
