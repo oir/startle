@@ -1,6 +1,7 @@
 import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal
+from enum import Enum
 
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
@@ -375,6 +376,20 @@ class Args:
                 text = Text.assemble("[", text, "]")
             return text
 
+        def default_value(val: Any) -> str:
+            if isinstance(val, str) and isinstance(val, Enum):
+                return val.value
+            try:
+                from enum import StrEnum
+                if isinstance(val, StrEnum):
+                    return val.value
+            except ImportError:
+                # low python version, no StrEnum support
+                pass
+            if isinstance(val, Enum):
+                return val.name.lower().replace("_", "-")
+            return str(val)
+
         def help(arg: Arg) -> Text:
             helptext = Text(arg.help, style="italic")
             if arg.is_flag:
@@ -383,7 +398,7 @@ class Args:
                 helptext = Text.assemble(helptext, " ", ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
-                    helptext, " ", (f"(default: {arg.default})", sty_opt)
+                    helptext, " ", (f"(default: {default_value(arg.default)})", sty_opt)
                 )
             return helptext
 

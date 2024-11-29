@@ -44,12 +44,17 @@ def _to_path(value: str) -> Path:
 
 def _to_enum(value: str, enum_type: type) -> Enum:
     try:
-        # first convert string to member type, then member type to enum
-        # e.g. member type for IntEnum is int
+        # for StringEnum and (str, Enum) types, use enum value
+        # otherwise use the name of the member
         member_type: type = getattr(enum_type, "_member_type_", object)
-        if member_type is not object:
-            return enum_type(member_type(value))
-        return enum_type(value)
+        if member_type is str or (member_type is object and issubclass(enum_type, str)):
+            return enum_type(value)
+        try:
+            return enum_type[value.upper().replace("-", "_")]
+        except KeyError:
+            raise ParserValueError(
+                f"Cannot parse enum {enum_type.__name__} from `{value}`!"
+            )
     except ValueError as err:
         raise ParserValueError(
             f"Cannot parse enum {enum_type.__name__} from `{value}`!"

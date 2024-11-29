@@ -24,11 +24,19 @@ def _get_metavar(type_: type) -> str | list[str]:
     if get_origin(type_) is Literal:
         if all(isinstance(value, str) for value in get_args(type_)):
             return list(get_args(type_))
+    
+    try:
+        from enum import StrEnum
+        if isclass(type_) and issubclass(type_, StrEnum):
+            return [member.value for member in type_]
+    except ImportError:
+        # low python version, no StrEnum support
+        pass
 
-    if isclass(type_) and issubclass(type_, IntEnum):
-        return [str(member.value) for member in type_]
+    if isclass(type_) and issubclass(type_, Enum) and issubclass(type_, str):
+        return [member.value for member in type_]
 
     if isclass(type_) and issubclass(type_, Enum):
-        return [member.value for member in type_]
+        return [member.name.lower().replace("_", "-") for member in type_]
 
     return _METAVARS.get(type_, "val")
