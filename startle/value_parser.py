@@ -6,7 +6,7 @@ import typing
 from enum import Enum
 from inspect import isclass
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, cast
 
 from ._type_utils import _strip_optional
 from .error import ParserValueError
@@ -50,7 +50,8 @@ def _to_enum(value: str, enum_type: type) -> Enum:
         if member_type is str or (member_type is object and issubclass(enum_type, str)):
             return enum_type(value)
         try:
-            return enum_type[value.upper().replace("-", "_")]
+            enum_type_ = cast(type[Enum], enum_type)
+            return enum_type_[value.upper().replace("-", "_")]
         except KeyError:
             raise ParserValueError(
                 f"Cannot parse enum {enum_type.__name__} from `{value}`!"
