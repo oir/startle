@@ -16,19 +16,27 @@ from rich.console import Console
 from startle import start
 
 
-class Color(Enum):
-    RED = "red"
-    GREEN = "green"
-    BLUE = "blue"
+class Color(str, Enum):
+    RED_LIKE = "red"
+    GREEN_LIKE = "green"
+    BLUE_LIKE = "blue"
+
+
+class Verbosity(Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
 
 
 def hi(
     name: str,
-    color: Color = Color.RED,
+    color: Color = Color.RED_LIKE,
     style: Literal["bold", "dim", "italic"] = "bold",
+    verbosity: Verbosity = Verbosity.LOW,
 ) -> None:
     console = Console()
-    console.print(f"[{color.value} {style}]{name}[/]")
+    for _ in range(verbosity.value):
+        console.print(f"[{color.value} {style}]{name}[/]")
 
 
 start(hi)

@@ -1,4 +1,5 @@
-from enum import Enum, IntEnum
+import sys
+from enum import Enum
 from inspect import isclass
 from pathlib import Path
 from typing import Literal, get_args, get_origin
@@ -25,10 +26,16 @@ def _get_metavar(type_: type) -> str | list[str]:
         if all(isinstance(value, str) for value in get_args(type_)):
             return list(get_args(type_))
 
-    if isclass(type_) and issubclass(type_, IntEnum):
-        return [str(member.value) for member in type_]
+    if sys.version_info >= (3, 11):
+        from enum import StrEnum
+
+        if isclass(type_) and issubclass(type_, StrEnum):
+            return [member.value for member in type_]
+
+    if isclass(type_) and issubclass(type_, Enum) and issubclass(type_, str):
+        return [member.value for member in type_]
 
     if isclass(type_) and issubclass(type_, Enum):
-        return [member.value for member in type_]
+        return [member.name.lower().replace("_", "-") for member in type_]
 
     return _METAVARS.get(type_, "val")

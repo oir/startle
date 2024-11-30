@@ -85,18 +85,20 @@ def test_strenum(opt: Opt):
 @mark.parametrize("opt", Opts())
 def test_intenum(opt: Opt):
     class Number(IntEnum):
-        ONE = 1
-        TWO = 2
-        FOUR = 4
+        ONE_LIKE = 1
+        TWO_LIKE = 2
+        FOUR_LIKE = 4
 
     def count(number: Number):
         print(f"Counting {number}.")
 
-    check_args(count, opt("number", ["1"]), [Number.ONE], {})
-    check_args(count, opt("number", ["2"]), [Number.TWO], {})
-    check_args(count, opt("number", ["4"]), [Number.FOUR], {})
-    with raises(ParserValueError, match="Cannot parse enum Number from `3`!"):
-        check_args(count, opt("number", ["3"]), [], {})
+    check_args(count, opt("number", ["one-like"]), [Number.ONE_LIKE], {})
+    check_args(count, opt("number", ["two-like"]), [Number.TWO_LIKE], {})
+    check_args(count, opt("number", ["four-like"]), [Number.FOUR_LIKE], {})
+    with raises(ParserValueError, match="Cannot parse enum Number from `three-like`!"):
+        check_args(count, opt("number", ["three-like"]), [], {})
+    with raises(ParserValueError, match="Cannot parse enum Number from `1`!"):
+        check_args(count, opt("number", ["1"]), [], {})
 
 
 @mark.parametrize("opt", Opts())

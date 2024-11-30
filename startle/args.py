@@ -1,5 +1,6 @@
 import sys
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Literal
 
 from .arg import Arg, Name
@@ -375,6 +376,18 @@ class Args:
                 text = Text.assemble("[", text, "]")
             return text
 
+        def default_value(val: Any) -> str:
+            if isinstance(val, str) and isinstance(val, Enum):
+                return val.value
+            if sys.version_info >= (3, 11):
+                from enum import StrEnum
+
+                if isinstance(val, StrEnum):
+                    return val.value
+            if isinstance(val, Enum):
+                return val.name.lower().replace("_", "-")
+            return str(val)
+
         def help(arg: Arg) -> Text:
             helptext = Text(arg.help, style="italic")
             if arg.is_flag:
@@ -383,7 +396,7 @@ class Args:
                 helptext = Text.assemble(helptext, " ", ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
-                    helptext, " ", (f"(default: {arg.default})", sty_opt)
+                    helptext, " ", (f"(default: {default_value(arg.default)})", sty_opt)
                 )
             return helptext
 
