@@ -1,3 +1,4 @@
+import sys
 from enum import Enum
 from inspect import isclass
 from pathlib import Path
@@ -25,14 +26,11 @@ def _get_metavar(type_: type) -> str | list[str]:
         if all(isinstance(value, str) for value in get_args(type_)):
             return list(get_args(type_))
 
-    try:
+    if sys.version_info >= (3, 11):
         from enum import StrEnum
 
         if isclass(type_) and issubclass(type_, StrEnum):
             return [member.value for member in type_]
-    except ImportError:
-        # low python version, no StrEnum support
-        pass
 
     if isclass(type_) and issubclass(type_, Enum) and issubclass(type_, str):
         return [member.value for member in type_]

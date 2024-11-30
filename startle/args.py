@@ -379,14 +379,11 @@ class Args:
         def default_value(val: Any) -> str:
             if isinstance(val, str) and isinstance(val, Enum):
                 return val.value
-            try:
+            if sys.version_info >= (3, 11):
                 from enum import StrEnum
 
                 if isinstance(val, StrEnum):
                     return val.value
-            except ImportError:
-                # low python version, no StrEnum support
-                pass
             if isinstance(val, Enum):
                 return val.name.lower().replace("_", "-")
             return str(val)
