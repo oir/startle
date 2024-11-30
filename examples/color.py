@@ -21,6 +21,7 @@ class Color(str, Enum):
     GREEN_LIKE = "green"
     BLUE_LIKE = "blue"
 
+
 class Verbosity(Enum):
     LOW = 1
     MEDIUM = 2

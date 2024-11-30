@@ -1,7 +1,7 @@
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Literal
 from enum import Enum
+from typing import Any, Literal
 
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
@@ -381,6 +381,7 @@ class Args:
                 return val.value
             try:
                 from enum import StrEnum
+
                 if isinstance(val, StrEnum):
                     return val.value
             except ImportError:

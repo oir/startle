@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import Enum
 from inspect import isclass
 from pathlib import Path
 from typing import Literal, get_args, get_origin
@@ -24,9 +24,10 @@ def _get_metavar(type_: type) -> str | list[str]:
     if get_origin(type_) is Literal:
         if all(isinstance(value, str) for value in get_args(type_)):
             return list(get_args(type_))
-    
+
     try:
         from enum import StrEnum
+
         if isclass(type_) and issubclass(type_, StrEnum):
             return [member.value for member in type_]
     except ImportError:
