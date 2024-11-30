@@ -402,6 +402,7 @@ class Args:
 
         # print brief if it exists
         console = console or Console()
+        console.print()
         if self.brief and not usage_only:
             console.print(self.brief + "\n")
 
@@ -421,6 +422,7 @@ class Args:
         console.print(usage_line)
 
         if usage_only:
+            console.print()
             return
 
         # then print help message for each argument
@@ -447,3 +449,4 @@ class Args:
         )
 
         console.print(table)
+        console.print()
