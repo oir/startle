@@ -5,6 +5,8 @@ from pytest import mark
 
 from ._utils import NS, OS, TS, VS, check_help
 
+# TODO: test how default enum values are displayed in help
+
 expected_w_names = f"""\
 
 Draw a shape.

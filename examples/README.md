@@ -12,3 +12,4 @@ you can inspect with `python <example> --help`.
 | `color.py` | Using enums or Literals to represent "choices". |
 | `calc.py` | How to use multiple (free) functions as commands, instead of invoking a single function. |
 | `rational.py` | How to register a perser for a custom user type to make it parsable. |
+| `search_gh.py` | How to use `**kwargs`-style arguments to parse arbirary key-value pairs. |
