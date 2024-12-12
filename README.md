@@ -2,6 +2,8 @@
 
 ![tests](https://github.com/oir/startle/actions/workflows/test.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/oir/startle/badge.svg?branch=main)](https://coveralls.io/github/oir/startle?branch=main)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/startle?logo=Python&logoColor=FFFFFF)](https://pypi.org/project/startle/)
+[![PyPI Version](https://img.shields.io/pypi/v/startle?label=pip%20install%20startle&color=blue)](https://pypi.org/project/startle/)
 
 > [!WARNING]  
 > **startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
