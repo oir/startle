@@ -53,12 +53,10 @@ start(word_count)
 When you invoke `start`, it will construct an argparser (based on type hints and docstring),
 parse the arguments, and invoke `word_count`.
 
-`❯ python wc.py wc.py -k char --verbose`:
-
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/ba095c85-22e8-4dc6-bab2-fd6c19ecd472" width="100%">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/7e2e29de-0a77-4646-b762-dbf9e3d8197f" width="100%">
-  <img src="https://github.com/user-attachments/assets/7e2e29de-0a77-4646-b762-dbf9e3d8197f" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="img/out-dark.svg" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="img/out-light.svg" width="100%">
+  <img src="img/out-light.svg" width="100%">
 </picture>
 
 ## Highlights
