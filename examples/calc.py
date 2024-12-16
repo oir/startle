@@ -1,20 +1,20 @@
 from startle import start
 
 
-def add(a: int, b: int) -> None:
+def add(ns: list[int]) -> None:
     """
-    Add two numbers.
+    Add numbers together.
 
     Args:
-        a: The first number.
-        b: The second number.
+        ns: The numbers to add together.
     """
-    print(f"{a} + {b} = {a + b}")
+    total = sum(ns)
+    print(f"{' + '.join(map(str, ns))} = {total}")
 
 
 def sub(a: int, b: int) -> None:
     """
-    Subtract two numbers.
+    Subtract a number from another.
 
     Args:
         a: The first number.
@@ -23,20 +23,22 @@ def sub(a: int, b: int) -> None:
     print(f"{a} - {b} = {a - b}")
 
 
-def mul(a: int, b: int) -> None:
+def mul(ns: list[int]) -> None:
     """
-    Multiply two numbers.
+    Multiply numbers together.
 
     Args:
-        a: The first number.
-        b: The second number.
+        ns: The numbers to multiply together.
     """
-    print(f"{a} * {b} = {a * b}")
+    total = 1
+    for n in ns:
+        total *= n
+    print(f"{' * '.join(map(str, ns))} = {total}")
 
 
 def div(a: int, b: int) -> None:
     """
-    Divide two numbers.
+    Divide a number by another.
 
     Args:
         a: The dividend.
