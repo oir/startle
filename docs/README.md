@@ -59,6 +59,80 @@ parse the arguments, and invoke `word_count`.
   <img src="img/out-light.svg" width="100%">
 </picture>
 
+### Multiple commands
+
+You can invoke `start()` with a list of functions instead of a single function.
+In this case, functions are made available as _commands_ with their own arguments
+and options in your CLI:
+
+`calc.py`:
+
+```py
+from startle import start
+
+
+def add(ns: list[int]) -> None:
+    """
+    Add numbers together.
+
+    Args:
+        ns: The numbers to add together.
+    """
+    total = sum(ns)
+    print(f"{' + '.join(map(str, ns))} = {total}")
+
+
+def sub(a: int, b: int) -> None:
+    """
+    Subtract a number from another.
+
+    Args:
+        a: The first number.
+        b: The second number
+    """
+    print(f"{a} - {b} = {a - b}")
+
+
+def mul(ns: list[int]) -> None:
+    """
+    Multiply numbers together.
+
+    Args:
+        ns: The numbers to multiply together.
+    """
+    total = 1
+    for n in ns:
+        total *= n
+    print(f"{' * '.join(map(str, ns))} = {total}")
+
+
+def div(a: int, b: int) -> None:
+    """
+    Divide a number by another.
+
+    Args:
+        a: The dividend.
+        b: The divisor.
+    """
+    print(f"{a} / {b} = {a / b}")
+
+
+if __name__ == "__main__":
+    start([add, sub, mul, div])
+
+```
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/calc-help-dark.svg" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="img/calc-help-light.svg" width="100%">
+  <img src="img/calc-help-light.svg" width="100%">
+</picture>
+
+In the invocation `python calc.py add 1 2 3`, first argument is `add`, which causes the execution
+to dispatch to the `add` command (i.e. `add()` function). The rest of the arguments (`1 2 3`) then
+are passed along to `add()`.
+
+
 ## Highlights
 
 **startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),

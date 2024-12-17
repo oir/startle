@@ -1,0 +1,53 @@
+<svg width="94ch" height="28em" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+    <style>
+        * {
+            font-family: Fira Mono, DejaVu Sans Mono, SF Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace, monospace;
+            font-size: 14px;
+        }
+        tspan, text {
+            font-variant-ligatures: none;
+            dominant-baseline: central;
+            white-space: pre;
+            fill: #9ba2b2;
+        }
+        .bg {
+            stroke-width: "0.5px";
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .italic {
+            font-style: italic;
+        }
+        .underline {
+            text-decoration: underline;
+        }
+        .dim {
+            opacity: 0.5;
+        }
+        <!-- Foreground ANSI colors -->
+        .fa2 { fill: #5ab977; }
+        .fa3 { fill: #dfb563; }
+        .fa4 { fill: #4d89c4; }
+        .fa5 { fill: #d55119; }
+    </style>
+    <rect width="100%" height="100%" x="0" y="0" style="fill: #ffffff; opacity: 0.03"/>
+<text x="1ch" y="1.5em"><tspan class="fa4">~ </tspan><tspan class="fa5">❯ </tspan><tspan>python calc.py --help</tspan></text>
+<text x="1ch" y="3.5em"><tspan class="bold dim underline">Usage:</tspan></text>
+<text x="1ch" y="4.5em"><tspan>  calc.py </tspan><tspan class="fa4">&lt;</tspan><tspan class="bold fa4">command</tspan><tspan class="fa4">&gt; &lt;command-specific-args&gt;</tspan></text>
+<text x="1ch" y="6.5em"><tspan class="bold dim underline">Commands:</tspan></text>
+<text x="1ch" y="7.5em"><tspan>  </tspan><tspan class="bold fa4">add  </tspan><tspan class="italic">Add numbers together.          </tspan></text>
+<text x="1ch" y="8.5em"><tspan>  </tspan><tspan class="bold fa4">sub  </tspan><tspan class="italic">Subtract a number from another.</tspan></text>
+<text x="1ch" y="9.5em"><tspan>  </tspan><tspan class="bold fa4">mul  </tspan><tspan class="italic">Multiply numbers together.     </tspan></text>
+<text x="1ch" y="10.5em"><tspan>  </tspan><tspan class="bold fa4">div  </tspan><tspan class="italic">Divide a number by another.    </tspan></text>
+<text x="1ch" y="12.5em"><tspan class="dim">Run </tspan><tspan>`calc.py </tspan><tspan class="fa4">&lt;</tspan><tspan class="bold fa4">command</tspan><tspan class="fa4">&gt; </tspan><tspan class="fa2">--help</tspan><tspan>` </tspan><tspan class="dim">to see all command-specific options.</tspan></text>
+<text x="1ch" y="14.5em"><tspan class="fa4">~ </tspan><tspan class="fa5">❯ </tspan><tspan>python calc.py add --help</tspan></text>
+<text x="1ch" y="16.5em"><tspan>Add numbers together.</tspan></text>
+<text x="1ch" y="18.5em"><tspan class="bold dim underline">Usage:</tspan></text>
+<text x="1ch" y="19.5em"><tspan>  calc.py add </tspan><tspan class="bold fa2">--ns </tspan><tspan class="fa4">&lt;int&gt; </tspan><tspan class="dim fa4">[&lt;int&gt; ...]</tspan></text>
+<text x="1ch" y="21.5em"><tspan class="bold dim underline">where</tspan></text>
+<text x="1ch" y="22.5em"><tspan>  </tspan><tspan class="dim">(pos. or opt.)  </tspan><tspan class="bold fa2">-n</tspan><tspan class="dim fa2">|</tspan><tspan class="bold fa2">--ns </tspan><tspan class="fa4">&lt;int&gt; </tspan><tspan class="dim fa4">[&lt;int&gt; ...]  </tspan><tspan class="italic">The numbers to add together. </tspan><tspan class="fa3">(required)</tspan></text>
+<text x="1ch" y="23.5em"><tspan>  </tspan><tspan class="dim">(option)        </tspan><tspan class="bold dim fa2">-?</tspan><tspan class="dim fa2">|</tspan><tspan class="bold dim fa2">--help                  </tspan><tspan class="dim italic">Show this help message and exit.       </tspan></text>
+<text x="1ch" y="25.5em"><tspan class="fa4">~ </tspan><tspan class="fa5">❯ </tspan><tspan>python calc.py add 1 2 3</tspan></text>
+<text x="1ch" y="26.5em"><tspan>1 &#43; 2 &#43; 3 = 6</tspan></text>
+</svg>
