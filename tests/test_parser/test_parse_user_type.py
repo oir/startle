@@ -27,12 +27,32 @@ def mul(a: Rational, b: Rational) -> Rational:
     return y
 
 
+def mul2(ns: list[Rational]) -> Rational:
+    """
+    Multiply a list of rational numbers.
+    """
+    y = Rational(1, 1)
+    for n in ns:
+        y.num *= n.num
+        y.den *= n.den
+    print(f"{' * '.join(map(str, ns))} = {y}")
+    return y
+
+
 def test_unsupported_type():
     with raises(
         ParserConfigError,
         match=re.escape("Unsupported type `Rational` for parameter `a` in `mul()`!"),
     ):
         check_args(mul, ["1/2", "3/4"], [], {})
+
+    with raises(
+        ParserConfigError,
+        match=re.escape(
+            "Unsupported type `list[Rational]` for parameter `ns` in `mul2()`!"
+        ),
+    ):
+        check_args(mul2, ["1/2", "3/4"], [], {})
 
     register_type(
         Rational,
@@ -41,3 +61,4 @@ def test_unsupported_type():
     )
 
     check_args(mul, ["1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul2, ["1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
