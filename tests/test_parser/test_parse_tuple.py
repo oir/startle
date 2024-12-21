@@ -1,33 +1,34 @@
+import re
 from typing import Callable, Tuple
 
 from pytest import mark, raises
 
-from startle.error import ParserOptionError, ParserValueError
+from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
 from ._utils import check_args
 
 
-def add_int(*, numbers: tuple[int]) -> None:
+def add_int(*, numbers: tuple[int, ...]) -> None:
     print(sum(numbers))
 
 
-def add_float(*, numbers: tuple[float]) -> None:
+def add_float(*, numbers: tuple[float, ...]) -> None:
     print(sum(numbers))
 
 
-def add_str(*, numbers: tuple[str]) -> None:
+def add_str(*, numbers: tuple[str, ...]) -> None:
     print(" ".join(numbers))
 
 
-def add_int2(*, numbers: Tuple[int]) -> None:
+def add_int2(*, numbers: Tuple[int, ...]) -> None:
     print(sum(numbers))
 
 
-def add_float2(*, numbers: Tuple[float]) -> None:
+def add_float2(*, numbers: Tuple[float, ...]) -> None:
     print(sum(numbers))
 
 
-def add_str2(*, numbers: tuple[str]) -> None:
+def add_str2(*, numbers: tuple[str, ...]) -> None:
     print(" ".join(numbers))
 
 
@@ -72,17 +73,17 @@ def test_keyword_tuple(add: Callable, scalar: type, opt: str) -> None:
             check_args(add, [opt, "0", "1", "x"], [], {})
 
 
-def addwh1(*, widths: tuple[int], heights: tuple[float] = []) -> None:
+def addwh1(*, widths: tuple[int, ...], heights: tuple[float, ...] = []) -> None:
     print(sum(widths))
     print(sum(heights))
 
 
-def addwh2(*, widths: tuple[float], heights: tuple[str] = []) -> None:
+def addwh2(*, widths: tuple[float, ...], heights: tuple[str, ...] = []) -> None:
     print(sum(widths))
     print(sum(heights))
 
 
-def addwh3(*, widths: tuple[str], heights: tuple[int] = []) -> None:
+def addwh3(*, widths: tuple[str, ...], heights: tuple[int, ...] = []) -> None:
     print(" ".join(widths))
     print(sum(heights))
 
@@ -139,3 +140,27 @@ def test_keyword_nargs_long(
             match=f"Cannot parse {'integer' if hscalar is int else 'float'} from `x`!",
         ):
             check_args(add, [wopt, "0", "1", hopt, "0", "1", "x"], [], {})
+
+
+def test_unexpected_tuple_signature():
+    def add1(*, numbers: tuple[int]) -> None:
+        print(sum(numbers))
+
+    def add2(*, numbers: tuple[int, float]) -> None:
+        print(sum(numbers))
+
+    with raises(
+        ParserConfigError,
+        match=re.escape(
+            "Unsupported type `tuple[int]` for parameter `numbers` in `add1()`!"
+        ),
+    ):
+        check_args(add1, [], [], {})
+
+    with raises(
+        ParserConfigError,
+        match=re.escape(
+            "Unsupported type `tuple[int, float]` for parameter `numbers` in `add2()`!"
+        ),
+    ):
+        check_args(add2, [], [], {})
