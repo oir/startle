@@ -1,4 +1,4 @@
 
 * [Home](/)
-* [Design Choices]()
-* [Types and Parsing Rules](/types)
+* [CLI from functions](function-interface)
+* [Types and parsing rules](types)
