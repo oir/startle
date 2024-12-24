@@ -1,11 +1,12 @@
-# startle
+# startle ⚡👀
 
 ![tests](https://github.com/oir/startle/actions/workflows/test.yml/badge.svg)
 [![Coverage Status](https://img.shields.io/coverallsCoverage/github/oir/startle?logo=Coveralls)](https://coveralls.io/github/oir/startle?branch=main)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/startle?logo=Python&logoColor=FFFFFF)](https://pypi.org/project/startle/)
 [![PyPI Version](https://img.shields.io/pypi/v/startle?label=pip%20install%20startle&color=blue)](https://pypi.org/project/startle/)
 
-!> **startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
+> [!ATTENTION]
+**startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
 
 <div style="visibility: hidden; height: 0">
 
@@ -133,7 +134,7 @@ to dispatch to the `add` command (i.e. `add()` function). The rest of the argume
 are passed along to `add()`.
 
 
-## Highlights
+## Motivation
 
 **startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
 but aims to be _non-intrusive_, to have stronger type support, and to have saner defaults.
