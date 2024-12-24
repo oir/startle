@@ -94,17 +94,23 @@ Args(brief='Count the number of words or characters in a file.',
 ```
 _(some fields are omitted for illustration)_
 
-Our (simplified) function signature looks like:
-```
+Our function signature (simplified of type hints) looks like:
+
+<div class="ascii">
+
+```python
 def word_count(fname, /, kind, *, verbose):
-               -----     ----     -------
-               |          |             |
-               |      Positional        |
-               |      or keyword        - Keyword only
-               |
-               -- Positional only
+    """        ┬────     ─┬──     ─────┬─
+               │          │            │
+               │      Positional       │
+               │      or keyword       ╰ Keyword only
+               │
+               ╰─ Positional only                     """
 ```
-using the delimiters `/` and `*`.
+
+</div>
+
+with the delimiters `/` and `*`.
 
 As a result, we see that the resulting `Args` object contains two
 positional arguments (one for `fname`, and one for `kind`), and
@@ -187,21 +193,28 @@ into a command-line argument for the parser.
 
 - **Type:** Target type after parsing the argument is directly obtained from the type
   hint assigned to the function argument.
+  
   See [Types and parsing rules](types#types-and-parsing-rules) for
-  detailed information how each such type is parsed.
+  detailed information on how each such type is parsed, and how new
+  types can be registered.
 
 - **Positional arg vs option:** Python functions can (optionally) use `/` and `*` delimiters to
   designate a function argument as a "positional only", "keyword only", or both.
 
+  <div class="ascii">
+
   ```python
-  def word_count(fname, /, kind, *, verbose):
-      """        -----     ----     -------
-                 |          |             |
-                 |      Positional        |
-                 |      or keyword        - Keyword only
-                 |
-                 -- Positional only                     """
+  def func(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
+      """  ┬─────────     ────┬─────     ──────┬───
+           │                  │                │
+           │              Positional           │
+           │              or keyword           ╰ Keyword only
+           │
+           ╰─ Positional only                     """
   ```
+
+  </div>
+
   This directly translates into the same notion for command-line arguments.
   Positonal only function arguments become positional command-line arguments,
   and keyword only function arguments become command-line options.
@@ -209,3 +222,89 @@ into a command-line argument for the parser.
   fed in either as a positional argument or an option, during command-line
   invocation.
 
+- **Optional vs required:**
+  If a function argument has a default value assignment, as in
+  ```python
+  def f(..., arg: type = value, ...): 
+  ```
+  then the command-line argument becomes _optional_. If not provided, realized
+  value will have the default-assigned `value`.
+
+  If there is no default value assignment, like
+  ```python
+  def f(..., arg: type, ...): 
+  ```
+  then the command-line argument is _required_. If a required argument or option
+  is not provided at the command-line, then `start()` will error.
+
+- **Help:** Descriptions of arguments to be displayed when `--help` is invoked
+  are retrieved from the docstring of the function. To this end, docstring is
+  expected to follow the following format (with some leeway):
+
+  ```python
+  def func(arg1: type1, arg2: type2, ..., argn: typen):
+      """
+      Some function.
+
+      Some more detailed description of the function.
+
+      Args:
+          arg1: Description of arg1.
+          arg2: Description of arg2
+              which has some more detail here.
+          arg3: arg3 help here.
+          ...
+      """
+  ```
+
+  Part of the docstring until we observe either `"Args:"` or `"Returns:"` make up
+  the brief of the overall program. Individual descriptions under the `Args:`
+  section, such as `"Description of arg1."` will constitute the help text specific
+  to that argument.
+
+  Help descriptions are optional. When docstring is unavailable, or parsing the
+  desired form fails, help text will be empty (rather than raising an error).
+
+- **Metavar:** Metavar is the illustratory variable name of an argument that is
+  substituted by the actual value in its place when it's fed in from the command-line.
+  This is determined by the type of the argument as defined in the type hint.
+
+  For instance type `str` has a metavar `text`, which means for an option with
+  name `arg`, the help string will display `--arg <text>`, and for a positional
+  argument, it will display `<arg:text>`. 
+
+  See [Types and parsing rules](types#types-and-parsing-rules) for
+  the predefined mapping of types to metavars, and how new metavars can be
+  registered.
+
+- **Unary vs n-ary:** 
+  Unary arguments are constructed from a single command-line string value in the
+  argument list (as in, a single string item in the list `sys.argv`):
+  ```bash
+  python myprogram.py --opt value
+  ```
+
+  Whereas _n-ary_ arguments admit multiple such values:
+  ```bash
+  python myprogram.py --opt value1 value2 value3
+  ```
+  or 
+  ```bash
+  python myprogram.py --opt=value1 --opt=value2 --opt=value3
+  ```
+  This is similar to the `nargs` option in the native `argparse` module.
+
+  Unary vs n-ary distinction is determined by the type hint designated with
+  the function argument. Most types define a unary argument whereas a
+  `list[T]`, a `set[T]`, or a `tuple[T, ...]` will result in an _n-ary_
+  argument of type `T`. This means each individual value that's fed in, e.g.
+  `value2`, will be attempted to be parsed as a `T` and appended to the
+  container.
+
+  See [Types and parsing rules](types#types-and-parsing-rules) for detail,
+  and the example [cat.py](https://github.com/oir/startle/blob/main/examples/cat.py)
+  for an illustration.
+
+- **Unknown arguments:**
+
+- **Unknown options:**
