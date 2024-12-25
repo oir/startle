@@ -246,7 +246,28 @@ is not provided at the command-line, then `start()` will error.
 
 ### Flags
 
-TODO
+Flags are options that do not admit a value, and fed in only using their name.
+For example, `python program.py --opt` or `python program.py -o` as opposed to
+regular options `python program.py --opt val`. Thus, flags work for the notion
+of _toggling_, as the only two possible configurations it provides is to either
+feed them in or not feed them in.
+
+If a function argument has a type hint of `bool`, has a default value of `False`,
+and is an option-only (keyword only) argument, then it becomes a flag. If any of
+these three conditions do not hold, then it is not a flag.
+
+In the [main example](/#showcase), `verbose` argument is a flag:
+```python
+def word_count(
+    fname: Path, /, kind: Literal["word", "char"] = "word", *, verbose: bool = False
+) -> None:
+    ...
+```
+and hence `--verbose` is fed in its invocation as opposed to `--verbose true` or
+`--verbose=true`:
+```bash
+~ ❯ python wc.py wc.py -k char --verbose
+```
 
 ### Help 
 
@@ -391,6 +412,7 @@ In the above, `"red"` and `"hot"` follow `"--kind"`, which resulted in `kwargs["
 be the list `["red", "hot"]`. In contrast, `kwargs["mana_cost"]` and `kwargs["d"]` are
 merely `str`s. 
 
+
 > [!WARNING]
 > Note that unlike "unknown arguments", "unknown options" can _fail_ to parse:
 > ```bash
@@ -427,3 +449,6 @@ fails, they will be appended to `args`.
 
 (`kwargs` is prioritized over `args` because otherwise everything
 would always fall into `args` and `kwargs` would always be empty.)
+
+
+## Commands
