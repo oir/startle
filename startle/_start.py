@@ -82,6 +82,7 @@ def _start_cmds(
         caught: Whether to catch and print errors instead of raising.
     """
 
+    cmd2func: dict[str, Callable]
     if isinstance(funcs, dict):
         cmd2func = funcs
     else:
@@ -89,9 +90,10 @@ def _start_cmds(
         def cmd_name(func: Callable) -> str:
             return func.__name__.replace("_", "-")
 
-        cmd2func: dict[str, Callable] = {cmd_name(func): func for func in funcs}
+        cmd2func = {cmd_name(func): func for func in funcs}
 
     def prog_name(cmd_name: str) -> str:
+        # TODO: more reliable way of getting the program name
         return f"{sys.argv[0]} {cmd_name}"
 
     try:
