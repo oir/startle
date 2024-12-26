@@ -56,10 +56,10 @@ def _start_func(
     except (ParserOptionError, ParserValueError) as e:
         if caught:
             console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
+            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]")
             args_.print_help(console, usage_only=True)
             console.print(
-                "\n[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]"
+                "[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]\n"
             )
             raise SystemExit(1)
         else:
@@ -98,7 +98,8 @@ def _start_cmds(
     try:
         # then, parse the arguments from the CLI
         args: Args | None = None
-        cmd, args = cmds.parse(cli_args)
+        cmd, args, remaining = cmds.get_cmd_parser(cli_args)
+        args.parse(remaining)
 
         # then turn the parsed arguments into function arguments
         f_args, f_kwargs = args.make_func_args()
@@ -109,14 +110,14 @@ def _start_cmds(
     except (ParserOptionError, ParserValueError) as e:
         if caught:
             console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
+            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]")
             if args:  # error happened after parsing the command
                 args.print_help(console, usage_only=True)
+                console.print(
+                    "[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]\n"
+                )
             else:  # error happened before parsing the command
-                cmds.print_help(console, usage_only=True)
-            console.print(
-                "\n[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]"
-            )
+                cmds.print_help(console)
             raise SystemExit(1)
         else:
             raise e

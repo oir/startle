@@ -2,6 +2,7 @@ import sys
 from dataclasses import dataclass, field
 
 from .args import Args
+from .error import ParserOptionError
 
 
 @dataclass
@@ -17,13 +18,11 @@ class Cmds:
     cmd_parsers: dict[str, Args] = field(default_factory=dict)
     brief: str = ""
 
-    def parse(self, cli_args: list[str] | None = None) -> tuple[str, Args]:
+    def get_cmd_parser(self, cli_args: list[str]) -> tuple[str, Args, list[str]]:
         cli_args = cli_args or sys.argv[1:]
 
         if not cli_args:
-            print("Error: No command given!")
-            self.print_help()
-            raise SystemExit(1)
+            raise ParserOptionError("No command given!")
 
         cmd = cli_args[0]
         if cmd in ["-?", "--help"]:
@@ -31,12 +30,15 @@ class Cmds:
             raise SystemExit(0)
 
         if cmd not in self.cmd_parsers:
-            print(f"Error: Unknown command {cmd}!")
-            self.print_help()
-            raise SystemExit(1)
+            raise ParserOptionError(f"Unknown command `{cmd}`!")
 
-        args = self.cmd_parsers[cmd]
-        args.parse(cli_args[1:])
+        return cmd, self.cmd_parsers[cmd], cli_args[1:]
+
+    def parse(self, cli_args: list[str] | None = None) -> tuple[str, Args]:
+        cli_args = cli_args or sys.argv[1:]
+
+        cmd, args, remaining_cli_args = self.get_cmd_parser(cli_args)
+        args.parse(remaining_cli_args)
         return cmd, args
 
     def print_help(
