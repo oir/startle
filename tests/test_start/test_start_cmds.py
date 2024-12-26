@@ -55,6 +55,13 @@ def test_calc(capsys, run: Callable) -> None:
     check(capsys, run, [add, sub, mul, div], ["sub", "2", "3"], "2 - 3 = -1\n")
     check(capsys, run, [add, sub, mul, div], ["mul", "2", "3"], "2 * 3 = 6\n")
     check(capsys, run, [add, sub, mul, div], ["div", "6", "3"], "6 / 3 = 2.0\n")
+    check(
+        capsys,
+        run,
+        {"sum": add, "sub": sub, "mul": mul, "div": div},
+        ["sum", "2", "3"],
+        "2 + 3 = 5\n",
+    )
 
     check_exits(
         capsys, run, [add, sub, mul, div], ["2", "3"], "Error: Unknown command `2`!\n"
