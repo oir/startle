@@ -12,9 +12,11 @@ T = TypeVar("T")
 
 
 def start(
-    obj: Callable | list[Callable], args: list[str] | None = None, caught: bool = True
+    obj: Callable | list[Callable] | dict[str, Callable],
+    args: list[str] | None = None,
+    caught: bool = True,
 ):
-    if isinstance(obj, list):
+    if isinstance(obj, list) or isinstance(obj, dict):
         return _start_cmds(obj, args, caught)
     else:
         return _start_func(obj, args, caught)
@@ -67,24 +69,39 @@ def _start_func(
 
 
 def _start_cmds(
-    funcs: list[Callable], cli_args: list[str] | None = None, caught: bool = True
+    funcs: list[Callable] | dict[str, Callable],
+    cli_args: list[str] | None = None,
+    caught: bool = True,
 ):
-    """ """
+    """
+    Given a list or dict of functions, parse the command from the CLI and call it.
 
-    def cmd_name(func: Callable) -> str:
-        return func.__name__.replace("_", "-")
+    Args:
+        funcs: The functions to parse the arguments for and invoke.
+        cli_args: The arguments to parse. If None, uses the arguments from the CLI.
+        caught: Whether to catch and print errors instead of raising.
+    """
 
-    def prog_name(func: Callable) -> str:
-        return f"{sys.argv[0]} {cmd_name(func)}"
+    cmd2func: dict[str, Callable]
+    if isinstance(funcs, dict):
+        cmd2func = funcs
+    else:
 
-    cmd2func: dict[str, Callable] = {cmd_name(func): func for func in funcs}
+        def cmd_name(func: Callable) -> str:
+            return func.__name__.replace("_", "-")
+
+        cmd2func = {cmd_name(func): func for func in funcs}
+
+    def prog_name(cmd_name: str) -> str:
+        # TODO: more reliable way of getting the program name
+        return f"{sys.argv[0]} {cmd_name}"
 
     try:
         # first, make Cmds object from the functions
         cmds = Cmds(
             {
-                cmd_name(func): make_args(func, program_name=prog_name(func))
-                for func in funcs
+                cmd_name: make_args(func, program_name=prog_name(cmd_name))
+                for cmd_name, func in cmd2func.items()
             }
         )
     except ParserConfigError as e:
