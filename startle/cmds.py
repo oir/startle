@@ -18,7 +18,9 @@ class Cmds:
     cmd_parsers: dict[str, Args] = field(default_factory=dict)
     brief: str = ""
 
-    def get_cmd_parser(self, cli_args: list[str]) -> tuple[str, Args, list[str]]:
+    def get_cmd_parser(
+        self, cli_args: list[str] | None = None
+    ) -> tuple[str, Args, list[str]]:
         cli_args = cli_args or sys.argv[1:]
 
         if not cli_args:
