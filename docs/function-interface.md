@@ -11,7 +11,7 @@ More specifically, when you invoke `start(f)`, for a function `f`, it will
   based on the provided type hints,
 - provide the parsed objects as arguments to `f`, and _invoke_ it.
 
-## Example, detailed
+## Example with walkthrough
 
 Let us revisit the main example to make the above concepts more concrete.
 
@@ -92,7 +92,7 @@ Args(brief='Count the number of words or characters in a file.',
                       default=False,
                       required=False)])
 ```
-_(some fields are omitted for illustration)_
+_(Some fields are omitted for illustration.)_
 
 Our function signature (simplified of type hints) looks like:
 
@@ -343,6 +343,43 @@ See [Types and parsing rules](types#types-and-parsing-rules) for detail,
 and the example [cat.py](https://github.com/oir/startle/blob/main/examples/cat.py)
 for an illustration.
 
+### Choices
+
+Sometimes it is desirable to limit the possible values for an argument or an option
+to a number of choices, and reject any other value by erroring out.
+
+In **startle**, similar to _unary_-ness or _flag_-ness, this is handled by the
+type hints corresponding to the argument. If the type is a `typing.Literal` of
+strings, e.g. `Literal["a", "b", "c"]`, or an `Enum` class (a user type deriving
+from `enum.Enum`), allowed types will be limited to the specific options.
+
+For example:<br>
+`program.py:`
+```python
+from typing import Literal
+from startle import start
+
+def hello(to: Literal["world", "terra", "earth"]):
+    print(f"hello {to}")
+
+start(hello)
+```
+```bash
+~ ❯ python program.py world
+hello world
+~ ❯ python program.py mars
+Error: Cannot parse literal ('world', 'terra', 'earth') from `mars`!
+...
+~ ❯
+```
+
+This is similar to the `choices` configuration in the native `argparse` module of Python.
+
+See [Types and parsing rules](types#types-and-parsing-rules) for more detail, and
+examples [color.py](https://github.com/oir/startle/blob/main/examples/color.py) and
+[wc.py](https://github.com/oir/startle/blob/main/examples/wc.py) for more showcases.
+
+
 ### Unknown arguments and options
 
 Normally, unexpected or unrecognized arguments fed in from the command-line
@@ -400,7 +437,7 @@ def f(**kwargs):
 start(f)
 ```
 ```bash
-~/work/startle pages* env3.11 ❯ python program.py --kind red hot --mana-cost=30 -d up
+~ ❯ python program.py --kind red hot --mana-cost=30 -d up
 {'kind': ['red', 'hot'], 'mana_cost': '30', 'd': 'up'}
 ~ ❯ 
 ```
@@ -452,3 +489,47 @@ would always fall into `args` and `kwargs` would always be empty.)
 
 
 ## Commands
+
+You can invoke `start()` with a list of functions instead of a single function.
+In this case, functions are made available as _commands_ with their own arguments
+and options in your CLI.
+
+For example:
+```python
+from startle import start
+
+def func1(...):
+    ...
+
+def func2(...):
+    ...
+
+def func3(...):
+    ...
+
+start([func1, func2, func3])
+```
+
+Parsing is done by treating the first argument as a command and then
+passing the remaining arguments to the function associated with that
+command.
+```bash
+~ ❯ python program.py func1 <arguments to func1>
+```
+
+See example [here](/#multiple-command) or in
+[calc.py](https://github.com/oir/startle/blob/main/examples/calc.py).
+
+You can rename commands by passing in a `dict[str, Callable]` instead of a
+`list[Callable]`:
+
+```python
+start({
+    "foo": func1,
+    "bar": func2,
+    "baz": func3,
+})
+```
+```bash
+~ ❯ python program.py baz <arguments to func3>
+```
