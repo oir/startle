@@ -6,11 +6,15 @@ from pytest import raises
 from startle import start
 
 
-def run_w_explicit_args(func: Callable[..., None], args: list[str]) -> None:
+def run_w_explicit_args(
+    func: Callable | list[Callable] | dict[str, Callable], args: list[str]
+) -> None:
     start(func, args)
 
 
-def run_w_sys_argv(func: Callable[..., None], args: list[str]) -> None:
+def run_w_sys_argv(
+    func: Callable | list[Callable] | dict[str, Callable], args: list[str]
+) -> None:
     old_argv = sys.argv[1:]
     sys.argv[1:] = args
     start(func)
@@ -18,7 +22,11 @@ def run_w_sys_argv(func: Callable[..., None], args: list[str]) -> None:
 
 
 def check(
-    capsys, run: Callable, f: Callable | list[Callable], args: list[str], expected: str
+    capsys,
+    run: Callable,
+    f: Callable | list[Callable] | dict[str, Callable],
+    args: list[str],
+    expected: str,
 ) -> None:
     run(f, args)
     captured = capsys.readouterr()
