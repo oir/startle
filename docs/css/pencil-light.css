@@ -1,6 +1,10 @@
+/* adapted to prism.js from pencil.vim
+** https://github.com/preservim/vim-colors-pencil/
+*/
+
 code[class*="language-"],
 pre[class*="language-"] {
-  color: #444444;
+  color: #424242;
   text-align: left;
   white-space: pre;
   word-spacing: normal;
@@ -23,7 +27,7 @@ pre[class*="language-"] ::-moz-selection,
 code[class*="language-"]::-moz-selection,
 code[class*="language-"] ::-moz-selection {
   text-shadow: none;
-  background: #0087af88;
+  background: #F1F1F1;
 }
 
 pre[class*="language-"]::selection,
@@ -31,7 +35,7 @@ pre[class*="language-"] ::selection,
 code[class*="language-"]::selection,
 code[class*="language-"] ::selection {
   text-shadow: none;
-  background: #0087af88;
+  background: #F1F1F1;
 }
 
 @media print {
@@ -62,37 +66,42 @@ pre[class*="language-"] {
 
 
 .token.builtin {
-  color: #005FAF;
+  color: #008EC4;
   
 }
 
 .token.boolean {
-  color: #008700;
+  color: #10A778;
   
 }
 
 .token.constant {
-  color: #008700;
+  color: #10A778;
   
 }
 
 .token.string {
-  color: #5F8700;
+  color: #A89C14;
+  
+}
+
+.token.function {
+  color: #20A5BA;
   
 }
 
 .token.keyword {
-  color: #8700AF;
+  color: #fb007a;
   
 }
 
 .token.operator {
-  color: #0087AF;
+  color: #008EC4;
   
 }
 
 .token.punctuation {
-  color: #0087AF;
+  color: #008EC4;
   
 }
 
@@ -102,7 +111,7 @@ pre[class*="language-"] {
 }
 
 .token.variable {
-  color: #D70087;
+  color: #fb007a;
   
 }
 
