@@ -1,111 +1,97 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>startle docs</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Description" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
-    <link
-      rel="stylesheet"
-      media="(prefers-color-scheme: light)"
-      href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
-    />
-    <link
-      rel="stylesheet"
-      media="(prefers-color-scheme: dark)"
-      href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css"
-    />
-    <link href="https://fonts.cdnfonts.com/css/sf-mono" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="app"></div>
-    <script>
-      window.$docsify = {
-        name: "startle documentation",
-        repo: "https://github.com/oir/startle/",
-        loadSidebar: true,
-        executeScript: true,
-        subMaxLevel: 3,
-        sidebarDisplayLevel: 1,
-        auto2top: true,
-        search: {
-          maxAge: 86400000, // Expiration time, the default one day
-          //maxAge: 1,
-          paths: "auto",
-          placeholder: "Type to search",
-          noData: "No results!",
-          // Headline depth, 1 - 6
-          depth: 6,
-          hideOtherSidebarContent: false, // whether or not to hide other sidebar content
-          namespace: "startle",
-          pathNamespaces: "startle",
-        },
-        tabs: {
-          persist: true, // default
-          sync: true, // default
-          theme: "classic", // default
-          tabComments: true, // default
-          tabHeadings: true, // default
-        },
-        vueComponents: {
-          icon: {
-            props: ["prefix"],
-            template: `<picture>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>startle docs</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Description" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <link rel="stylesheet" media="(prefers-color-scheme: light)"
+    href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css" />
+  <link rel="stylesheet" media="(prefers-color-scheme: dark)"
+    href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css" />
+  <link href="https://fonts.cdnfonts.com/css/sf-mono" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      name: "startle documentation",
+      repo: "https://github.com/oir/startle/",
+      loadSidebar: true,
+      executeScript: true,
+      subMaxLevel: 3,
+      sidebarDisplayLevel: 1,
+      auto2top: true,
+      search: {
+        maxAge: 86400000, // Expiration time, the default one day
+        //maxAge: 1,
+        paths: "auto",
+        placeholder: "Type to search",
+        noData: "No results!",
+        // Headline depth, 1 - 6
+        depth: 6,
+        hideOtherSidebarContent: false, // whether or not to hide other sidebar content
+        namespace: "startle",
+        pathNamespaces: "startle",
+      },
+      tabs: {
+        persist: true, // default
+        sync: true, // default
+        theme: "classic", // default
+        tabComments: true, // default
+        tabHeadings: true, // default
+      },
+      vueComponents: {
+        icon: {
+          props: ["prefix"],
+          template: `<picture>
             <source style="vertical-align:middle" media="(prefers-color-scheme: dark)" :srcset="lightSrc" height="22">
             <source style="vertical-align:middle" media="(prefers-color-scheme: light)" :srcset="darkSrc" height="22">
             <img style="vertical-align:middle" :src="darkSrc" height="22"> 
           </picture>`,
-            computed: {
-              lightSrc() {
-                return `img/${this.prefix}-light.svg`;
-              },
-              darkSrc() {
-                return `img/${this.prefix}-dark.svg`;
-              },
+          computed: {
+            lightSrc() {
+              return `img/${this.prefix}-light.svg`;
+            },
+            darkSrc() {
+              return `img/${this.prefix}-dark.svg`;
             },
           },
         },
-        'flexible-alerts': {
-          style: 'callout',
-        },
-      };
-    </script>
-    <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-themeable@0.9.0/dist/js/docsify-themeable.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+      },
+      'flexible-alerts': {
+        style: 'callout',
+      },
+    };
+  </script>
+  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-themeable@0.9.0/dist/js/docsify-themeable.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
 
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
-    <script src="//unpkg.com/docsify-plugin-flexible-alerts"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+  <script src="//unpkg.com/docsify-plugin-flexible-alerts"></script>
 
-    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
 
-    <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
 
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="stylesheet" media="(prefers-color-scheme: light)" href="css/pencil-light.css" />
-    <link
-      rel="stylesheet"
-      media="(prefers-color-scheme: dark)"
-      href="https://cdn.jsdelivr.net/npm/prismjs@1/themes/okaidia.min.css"
-    />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" media="(prefers-color-scheme: light)" href="css/pencil-light.css" />
+  <link rel="stylesheet" media="(prefers-color-scheme: dark)"
+    href="https://cdn.jsdelivr.net/npm/prismjs@1/themes/okaidia.min.css" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@1,500&display=swap"
-      rel="stylesheet"
-    />
-  </body>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@1,500&display=swap" rel="stylesheet" />
+</body>
+
 </html>

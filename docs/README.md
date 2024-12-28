@@ -73,7 +73,7 @@ and options in your CLI:
 
 `calc.py`:
 
-```py
+```python
 from startle import start
 
 
