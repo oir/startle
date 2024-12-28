@@ -1,9 +1,11 @@
-# Types and Parsing Rules
+# Types and parsing rules
 
 This section describes how the parsing is performed for a type specified in your hints.
 That is, how a raw string argument is processed to construct an object with the designated type.
 
-## Supported (Built-in) Types
+## Supported (built-in) types
+
+<div style="width: 150%; margin-left: -25%;">
 
 | Type (hint) | Parsed value for argument string `s` | Metavar |
 | ---- | ------------- | ------- |
@@ -16,6 +18,8 @@ That is, how a raw string argument is processed to construct an object with the 
 | Other enum types, `T(enum.Enum)` | `T.OPT_I` for an enum option with `s == "opt-i"` <br> parse error otherwise | `opt-1\|...\|opt-n` |
 | `typing.Literal["opt-1", ..., "opt-n"]` | `s` if `s` is in `["opt-1", ..., "opt-n"]` <br> parse error otherwise | `opt-1\|...\|opt-n` |
 | `T \| None` or <br> `typing.Optional[T]` or <br> `typing.Union[T, None]` | parse as if `T` | metavar as if `T` |
+
+</div>
 
 _Note: Metavar column shows how the input value is represented in the help string._
 
@@ -41,7 +45,7 @@ _Note: Metavar column shows how the input value is represented in the help strin
   ```
 
 
-### n-ary Arguments
+### n-ary arguments
 
 The following type hints turn an argument (or an option) to _n-ary_, meaning that for a container
 of type `T`, multiple string arguments from the command line are repeatedly parsed as `T`s and
@@ -57,7 +61,7 @@ appended to the container.
 | `set[T]` or `typing.Set[T]` | `set([parse_T(arg) for arg in args])` <br> where `parse_T()` denotes the parsing method for `T` |
 | `set` | `set(args)` |
 
-## User Defined Types
+## User defined types
 
 Any custom type that is not supported out of the box can be supported by registering it with `register_type()`.
 To register such a type `T`, you need to define
@@ -66,4 +70,35 @@ To register such a type `T`, you need to define
 - and optionally a metavar as either
   - a string (for most types, to be enclosed by `<>`),
   - or a list of strings (for choice-based types, to be joined by `|`)
-  to 
+  to define how help string refers to the variable name in place of the actual value.
+
+An example:<br>
+`program.py`:
+```python
+from startle import start, register_type
+
+def func(nums: tuple[int, float]):
+    print(nums)
+
+register_type(
+    tuple[int, float],
+    parser=lambda s: tuple([int(s.split(",")[0]), float(s.split(",")[1])]),
+    metavar="pair")
+
+start(func)
+```
+```bash
+~ ❯ python program.py --help
+
+Usage:
+  program.py --nums <pair>
+
+where
+  (pos. or opt.)  -n|--nums <pair>  (required)
+  (option)        -?|--help         Show this help message and exit.
+
+~ ❯ python program.py 3,4.5
+(3, 4.5)
+```
+
+See [rational.py](https://github.com/oir/startle/blob/main/examples/rational.py) for a full example.
