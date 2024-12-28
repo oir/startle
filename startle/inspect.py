@@ -144,17 +144,17 @@ def make_args(func: Callable, program_name: str = "") -> Args:
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str
-        if get_origin(normalized_annotation) in [list, tuple, set]:
+
+        orig = get_origin(normalized_annotation)
+        args_ = get_args(normalized_annotation)
+
+        if orig in [list, set]:
             nary = True
-            args_ = get_args(normalized_annotation)
-            container_type = get_origin(normalized_annotation)
-            if get_origin(normalized_annotation) is tuple and not (
-                len(args_) == 2 and args_[1] is ...
-            ):
-                raise ParserConfigError(
-                    f"Unsupported type `{_shorten_type_annotation(normalized_annotation)}` "
-                    f"for parameter `{param_name}` in `{func.__name__}()`!"
-                )
+            container_type = orig
+            normalized_annotation = args_[0] if args_ else str
+        elif orig is tuple and len(args_) == 2 and args_[1] is ...:
+            nary = True
+            container_type = orig
             normalized_annotation = args_[0] if args_ else str
         elif normalized_annotation in [list, tuple, set]:
             nary = True

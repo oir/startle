@@ -1,0 +1,130 @@
+/* adapted to prism.js from pencil.vim
+** https://github.com/preservim/vim-colors-pencil/
+*/
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #424242;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+pre[class*="language-"]::-moz-selection,
+pre[class*="language-"] ::-moz-selection,
+code[class*="language-"]::-moz-selection,
+code[class*="language-"] ::-moz-selection {
+  text-shadow: none;
+  background: #F1F1F1;
+}
+
+pre[class*="language-"]::selection,
+pre[class*="language-"] ::selection,
+code[class*="language-"]::selection,
+code[class*="language-"] ::selection {
+  text-shadow: none;
+  background: #F1F1F1;
+}
+
+@media print {
+  code[class*="language-"],
+  pre[class*="language-"] {
+    text-shadow: none;
+  }
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  color: white;
+  background: #f3f3f3;
+}
+
+:not(pre) > code[class*="language-"] {
+  padding: 0.1em;
+  border-radius: 0.3em;
+  white-space: normal;
+}
+
+
+.token.builtin {
+  color: #008EC4;
+  
+}
+
+.token.boolean {
+  color: #10A778;
+  
+}
+
+.token.constant {
+  color: #10A778;
+  
+}
+
+.token.string {
+  color: #A89C14;
+  
+}
+
+.token.function {
+  color: #20A5BA;
+  
+}
+
+.token.keyword {
+  color: #fb007a;
+  
+}
+
+.token.operator {
+  color: #008EC4;
+  
+}
+
+.token.punctuation {
+  color: #008EC4;
+  
+}
+
+.token.comment {
+  color: #878787;
+  font-style: italic
+}
+
+.token.variable {
+  color: #fb007a;
+  
+}
+
+.token.hexcode {
+  color: #D75F00;
+  
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
