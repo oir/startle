@@ -27,7 +27,7 @@ pre[class*="language-"] ::-moz-selection,
 code[class*="language-"]::-moz-selection,
 code[class*="language-"] ::-moz-selection {
   text-shadow: none;
-  background: #F1F1F1;
+  background: #E2E2E2;
 }
 
 pre[class*="language-"]::selection,
@@ -35,7 +35,7 @@ pre[class*="language-"] ::selection,
 code[class*="language-"]::selection,
 code[class*="language-"] ::selection {
   text-shadow: none;
-  background: #F1F1F1;
+  background: #E2E2E2;
 }
 
 @media print {
@@ -52,13 +52,13 @@ pre[class*="language-"] {
   overflow: auto;
 }
 
-:not(pre) > code[class*="language-"],
+:not(pre)>code[class*="language-"],
 pre[class*="language-"] {
-  color: white;
+  color: #828282;
   background: #f3f3f3;
 }
 
-:not(pre) > code[class*="language-"] {
+:not(pre)>code[class*="language-"] {
   padding: 0.1em;
   border-radius: 0.3em;
   white-space: normal;
@@ -67,42 +67,42 @@ pre[class*="language-"] {
 
 .token.builtin {
   color: #008EC4;
-  
+
 }
 
 .token.boolean {
   color: #10A778;
-  
+
 }
 
 .token.constant {
   color: #10A778;
-  
+
 }
 
 .token.string {
   color: #A89C14;
-  
+
 }
 
 .token.function {
   color: #20A5BA;
-  
+
 }
 
 .token.keyword {
   color: #fb007a;
-  
+
 }
 
 .token.operator {
   color: #008EC4;
-  
+
 }
 
 .token.punctuation {
   color: #008EC4;
-  
+
 }
 
 .token.comment {
@@ -112,12 +112,12 @@ pre[class*="language-"] {
 
 .token.variable {
   color: #fb007a;
-  
+
 }
 
 .token.hexcode {
   color: #D75F00;
-  
+
 }
 
 .token.important,
