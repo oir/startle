@@ -137,7 +137,7 @@ This will result in the following _parsed_ objects for each argument:
 - ```python
   Arg(name=Name(short='v', long='verbose'), ..., _value=True)
   ```
-Observer how internal `_value` fields contain the concrete parsed values.
+Observe how internal `_value` fields contain the concrete parsed values.
 
 Finally, these values are translated into appropriate positional and keyword
 arguments as `word_count` expects them, and the function is called:
