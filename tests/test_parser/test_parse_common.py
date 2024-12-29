@@ -304,3 +304,16 @@ def test_param_named_help():
         ),
     ):
         make_args(hi_help)
+
+
+def hi_untyped(name, count) -> None:
+    print(f"hello, {name}!")
+    print(f"count: {count}")
+
+
+def test_untyped():
+    check_args(hi_untyped, ["jane", "3"], ["jane", "3"], {})
+    check_args(hi_untyped, ["jane", "--count", "3"], ["jane", "3"], {})
+    check_args(hi_untyped, ["--count", "3", "jane"], ["jane", "3"], {})
+    check_args(hi_untyped, ["--name", "jane", "--count", "3"], ["jane", "3"], {})
+    check_args(hi_untyped, ["-n", "jane", "-c", "3"], ["jane", "3"], {})

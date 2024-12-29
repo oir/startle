@@ -94,7 +94,11 @@ def make_args(func: Callable, program_name: str = "") -> Args:
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in sig.parameters.items():
-        normalized_annotation = _normalize_type(param.annotation)
+        normalized_annotation = (
+            str
+            if param.annotation is Parameter.empty
+            else _normalize_type(param.annotation)
+        )
 
         if param.default is not inspect.Parameter.empty:
             required = False
