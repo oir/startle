@@ -1,4 +1,6 @@
-# startle
+# startle ⚡👀
+
+_Give your code a start._
 
 ![tests](https://github.com/oir/startle/actions/workflows/test.yml/badge.svg)
 [![Coverage Status](https://img.shields.io/coverallsCoverage/github/oir/startle?logo=Coveralls)](https://coveralls.io/github/oir/startle?branch=main)
