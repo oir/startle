@@ -21,7 +21,7 @@ class Cmds:
     def get_cmd_parser(
         self, cli_args: list[str] | None = None
     ) -> tuple[str, Args, list[str]]:
-        cli_args = cli_args or sys.argv[1:]
+        cli_args = cli_args if cli_args is not None else sys.argv[1:]
 
         if not cli_args:
             raise ParserOptionError("No command given!")
@@ -37,7 +37,7 @@ class Cmds:
         return cmd, self.cmd_parsers[cmd], cli_args[1:]
 
     def parse(self, cli_args: list[str] | None = None) -> tuple[str, Args]:
-        cli_args = cli_args or sys.argv[1:]
+        cli_args = cli_args if cli_args is not None else sys.argv[1:]
 
         cmd, args, remaining_cli_args = self.get_cmd_parser(cli_args)
         args.parse(remaining_cli_args)

@@ -390,23 +390,24 @@ class Args:
 
         def help(arg: Arg) -> Text:
             helptext = Text(arg.help, style="italic")
+            delim = " " if helptext else ""
             if arg.is_flag:
-                helptext = Text.assemble(helptext, " ", ("(flag)", sty_opt))
+                helptext = Text.assemble(helptext, delim, ("(flag)", sty_opt))
             elif arg.required:
-                helptext = Text.assemble(helptext, " ", ("(required)", "yellow"))
+                helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
                     helptext, " ", (f"(default: {default_value(arg.default)})", sty_opt)
                 )
             return helptext
 
-        # print brief if it exists
+        # (1) print brief if it exists
         console = console or Console()
         console.print()
         if self.brief and not usage_only:
             console.print(self.brief + "\n")
 
-        # then print usage line
+        # (2) then print usage line
         console.print(Text("Usage:", style=sty_title))
         usage_line = Text(f"  {name}")
         pos_only_str = Text(" ").join(
@@ -425,7 +426,7 @@ class Args:
             console.print()
             return
 
-        # then print help message for each argument
+        # (3) then print help message for each argument
         if positional_only + positional_and_named + named_only:
             console.print(Text("\nwhere", style=sty_title))
 
