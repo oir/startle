@@ -493,7 +493,7 @@ But they can be typed just like regular arguments.
 
 > [!INFO]
 Type annotations for `*args` and `**kwargs` apply to the _elements_, **not**
-the containers themselves. See [Arbirary argument lists](https://peps.python.org/pep-0484/#arbitrary-argument-lists-and-default-argument-values) under PEP 484, or
+the containers themselves. See [Arbitrary argument lists](https://peps.python.org/pep-0484/#arbitrary-argument-lists-and-default-argument-values) under PEP 484, or
 the example below.
 
 `program.py`:
