@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from startle import register_type, start
+from startle import register, start
 
 
 @dataclass
@@ -21,7 +21,7 @@ def mul(a: Rational, b: Rational) -> Rational:
     return y
 
 
-register_type(
+register(
     Rational,
     parser=lambda value: Rational(*map(int, value.split("/"))),
     metavar=["<int>/<int>"],

@@ -63,7 +63,7 @@ appended to the container.
 
 ## User defined types
 
-Any custom type that is not supported out of the box can be supported by registering it with `register_type()`.
+Any custom type that is not supported out of the box can be supported by registering it with `register()`.
 To register such a type `T`, you need to define
 - a parser, which is a function (callable) that takes in a `str` and returns a `T`
   (and can raise a `startle.error.ParserValueError` if needed)
@@ -75,12 +75,12 @@ To register such a type `T`, you need to define
 An example:<br>
 `program.py`:
 ```python
-from startle import start, register_type
+from startle import start, register
 
 def func(nums: tuple[int, float]):
     print(nums)
 
-register_type(
+register(
     tuple[int, float],
     parser=lambda s: tuple([int(s.split(",")[0]), float(s.split(",")[1])]),
     metavar="pair")
