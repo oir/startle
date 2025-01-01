@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from pytest import raises
 
-from startle import register_type
+from startle import register
 from startle.error import ParserConfigError
 
 from ._utils import check_args
@@ -54,7 +54,7 @@ def test_unsupported_type():
     ):
         check_args(mul2, ["1/2", "3/4"], [], {})
 
-    register_type(
+    register(
         Rational,
         parser=lambda value: Rational(*map(int, value.split("/"))),
         metavar="<int>/<int>",
