@@ -138,11 +138,9 @@ def make_args(func: Callable, program_name: str = "") -> Args:
                 name = Name(long=param_name_sub)
 
         if param.kind is Parameter.VAR_POSITIONAL:
-            # print(normalized_annotation)
             nary = True
             container_type = list
         elif param.kind is Parameter.VAR_KEYWORD:
-            # print(normalized_annotation)
             nary = True
             container_type = dict  # this is the only case that can be a dict
 
