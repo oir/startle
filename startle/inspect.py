@@ -138,12 +138,12 @@ def make_args(func: Callable, program_name: str = "") -> Args:
                 name = Name(long=param_name_sub)
 
         if param.kind is Parameter.VAR_POSITIONAL:
+            # print(normalized_annotation)
             nary = True
-            normalized_annotation = str
             container_type = list
         elif param.kind is Parameter.VAR_KEYWORD:
+            # print(normalized_annotation)
             nary = True
-            normalized_annotation = str
             container_type = dict  # this is the only case that can be a dict
 
         # for n-ary options, type should refer to the inner type
@@ -165,9 +165,7 @@ def make_args(func: Callable, program_name: str = "") -> Args:
             container_type = normalized_annotation
             normalized_annotation = str
 
-        if param.kind is not Parameter.VAR_KEYWORD and not is_parsable(
-            normalized_annotation
-        ):
+        if not is_parsable(normalized_annotation):
             raise ParserConfigError(
                 f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
                 f"for parameter `{param_name}` in `{func.__name__}()`!"
