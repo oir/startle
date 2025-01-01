@@ -487,6 +487,37 @@ fails, they will be appended to `args`.
 (`kwargs` is prioritized over `args` because otherwise everything
 would always fall into `args` and `kwargs` would always be empty.)
 
+**Type hinting unknown arguments and options:** Above, there is no type hint
+attached to `*args` or `**kwargs`, therefore `start()` will leave them as strings.
+But they can be typed just like regular arguments.
+
+> [!INFO]
+Type annotations for `*args` and `**kwargs` apply to the _elements_, **not**
+the containers themselves. See [Arbirary argument lists](https://peps.python.org/pep-0484/#arbitrary-argument-lists-and-default-argument-values) under PEP 484, or
+the example below.
+
+`program.py`:
+```python
+from startle import start
+
+def f(*args: int, **kwargs: float):
+    print(args)
+    print(kwargs)
+
+start(f)
+```
+```bash
+~ ❯ python program.py 1 2 3 --euler=2.72 --pi=3.14
+(1, 2, 3)
+{'euler': 2.72, 'pi': 3.14}
+~ ❯ python program.py 1 2 3 --euler=e --pi=3.14
+Error: Cannot parse float from `e`!
+...
+~ ❯ python program.py 1 2 three --euler=2.72 --pi=3.14
+Error: Cannot parse integer from `three`!
+...
+~ ❯
+```
 
 ## Commands
 
