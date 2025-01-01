@@ -86,7 +86,7 @@ class Arg:
             self._value = defaultdict(list)
 
         self._value = cast(dict[str, list[str]], self._value)
-        self._value[key].append(value)  # TODO: take hints for kwargs into account
+        self._value[key].append(parse(value, self.type_))
 
     def parse(self, value: str | None = None):
         """
