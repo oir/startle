@@ -1,10 +1,11 @@
 import inspect
-from typing import Callable, Any, Union, get_origin, get_args, TextIO
-from collections import abc
 import types
+from collections import abc
+from typing import Any, Callable, TextIO, Union, get_args, get_origin
 
 from startle import register, start
 from startle.inspect import _parse_docstring
+
 
 def _shorten_type_annotation(annotation: Any) -> str:
     origin = get_origin(annotation)
@@ -37,6 +38,7 @@ def _shorten_type_annotation(annotation: Any) -> str:
 
     return str(annotation).removeprefix("typing.")
 
+
 def _parse_return_description(func: Callable) -> str:
     """
     Parse the return description of a function from its docstring.
@@ -60,6 +62,7 @@ def _parse_return_description(func: Callable) -> str:
 
     return return_description
 
+
 def func_api(func: Callable, file: TextIO):
     """
     Given a function `func`, print its docstrings and signature with
@@ -74,7 +77,10 @@ def func_api(func: Callable, file: TextIO):
         maybe_default = ""
         if param.default is not inspect.Parameter.empty:
             maybe_default = f" = {param.default}"
-        print(f"    {param.name}: {_shorten_type_annotation(param.annotation)}{maybe_default},", file=file)
+        print(
+            f"    {param.name}: {_shorten_type_annotation(param.annotation)}{maybe_default},",
+            file=file,
+        )
     print(f") -> {_shorten_type_annotation(sig.return_annotation)}", file=file)
     print("```\n", file=file)
 
