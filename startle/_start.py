@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, TypeVar, Any
+from typing import Any, Callable, TypeVar
 
 from rich.console import Console
 
