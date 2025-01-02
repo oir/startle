@@ -18,6 +18,8 @@
 
   --heading-h1-font-weight: 900;
   --heading-h2-font-weight: 900;
+  --heading-h3-font-weight: 900;
+  --heading-h4-font-weight: 900;
 }
 .codey {
   font-family: var(--code-font-family);
@@ -37,6 +39,7 @@
 }
 .sidebar-nav strong {
   color: #808080;
+  font-size: 0.9em;
 }
 h1.app-name {
   line-height: 1.1em;

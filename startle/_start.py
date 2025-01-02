@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 from rich.console import Console
 
@@ -15,7 +15,23 @@ def start(
     obj: Callable | list[Callable] | dict[str, Callable],
     args: list[str] | None = None,
     caught: bool = True,
-):
+) -> Any:
+    """
+    Given a function, or a container of functions `obj`, parse its arguments from
+    the command-line and call it.
+
+    Args:
+        obj: The function or functions to parse the arguments for and invoke.
+            If a list or dict, the functions are treated as subcommands.
+        args: The arguments to parse. If None, uses the arguments from the command-line
+            (i.e. sys.argv).
+        caught: Whether to catch and print errors instead of raising. This is used
+            to display a more presentable output when a parse error occurs instead
+            of the default traceback.
+    Returns:
+        The return value of the function `obj`, or the subcommand of `obj` if it is
+        a list or dict.
+    """
     if isinstance(obj, list) or isinstance(obj, dict):
         return _start_cmds(obj, args, caught)
     else:
