@@ -38,7 +38,9 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
             if i >= len(lines):
                 break
         i += 1
-        while i < len(lines) and lines[i].strip() != "":
+        
+        # then run through the lines until we find the first non-indented or empty line
+        while i < len(lines) and lines[i].startswith(" ") and lines[i].strip() != "":
             args_section += lines[i] + "\n"
             i += 1
 
