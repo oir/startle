@@ -6,9 +6,11 @@
     Liberation Mono, Lucida Console, monospace;
   --code-font-size: 12px;
   --code-font-weight: 450;
+  --theme-color: #fb007a;
 
-  --sidebar-name-font-weight: 400;
+  --sidebar-name-font-weight: 900;
   --sidebar-name-text-align: left;
+  --sidebar-name-color: var(--base-color);
 
   --sidebar-nav-pagelink-padding: 0 0 0 0;
   --sidebar-nav-pagelink-background: transparent;
@@ -73,4 +75,10 @@ div.badges picture {
     Lucida Console,
     monospace;
   font-style: italic;
+}
+
+/* docsify-plugin-flexible-alerts default color
+is not accounting for dark mode */
+.alert.callout {
+  border-color: var(--mono-tint2);
 }

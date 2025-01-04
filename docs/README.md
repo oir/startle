@@ -1,7 +1,13 @@
-# startle ⚡👀
+<div align="center">
+<div style="margin-bottom: -20px">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="img/logo-dark.png" width="400">
+  <source media="(prefers-color-scheme: light)" srcset="img/logo-light.png" width="400">
+  <img src="img/logo-light.png" width="400">
+</picture>
+</div>
 
-
-_Give your code a start._
+_Give your code a start._ ⚡👀
 
 ![tests](https://github.com/oir/startle/actions/workflows/test.yml/badge.svg)
 [![Coverage Status](https://img.shields.io/coverallsCoverage/github/oir/startle?logo=Coveralls)](https://coveralls.io/github/oir/startle?branch=main)
@@ -9,8 +15,11 @@ _Give your code a start._
 [![PyPI Version](https://img.shields.io/pypi/v/startle?label=pip%20install%20startle&color=blue&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48IS0tIUZvbnQgQXdlc29tZSBGcmVlIDYuNy4yIGJ5IEBmb250YXdlc29tZSAtIGh0dHBzOi8vZm9udGF3ZXNvbWUuY29tIExpY2Vuc2UgLSBodHRwczovL2ZvbnRhd2Vzb21lLmNvbS9saWNlbnNlL2ZyZWUgQ29weXJpZ2h0IDIwMjQgRm9udGljb25zLCBJbmMuLS0+PHBhdGggZmlsbD0iI2VhZWJlZSIgZD0iTTI4OCAzMmMwLTE3LjctMTQuMy0zMi0zMi0zMnMtMzIgMTQuMy0zMiAzMmwwIDI0Mi43LTczLjQtNzMuNGMtMTIuNS0xMi41LTMyLjgtMTIuNS00NS4zIDBzLTEyLjUgMzIuOCAwIDQ1LjNsMTI4IDEyOGMxMi41IDEyLjUgMzIuOCAxMi41IDQ1LjMgMGwxMjgtMTI4YzEyLjUtMTIuNSAxMi41LTMyLjggMC00NS4zcy0zMi44LTEyLjUtNDUuMyAwTDI4OCAyNzQuNyAyODggMzJ6TTY0IDM1MmMtMzUuMyAwLTY0IDI4LjctNjQgNjRsMCAzMmMwIDM1LjMgMjguNyA2NCA2NCA2NGwzODQgMGMzNS4zIDAgNjQtMjguNyA2NC02NGwwLTMyYzAtMzUuMy0yOC43LTY0LTY0LTY0bC0xMDEuNSAwLTQ1LjMgNDUuM2MtMjUgMjUtNjUuNSAyNS05MC41IDBMMTY1LjUgMzUyIDY0IDM1MnptMzY4IDU2YTI0IDI0IDAgMSAxIDAgNDggMjQgMjQgMCAxIDEgMC00OHoiLz48L3N2Zz4=)](https://pypi.org/project/startle/)
 [![Docs](https://img.shields.io/badge/docs-2ECE53?logo=docsify&logoColor=fff)](https://oir.github.io/startle/)
 
+</div>
+
 > [!ATTENTION]
-**startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
+**Startle** is _alpha_ and should be considered unstable as its interface is fluid 😅.
+Consider pinning to a version.
 
 ---
 
@@ -20,7 +29,7 @@ _Give your code a start._
 
 </div>
 
-**startle** lets you transform a python function (or functions) into a command line entry point, e.g:
+**Startle** lets you transform a python function (or functions) into a command line entry point, e.g:
 
 `wc.py`:
 ```python
@@ -142,7 +151,7 @@ are passed along to `add()`.
 
 ## Motivation
 
-**startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
+**Startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
 but aims to be _non-intrusive_, to have stronger type support, and to have saner defaults.
 Thus, some decisions are done differently:
 
@@ -155,7 +164,7 @@ Thus, some decisions are done differently:
   You can use `--things a b c` (in addition to `--things=a --things=b --things=c`).
   See [example](https://github.com/oir/startle/blob/main/examples/cat.py).
 - Like Typer and unlike Fire, help is simply printed and not displayed in pager mode by default, so you can keep referring to it as you type your command.
-- Like Fire and unlike Typer, docstrings determine the description of each argument in the help text, instead of having to individually add extra type annotations. This allows for a very non-intrusive design, you can adopt (or un-adopt) **startle** with no changes to your functions.
+- Like Fire and unlike Typer, docstrings determine the description of each argument in the help text, instead of having to individually add extra type annotations. This allows for a very non-intrusive design, you can adopt (or un-adopt) **Startle** with no changes to your functions.
 - `*args` but also `**kwargs` are supported, to parse unknown arguments as well as unknown options (`--unk-key unk-val`).
   See [example](https://github.com/oir/startle/blob/main/examples/search_gh.py).
 

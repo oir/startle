@@ -1,9 +1,9 @@
 
-* [Home](/ "startle")
-* [CLI from functions](function-interface "startle • CLI from functions")
-* [Types and parsing rules](types "startle • Types and parsing rules")
+* [Home](/ "Startle")
+* [CLI from functions](function-interface "Startle • CLI from functions")
+* [Types and parsing rules](types "Startle • Types and parsing rules")
 
 
 __API__
 
-* [Functions](/api/functions)
+* [Functions](/api/functions "Startle • Functions")
