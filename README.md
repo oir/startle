@@ -1,6 +1,10 @@
-# startle ⚡👀
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/26485518-3586-43d3-b77c-066868181795" width="400">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/c26368f6-00d6-425f-974e-99c6af8eb680" width="400">
+  <img src="https://github.com/user-attachments/assets/c26368f6-00d6-425f-974e-99c6af8eb680" width="400">
+</picture>
 
-_Give your code a start._
+_Give your code a start._ ⚡👀
 
 ![tests](https://github.com/oir/startle/actions/workflows/test.yml/badge.svg)
 [![Coverage Status](https://img.shields.io/coverallsCoverage/github/oir/startle?logo=Coveralls)](https://coveralls.io/github/oir/startle?branch=main)
