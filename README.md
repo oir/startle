@@ -9,9 +9,9 @@ _Give your code a start._
 [![Docs](https://img.shields.io/badge/docs-2ECE53?logo=docsify&logoColor=fff)](https://oir.github.io/startle/)
 
 > [!WARNING]  
-> **startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
+> **Startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
 
-**startle** lets you transform a python function (or functions) into a command line entry point, e.g:
+**Startle** lets you transform a python function (or functions) into a command line entry point, e.g:
 
 `wc.py`:
 ```python
@@ -60,7 +60,7 @@ parse the arguments, and invoke `word_count`.
 ---
 <br>
 
-**startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
+**Startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
 but aims to be _non-intrusive_, to have stronger type support, and to have saner defaults.
 Thus, some decisions are done differently:
 
@@ -72,7 +72,7 @@ Thus, some decisions are done differently:
   You can use `--things a b c` (in addition to `--things=a --things=b --things=c`).
   See [example](https://github.com/oir/startle/blob/main/examples/cat.py).
 - Like Typer and unlike Fire, help is simply printed and not displayed in pager mode by default, so you can keep referring to it as you type your command.
-- Like Fire and unlike Typer, docstrings determine the description of each argument in the help text, instead of having to individually add extra type annotations. This allows for a very non-intrusive design, you can adopt (or un-adopt) **startle** with no changes to your functions.
+- Like Fire and unlike Typer, docstrings determine the description of each argument in the help text, instead of having to individually add extra type annotations. This allows for a very non-intrusive design, you can adopt (or un-adopt) **Startle** with no changes to your functions.
 - `*args` but also `**kwargs` are supported, to parse unknown arguments as well as unknown options (`--unk-key unk-val`).
   See [example](https://github.com/oir/startle/blob/main/examples/search_gh.py).
 
