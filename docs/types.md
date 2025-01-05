@@ -5,7 +5,6 @@ That is, how a raw string argument is processed to construct an object with the 
 
 ## Supported (built-in) types
 
-<div style="width: 150%; margin-left: -25%;">
 
 | Type (hint) | Parsed value for argument string `s` | Metavar |
 | ---- | ------------- | ------- |
@@ -14,12 +13,11 @@ That is, how a raw string argument is processed to construct an object with the 
 | `float` | `float(s)` | `<float>` |
 | `bool` | `True` if lowercased `s` is in `["true", "t", "yes", "y", "1"]` <br> `False` if lowercased `s` is in `["false", "f", "no", "n", "0"]` <br> parse error otherwise | `true\|false` |
 | `pathlib.Path` | `pathlib.Path(s)` | `<path>` |
-| `T(enum.StrEnum)` or <br> `T(str, enum.Enum)` | `T.OPT_I` for an enum option with `s == T.OPT_I.value` <br> parse error otherwise | `T.OPT_1.value\|...\|T.OPT_N.value` |
+| `T(enum.StrEnum)` or <br> `T(str, enum.Enum)` | `T.OPT_I` for an enum option with `s == T.OPT_I.value` <br> parse error otherwise | <span class="codey"> T.OPT_1.value\|...\|T.OPT_N.value </span> |
 | Other enum types, `T(enum.Enum)` | `T.OPT_I` for an enum option with `s == "opt-i"` <br> parse error otherwise | `opt-1\|...\|opt-n` |
-| `typing.Literal["opt-1", ..., "opt-n"]` | `s` if `s` is in `["opt-1", ..., "opt-n"]` <br> parse error otherwise | `opt-1\|...\|opt-n` |
+| <span class="codey"> typing.Literal["opt-1", ..., "opt-n"] </span> | `s` if `s` is in `["opt-1", ..., "opt-n"]` <br> parse error otherwise | `opt-1\|...\|opt-n` |
 | `T \| None` or <br> `typing.Optional[T]` or <br> `typing.Union[T, None]` | parse as if `T` | metavar as if `T` |
 
-</div>
 
 _Note: Metavar column shows how the input value is represented in the help string._
 
