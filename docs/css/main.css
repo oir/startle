@@ -27,6 +27,16 @@
   font-family: var(--code-font-family);
   font-size: 0.9em;
   font-weight: var(--code-font-weight);
+
+  margin: var(--code-inline-margin);
+  padding: var(--code-inline-padding);
+  border-radius: var(--code-inline-border-radius);
+  background: var(--code-inline-background);
+  color: var(--code-inline-color, currentColor);
+
+  /* to make horizontal padding and border radius apply to wrapped text */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 .ascii code {
   font-family: Menlo, Consolas, Monaco, Liberation Mono, Lucida Console,
@@ -81,4 +91,35 @@ div.badges picture {
 is not accounting for dark mode */
 .alert.callout {
   border-color: var(--mono-tint2);
+}
+
+.markdown-section .code-file pre {
+  border-radius: 0 0 4px 4px;
+  margin: 1pt 0 1em 0;
+}
+
+.markdown-section .code-file .code-filename {
+  display: block;
+  overflow: auto;
+  padding: 0 0.5em;
+  box-sizing: inherit;
+
+  background: var(--code-theme-background);
+  border-radius: 4px 4px 0 0;
+
+  font-family: var(--code-font-family);
+  font-size: var(--code-font-size);
+  font-weight: var(--code-font-weight);
+  letter-spacing: normal;
+  line-height: var(--code-block-line-height);
+  -moz-tab-size: var(--code-tab-size);
+  -o-tab-size: var(--code-tab-size);
+  tab-size: var(--code-tab-size);
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-wrap: normal;
+  word-break: normal;
+  -webkit-hyphens: none;
+  hyphens: none;
 }

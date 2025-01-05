@@ -31,7 +31,12 @@ Consider pinning to a version.
 
 **Startle** lets you transform a python function (or functions) into a command line entry point, e.g:
 
-`wc.py`:
+<div class="code-file">
+<div class="code-filename">
+wc.py:
+</div>
+
+
 ```python
 from pathlib import Path
 from typing import Literal
@@ -60,6 +65,8 @@ def word_count(
 start(word_count)
 ```
 
+</div>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/help-dark.svg" width="100%">
   <source media="(prefers-color-scheme: light)" srcset="img/help-light.svg" width="100%">
@@ -81,7 +88,11 @@ You can invoke `start()` with a list of functions instead of a single function.
 In this case, functions are made available as _commands_ with their own arguments
 and options in your CLI:
 
-`calc.py`:
+
+<div class="code-file">
+<div class="code-filename">
+calc.py:
+</div>
 
 ```python
 from startle import start
@@ -137,6 +148,8 @@ if __name__ == "__main__":
     start([add, sub, mul, div])
 
 ```
+
+</div>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="img/calc-help-dark.svg" width="100%">
