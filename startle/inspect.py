@@ -207,6 +207,8 @@ def make_args_from_func(func: Callable, program_name: str = "") -> Args:
 
 
 def make_args_from_class(cls: type, program_name: str = "") -> Args:
+    # TODO: check if cls is a class?
+
     func = cls.__init__  # type: ignore
     # (mypy thinks cls is an instance)
 
@@ -221,7 +223,8 @@ def make_args_from_class(cls: type, program_name: str = "") -> Args:
         (name, param) for name, param in sig.parameters.items() if name != self_name
     ]
 
-    # Attempt to parse brief and arg descriptions from docstring
-    brief, arg_helps = _parse_docstring(func)
+    # TODO: maybe for regular classes, parse from init, but for dataclasses, parse from the class itself?
+    brief = ""
+    arg_helps: dict[str, str] = {}
 
     return make_args_from_params(params, cls.__name__, brief, arg_helps, program_name)
