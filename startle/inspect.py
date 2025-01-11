@@ -2,7 +2,7 @@ import inspect
 import re
 from inspect import Parameter
 from textwrap import dedent
-from typing import Callable, get_args, get_origin, get_type_hints
+from typing import Callable, Iterable, get_args, get_origin, get_type_hints
 
 from ._type_utils import _normalize_type, _shorten_type_annotation
 from .args import Arg, Args, Name
@@ -70,32 +70,32 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     return brief, arg_helps
 
 
-def make_args(func: Callable, program_name: str = "") -> Args:
-    # Get the signature of the function
-    sig = inspect.signature(func)
-
-    # Attempt to parse brief and arg descriptions from docstring
-    brief, arg_helps = _parse_docstring(func)
-
+def make_args_from_params(
+    params: Iterable[tuple[str, Parameter]],
+    obj_name: str,
+    brief: str = "",
+    arg_helps: dict[str, str] = {},
+    program_name: str = "",
+) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
     used_short_names = set()
 
-    for param_name, _ in sig.parameters.items():
+    for param_name, _ in params:
         if param_name == "help":
             raise ParserConfigError(
-                f"Cannot use `help` as parameter name in {func.__name__}()!"
+                f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options
-    for param_name, param in sig.parameters.items():
+    for param_name, param in params:
         if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
             if len(param_name) == 1:
                 used_short_names.add(param_name)
 
     # Iterate over the parameters and add arguments based on kind
-    for param_name, param in sig.parameters.items():
+    for param_name, param in params:
         normalized_annotation = (
             str
             if param.annotation is Parameter.empty
@@ -168,7 +168,7 @@ def make_args(func: Callable, program_name: str = "") -> Args:
         if not is_parsable(normalized_annotation):
             raise ParserConfigError(
                 f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
-                f"for parameter `{param_name}` in `{func.__name__}()`!"
+                f"for parameter `{param_name}` in `{obj_name}`!"
             )
 
         arg = Arg(
@@ -191,3 +191,37 @@ def make_args(func: Callable, program_name: str = "") -> Args:
             args.add(arg)
 
     return args
+
+
+def make_args_from_func(func: Callable, program_name: str = "") -> Args:
+    # Get the signature of the function
+    sig = inspect.signature(func)
+    params = sig.parameters.items()
+
+    # Attempt to parse brief and arg descriptions from docstring
+    brief, arg_helps = _parse_docstring(func)
+
+    return make_args_from_params(
+        params, f"{func.__name__}()", brief, arg_helps, program_name
+    )
+
+
+def make_args_from_class(cls: type, program_name: str = "") -> Args:
+    func = cls.__init__  # type: ignore
+    # (mypy thinks cls is an instance)
+
+    # Get the signature of the function
+    sig = inspect.signature(func)
+
+    self_name = next(
+        iter(sig.parameters)
+    )  # name of the first parameter (usually `self`)
+    # Filter out the first parameter
+    params = [
+        (name, param) for name, param in sig.parameters.items() if name != self_name
+    ]
+
+    # Attempt to parse brief and arg descriptions from docstring
+    brief, arg_helps = _parse_docstring(func)
+
+    return make_args_from_params(params, cls.__name__, brief, arg_helps, program_name)
