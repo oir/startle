@@ -85,7 +85,7 @@ def _parse_func_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     """
     Parse the docstring of a function and return the brief and the arg descriptions.
     """
-    docstring = inspect.getdoc(func)
+    docstring = inspect.getdoc(func) or ""
     hints = get_type_hints(func)
 
     return _parse_docstring(docstring, hints, "function")
@@ -95,7 +95,7 @@ def _parse_class_docstring(cls: type) -> dict[str, str]:
     """
     Parse the docstring of a class and return the arg descriptions.
     """
-    docstring = inspect.getdoc(cls)
+    docstring = inspect.getdoc(cls) or ""
     hints = get_type_hints(cls.__init__)  # type: ignore
 
     _, arg_helps = _parse_docstring(docstring, hints, "class")
