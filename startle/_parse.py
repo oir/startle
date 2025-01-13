@@ -11,11 +11,12 @@ T = TypeVar("T")
 def parse(
     cls: Type[T],
     args: list[str] | None = None,
+    brief: str = "",
     caught: bool = True,
 ) -> T:
     try:
         # first, make Args object from the class
-        args_ = make_args_from_class(cls)
+        args_ = make_args_from_class(cls, brief=brief)
     except ParserConfigError as e:
         if caught:
             console = Console()

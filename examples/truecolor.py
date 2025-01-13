@@ -16,6 +16,13 @@ from startle import parse
 class StyledText:
     """
     A styled text with color.
+
+    Attributes:
+        text: The text to display.
+        red: The red component of the text color.
+        green: The green component of the text color.
+        blue: The blue component of the text color.
+        style: The style of the text.
     """
 
     text: str
@@ -31,5 +38,5 @@ def display(st: StyledText) -> None:
 
 
 if __name__ == "__main__":
-    cfg = parse(StyledText)
+    cfg = parse(StyledText, brief="Print styled text.")
     display(cfg)
