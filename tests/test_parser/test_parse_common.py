@@ -3,7 +3,7 @@ import re
 from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
-from startle.inspect import make_args
+from startle.inspect import make_args_from_func
 
 from ._utils import check_args
 
@@ -300,10 +300,10 @@ def test_param_named_help():
     with raises(
         ParserConfigError,
         match=re.escape(
-            f"Cannot use `help` as parameter name in {hi_help.__name__}()!"
+            f"Cannot use `help` as parameter name in `{hi_help.__name__}()`!"
         ),
     ):
-        make_args(hi_help)
+        make_args_from_func(hi_help)
 
 
 def hi_untyped(name, count) -> None:

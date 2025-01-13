@@ -124,5 +124,5 @@ def test_config_err(capsys, run: Callable) -> None:
         pass
 
     check_exits(
-        capsys, run, f, [], "Error: Cannot use `help` as parameter name in f()!"
+        capsys, run, f, [], "Error: Cannot use `help` as parameter name in `f()`!"
     )

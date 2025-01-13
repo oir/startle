@@ -2,7 +2,15 @@ import inspect
 import re
 from inspect import Parameter
 from textwrap import dedent
-from typing import Callable, get_args, get_origin, get_type_hints
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    Literal,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from ._type_utils import _normalize_type, _shorten_type_annotation
 from .args import Arg, Args, Name
@@ -10,14 +18,17 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
-def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
-    """
-    Parse the docstring of a function and return the brief and the arg descriptions.
-    """
+def _parse_docstring(
+    docstring: str, hints: dict[str, Any], kind: Literal["function", "class"]
+) -> tuple[str, dict[str, str]]:
+    params_headers: list[str]
+    if kind == "function":
+        params_headers = ["Args:", "Arguments:"]
+    else:
+        params_headers = ["Attributes:"]
+
     brief = ""
-    arg_helps = {}
-    docstring = inspect.getdoc(func)
-    hints = get_type_hints(func)
+    arg_helps: dict[str, str] = {}
 
     if docstring:
         lines = docstring.split("\n")
@@ -33,7 +44,7 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
         # first, find the Args section
         args_section = ""
         i = 0
-        while lines[i].strip() != "Args:":  # find the Args section
+        while lines[i].strip() not in params_headers:  # find the parameters section
             i += 1
             if i >= len(lines):
                 break
@@ -70,32 +81,54 @@ def _parse_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     return brief, arg_helps
 
 
-def make_args(func: Callable, program_name: str = "") -> Args:
-    # Get the signature of the function
-    sig = inspect.signature(func)
+def _parse_func_docstring(func: Callable) -> tuple[str, dict[str, str]]:
+    """
+    Parse the docstring of a function and return the brief and the arg descriptions.
+    """
+    docstring = inspect.getdoc(func) or ""
+    hints = get_type_hints(func)
 
-    # Attempt to parse brief and arg descriptions from docstring
-    brief, arg_helps = _parse_docstring(func)
+    return _parse_docstring(docstring, hints, "function")
 
+
+def _parse_class_docstring(cls: type) -> dict[str, str]:
+    """
+    Parse the docstring of a class and return the arg descriptions.
+    """
+    docstring = inspect.getdoc(cls) or ""
+    hints = get_type_hints(cls.__init__)  # type: ignore
+
+    _, arg_helps = _parse_docstring(docstring, hints, "class")
+
+    return arg_helps
+
+
+def make_args_from_params(
+    params: Iterable[tuple[str, Parameter]],
+    obj_name: str,
+    brief: str = "",
+    arg_helps: dict[str, str] = {},
+    program_name: str = "",
+) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
     used_short_names = set()
 
-    for param_name, _ in sig.parameters.items():
+    for param_name, _ in params:
         if param_name == "help":
             raise ParserConfigError(
-                f"Cannot use `help` as parameter name in {func.__name__}()!"
+                f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options
-    for param_name, param in sig.parameters.items():
+    for param_name, param in params:
         if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
             if len(param_name) == 1:
                 used_short_names.add(param_name)
 
     # Iterate over the parameters and add arguments based on kind
-    for param_name, param in sig.parameters.items():
+    for param_name, param in params:
         normalized_annotation = (
             str
             if param.annotation is Parameter.empty
@@ -168,7 +201,7 @@ def make_args(func: Callable, program_name: str = "") -> Args:
         if not is_parsable(normalized_annotation):
             raise ParserConfigError(
                 f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
-                f"for parameter `{param_name}` in `{func.__name__}()`!"
+                f"for parameter `{param_name}` in `{obj_name}`!"
             )
 
         arg = Arg(
@@ -191,3 +224,39 @@ def make_args(func: Callable, program_name: str = "") -> Args:
             args.add(arg)
 
     return args
+
+
+def make_args_from_func(func: Callable, program_name: str = "") -> Args:
+    # Get the signature of the function
+    sig = inspect.signature(func)
+    params = sig.parameters.items()
+
+    # Attempt to parse brief and arg descriptions from docstring
+    brief, arg_helps = _parse_func_docstring(func)
+
+    return make_args_from_params(
+        params, f"{func.__name__}()", brief, arg_helps, program_name
+    )
+
+
+def make_args_from_class(cls: type, program_name: str = "", brief: str = "") -> Args:
+    # TODO: check if cls is a class?
+
+    func = cls.__init__  # type: ignore
+    # (mypy thinks cls is an instance)
+
+    # Get the signature of the initializer
+    sig = inspect.signature(func)
+
+    # name of the first parameter (usually `self`)
+    self_name = next(iter(sig.parameters))
+
+    # filter out the first parameter
+    params = [
+        (name, param) for name, param in sig.parameters.items() if name != self_name
+    ]
+
+    # TODO: maybe for regular classes, parse from init, but for dataclasses, parse from the class itself?
+    arg_helps = _parse_class_docstring(cls)
+
+    return make_args_from_params(params, cls.__name__, brief, arg_helps, program_name)

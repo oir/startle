@@ -6,7 +6,7 @@ from rich.console import Console
 from .args import Args
 from .cmds import Cmds
 from .error import ParserConfigError, ParserOptionError, ParserValueError
-from .inspect import make_args
+from .inspect import make_args_from_func
 
 T = TypeVar("T")
 
@@ -53,7 +53,7 @@ def _start_func(
     """
     try:
         # first, make Args object from the function
-        args_ = make_args(func)
+        args_ = make_args_from_func(func)
     except ParserConfigError as e:
         if caught:
             console = Console()
@@ -116,7 +116,7 @@ def _start_cmds(
         # first, make Cmds object from the functions
         cmds = Cmds(
             {
-                cmd_name: make_args(func, program_name=prog_name(cmd_name))
+                cmd_name: make_args_from_func(func, program_name=prog_name(cmd_name))
                 for cmd_name, func in cmd2func.items()
             }
         )

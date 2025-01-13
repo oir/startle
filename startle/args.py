@@ -397,7 +397,9 @@ class Args:
                 helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
             else:
                 helptext = Text.assemble(
-                    helptext, " ", (f"(default: {default_value(arg.default)})", sty_opt)
+                    helptext,
+                    delim,
+                    (f"(default: {default_value(arg.default)})", sty_opt),
                 )
             return helptext
 

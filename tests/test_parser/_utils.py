@@ -1,6 +1,6 @@
 from typing import Any, Callable
 
-from startle.inspect import make_args
+from startle.inspect import make_args_from_func
 
 
 def check_args(
@@ -18,7 +18,7 @@ def check_args(
         expected_args: The expected positional arguments.
         expected_kwargs: The expected keyword arguments
     """
-    args, kwargs = make_args(f).parse(cli_args).make_func_args()
+    args, kwargs = make_args_from_func(f).parse(cli_args).make_func_args()
     assert args == expected_args
     assert kwargs == expected_kwargs
 
