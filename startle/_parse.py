@@ -14,6 +14,22 @@ def parse(
     brief: str = "",
     caught: bool = True,
 ) -> T:
+    """
+    Given a class `cls`, parse arguments from the command-line according to the
+    class definition and construct an instance.
+
+    Args:
+        cls: The class to parse the arguments for and construct an instance of.
+        args: The arguments to parse. If None, uses the arguments from the command-line
+            (i.e. sys.argv).
+        brief: The brief description of the parser. This is used to display a brief
+            when --help is invoked.
+        caught: Whether to catch and print errors instead of raising. This is used
+            to display a more presentable output when a parse error occurs instead
+            of the default traceback.
+    Returns:
+        An instance of the class `cls`.
+    """
     try:
         # first, make Args object from the class
         args_ = make_args_from_class(cls, brief=brief)
