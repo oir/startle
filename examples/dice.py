@@ -29,7 +29,7 @@ class Config:
     kind: Literal["single", "pair"] = "single"
 
 
-def throw(cfg: Config) -> None:
+def throw_dice(cfg: Config) -> None:
     """
     Throw the dice according to the configuration.
     """
@@ -43,4 +43,4 @@ def throw(cfg: Config) -> None:
 
 if __name__ == "__main__":
     cfg = parse(Config, brief="A program to throw dice.")
-    throw(cfg)
+    throw_dice(cfg)
