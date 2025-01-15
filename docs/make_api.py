@@ -3,7 +3,7 @@ import types
 from collections import abc
 from typing import Any, Callable, TextIO, Union, get_args, get_origin
 
-from startle import register, start
+from startle import parse, register, start
 from startle.inspect import _parse_func_docstring
 
 
@@ -76,7 +76,7 @@ def func_api(func: Callable, file: TextIO):
     for param in sig.parameters.values():
         maybe_default = ""
         if param.default is not inspect.Parameter.empty:
-            maybe_default = f" = {param.default}"
+            maybe_default = f" = {repr(param.default)}"
         print(
             f"    {param.name}: {_shorten_type_annotation(param.annotation)}{maybe_default},",
             file=file,
@@ -101,7 +101,7 @@ def func_api(func: Callable, file: TextIO):
         if default is inspect.Parameter.empty:
             default = "_required_"
         else:
-            default = f"`{default}`"
+            default = f"`{repr(default)}`"
         print(f"| {name} | {typ} | {desc} | {default} |", file=file)
 
     print("\n", file=file)
@@ -117,10 +117,12 @@ def func_api(func: Callable, file: TextIO):
     rt = f"`{rt}`"
     desc = _parse_return_description(func)
     print(f"| {rt} | {desc} |", file=file)
+    print("\n\n", file=file)
 
 
 if __name__ == "__main__":
     with open("docs/api/functions.md", "w") as f:
         print("# Functions\n", file=f)
         func_api(start, f)
+        func_api(parse, f)
         func_api(register, f)
