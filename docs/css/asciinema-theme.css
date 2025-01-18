@@ -1,0 +1,47 @@
+.asciinema-player-theme-custom-auto {
+  /* adapted from pencil.vim */
+    --term-color-foreground: #212121;
+    --term-color-background: #f1f1f1;
+  
+    
+    --term-color-0: #212121; /* black */
+    --term-color-1: #C30771; /* red */
+    --term-color-2: #10A778; /* green */
+    --term-color-3: #A89C14; /* yellow */
+    --term-color-4: #008EC4; /* blue */
+    --term-color-5: #fb007a; /* magenta */
+    --term-color-6: #20A5BA; /* cyan */
+    --term-color-7: #f1f1f1; /* white */
+    --term-color-8: #212121; /* bright black */
+    --term-color-9: #E32791; /* bright red */ 
+    --term-color-10: #10A778; /* bright green */
+    --term-color-11: #A89C14; /* bright yellow */
+    --term-color-12: #008EC4; /* bright blue */
+    --term-color-13: #fb007a; /* bright magenta */
+    --term-color-14: #20A5BA; /* bright cyan */
+    --term-color-15: #f1f1f1; /* bright white */
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    /* Firewatch (except background) */
+    .asciinema-player-theme-custom-auto {
+      --term-color-0: #585f6d;
+      --term-color-1: #d95360;
+      --term-color-10: #5ab977;
+      --term-color-11: #dfb563;
+      --term-color-12: #4c89c4;
+      --term-color-13: #d55119;
+      --term-color-14: #44a8b6;
+      --term-color-15: #e6e5ff;
+      --term-color-2: #5ab977;
+      --term-color-3: #dfb563;
+      --term-color-4: #4d89c4;
+      --term-color-5: #d55119;
+      --term-color-6: #44a8b6;
+      --term-color-7: #e6e5ff;
+      --term-color-8: #585f6d;
+      --term-color-9: #d95360;
+      --term-color-background: #1e2027;
+      --term-color-foreground: #9ba2b2;
+    }
+  }

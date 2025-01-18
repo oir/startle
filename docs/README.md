@@ -67,20 +67,12 @@ start(word_count)
 
 </div>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="img/help-dark.svg" width="100%">
-  <source media="(prefers-color-scheme: light)" srcset="img/help-light.svg" width="100%">
-  <img src="img/help-light.svg" width="100%">
-</picture>
+<div id="wc-help-cast"></div>
 
 When you invoke `start()`, it will construct an argparser (based on type hints and docstring),
 parse the arguments, and invoke `word_count`.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="img/out-dark.svg" width="100%">
-  <source media="(prefers-color-scheme: light)" srcset="img/out-light.svg" width="100%">
-  <img src="img/out-light.svg" width="100%">
-</picture>
+<div id="wc-run-cast"></div>
 
 ### Multiple commands
 
@@ -151,11 +143,7 @@ if __name__ == "__main__":
 
 </div>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="img/calc-help-dark.svg" width="100%">
-  <source media="(prefers-color-scheme: light)" srcset="img/calc-help-light.svg" width="100%">
-  <img src="img/calc-help-light.svg" width="100%">
-</picture>
+<div id="calc-cast"></div>
 
 In the invocation `python calc.py add 1 2 3`, first argument is `add`, which causes the execution
 to dispatch to the `add` command (i.e. `add()` function). The rest of the arguments (`1 2 3`) then
@@ -182,3 +170,36 @@ Thus, some decisions are done differently:
   See [example](https://github.com/oir/startle/blob/main/examples/search_gh.py).
 
 See all [examples](https://github.com/oir/startle/tree/main/examples).
+
+
+<script>
+AsciinemaPlayer.create('cast/wc-help.cast', document.getElementById('wc-help-cast'), {
+    autoPlay: true,
+    controls: true,
+    rows: 14,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/wc-run.cast', document.getElementById('wc-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    rows: 3,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/calc.cast', document.getElementById('calc-cast'), {
+    autoPlay: true,
+    controls: true,
+    rows: 27,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+</script>
+
+
