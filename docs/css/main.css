@@ -70,9 +70,6 @@ h2 {
 .search {
   font-size: 14px;
 }
-.dual-code .language-cpp {
-  font-size: 12px !important;
-}
 div.tip p {
   margin: 0 0 0 0;
 }
@@ -100,36 +97,24 @@ is not accounting for dark mode */
   border-color: var(--mono-tint2);
 }
 
-.markdown-section .code-file pre {
-  border-radius: 0 0 4px 4px;
-  margin: 1pt 0 1em 0;
+.markdown-section .code-file pre[data-lang]::after {
+  content: var(--filename) !important;
+  margin-left: 0.5em;
+  padding: 0.2em;
+  color: var(--base-color);
+  background-color: var(--mono-tint2);
+  opacity: 0.6;
+  font-weight: 200;
+  font-size: 0.9em;
+  border-radius: 0.25em;
 }
 
-.markdown-section .code-file .code-filename {
-  display: block;
-  overflow: auto;
-  padding: 0 0.5em;
-  box-sizing: inherit;
-
-  background: var(--code-theme-background);
-  border-radius: 4px 4px 0 0;
-
-  font-family: var(--code-font-family);
-  font-size: var(--code-font-size);
-  font-weight: var(--code-font-weight);
-  letter-spacing: normal;
-  line-height: var(--code-block-line-height);
-  -moz-tab-size: var(--code-tab-size);
-  -o-tab-size: var(--code-tab-size);
-  tab-size: var(--code-tab-size);
-  text-align: left;
-  white-space: pre;
-  word-spacing: normal;
-  word-wrap: normal;
-  word-break: normal;
-  -webkit-hyphens: none;
-  hyphens: none;
+@media (prefers-color-scheme: dark) {
+  .markdown-section .code-file pre[data-lang]::after {
+    background-color: var(--mono-tint1);
+  }
 }
+
 
 
 .ap-control-bar {
