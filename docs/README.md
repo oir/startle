@@ -31,10 +31,7 @@ Consider pinning to a version.
 
 **Startle** lets you transform a python function (or functions) into a command line entry point, e.g:
 
-<div class="code-file">
-<div class="code-filename">
-wc.py:
-</div>
+<div class="code-file" style="--filename:'wc.py'">
 
 
 ```python
@@ -81,10 +78,7 @@ In this case, functions are made available as _commands_ with their own argument
 and options in your CLI:
 
 
-<div class="code-file">
-<div class="code-filename">
-calc.py:
-</div>
+<div class="code-file" style="--filename:'calc.py'">
 
 ```python
 from startle import start

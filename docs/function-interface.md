@@ -15,7 +15,9 @@ More specifically, when you invoke `start(f)`, for a function `f`, it will
 
 Let us revisit the main example to make the above concepts more concrete.
 
-`wc.py`:
+<div class="code-file" style="--filename:'wc.py'">
+
+
 ```python
 from pathlib import Path
 from typing import Literal
@@ -44,9 +46,11 @@ def word_count(
 start(word_count)
 ```
 
+</div>
+
 Assume we run our file from the command-line as:
 ```bash
-python wc.py myfile.txt -k char --verbose
+python wc.py wc.py -k char --verbose
 ```
 
 Then `start(word_count)` will first inspect the `word_count()` function
@@ -148,11 +152,8 @@ word_count(*f_args, **f_kwargs)
 ```
 
 This gives us the final output:
-```bash
-~ ❯ python examples/wc.py myfile.txt -k char --verbose
-590 chars in examples/wc.py
-~ ❯
-```
+
+<div id="wc-run-cast"></div>
 
 ## Argument specification
 
@@ -353,8 +354,11 @@ type hints corresponding to the argument. If the type is a `typing.Literal` of
 strings, e.g. `Literal["a", "b", "c"]`, or an `Enum` class (a user type deriving
 from `enum.Enum`), allowed types will be limited to the specific options.
 
-For example:<br>
-`program.py:`
+For example:
+
+<div class="code-file" style="--filename:'program.py'">
+
+
 ```python
 from typing import Literal
 from startle import start
@@ -364,14 +368,10 @@ def hello(to: Literal["world", "terra", "earth"]):
 
 start(hello)
 ```
-```bash
-~ ❯ python program.py world
-hello world
-~ ❯ python program.py mars
-Error: Cannot parse literal ('world', 'terra', 'earth') from `mars`!
-...
-~ ❯
-```
+
+</div>
+
+<div id="choices-run-cast"></div>
 
 This is similar to the `choices` configuration in the native `argparse` module of Python.
 
@@ -393,8 +393,10 @@ admit any unrecognized command-line arguments and store them in `args` variable.
 
 This is similar to the `parse_unknown_args()` of the native `argparse` module.
 
-An example: <br>
-`program.py`:
+An example:
+
+<div class="code-file" style="--filename:'program.py'">
+
 ```python
 from startle import start
 
@@ -403,11 +405,10 @@ def f(*args):
 
 start(f)
 ```
-```bash
-~ ❯ python program.py fireball --kind red hot --mana-cost=30
-('fireball', '--kind', 'red', 'hot', '--mana-cost=30')
-~ ❯ 
-```
+
+</div>
+
+<div id="unk-args-run-cast"></div>
 
 Observe that _everything_ unknown is fed into `args` as unknown _positional_
 argument strings, including strings that conventionally look like option names
@@ -426,8 +427,10 @@ Any string that could be interpreted as an option name will be parsed as an unkn
 option name. Any string that could not be interpreted as an option name will be parsed
 as a value to the option preceding the value.
 
-An example:<br>
-`program.py`:
+An example:
+
+<div class="code-file" style="--filename:'program.py'">
+
 ```python
 from startle import start
 
@@ -436,11 +439,10 @@ def f(**kwargs):
 
 start(f)
 ```
-```bash
-~ ❯ python program.py --kind red hot --mana-cost=30 -d up
-{'kind': ['red', 'hot'], 'mana_cost': '30', 'd': 'up'}
-~ ❯ 
-```
+
+</div>
+
+<div id="unk-kwargs-run-cast"></div>
 
 When multiple _value_-like strings is matched to the same _name_-like string, the
 values are gathered in a list, as if the option was n-ary. If not, they stand as strings.
@@ -452,10 +454,9 @@ merely `str`s.
 
 > [!WARNING]
 > Note that unlike "unknown arguments", "unknown options" can _fail_ to parse:
-> ```bash
-> ~ ❯ python program.py fireball --kind red hot --mana-cost=30
-> Error: Unexpected positional argument: `fireball`!
-> ```
+>
+> <div id="unk-kwargs-err-cast"></div>
+>
 > This is because there is no way to associate `"fireball"` with any _name_-like keyword,
 > and `**kwargs` implies _keyword only_ unknown arguments to our function.
 
@@ -463,7 +464,8 @@ merely `str`s.
 both unknown arguments, and options, i.e. if our function has both `*args`, and `**kwargs`
 listed:
 
-`program.py`:
+<div class="code-file" style="--filename:'program.py'">
+
 ```python
 from startle import start
 
@@ -473,12 +475,10 @@ def f(*args, **kwargs):
 
 start(f)
 ```
-```bash
-~ ❯ python program.py fireball --kind red hot --mana-cost=30
-('fireball',)
-{'kind': ['red', 'hot'], 'mana_cost': '30'}
-~ ❯
-```
+
+</div>
+
+<div id="unk-args-kwargs-run-cast"></div>
 
 In this case, unrecognized command-line argument strings are first
 attempted to be parsed as key-value items for `kwargs`, and if that
@@ -496,7 +496,8 @@ Type annotations for `*args` and `**kwargs` apply to the _elements_, **not**
 the containers themselves. See [Arbitrary argument lists](https://peps.python.org/pep-0484/#arbitrary-argument-lists-and-default-argument-values) under PEP 484, or
 the example below.
 
-`program.py`:
+<div class="code-file" style="--filename:'program.py'">
+
 ```python
 from startle import start
 
@@ -506,18 +507,10 @@ def f(*args: int, **kwargs: float):
 
 start(f)
 ```
-```bash
-~ ❯ python program.py 1 2 3 --euler=2.72 --pi=3.14
-(1, 2, 3)
-{'euler': 2.72, 'pi': 3.14}
-~ ❯ python program.py 1 2 3 --euler=e --pi=3.14
-Error: Cannot parse float from `e`!
-...
-~ ❯ python program.py 1 2 three --euler=2.72 --pi=3.14
-Error: Cannot parse integer from `three`!
-...
-~ ❯
-```
+
+</div>
+
+<div id="unk-args-kwargs-typed-run-cast"></div>
 
 ## Commands
 
@@ -564,3 +557,76 @@ start({
 ```bash
 ~ ❯ python program.py baz <arguments to func3>
 ```
+
+<script>
+AsciinemaPlayer.create('cast/wc-run.cast', document.getElementById('wc-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    rows: 3,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/choices-run.cast', document.getElementById('choices-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    rows: 11,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/unk-args-run.cast', document.getElementById('unk-args-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 3,
+    rows: 3,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/unk-kwargs-run.cast', document.getElementById('unk-kwargs-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 3,
+    rows: 3,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/unk-kwargs-err.cast', document.getElementById('unk-kwargs-err-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 3,
+    rows: 9,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/unk-args-kwargs-run.cast', document.getElementById('unk-args-kwargs-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 3,
+    rows: 4,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/unk-args-kwargs-typed-run.cast', document.getElementById('unk-args-kwargs-typed-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 2,
+    rows: 20,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+</script>
+
+
