@@ -23,6 +23,13 @@
   --heading-h3-font-weight: 900;
   --heading-h4-font-weight: 900;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mono-hue: 227;
+    --theme-color: #d55119;
+  }
+}
+
 .codey {
   font-family: var(--code-font-family);
   font-size: 0.9em;
@@ -123,3 +130,28 @@ is not accounting for dark mode */
   -webkit-hyphens: none;
   hyphens: none;
 }
+
+
+.ap-control-bar {
+  border-top: 0 !important;
+}
+
+.ap-playback-button {
+  position: absolute;
+  right: 0;
+}
+
+.ap-faint {
+  opacity: 0.6 !important;
+}
+
+/*
+.ap-player::before {
+  content: "Console:";
+  display: block;
+  font-size: 0.9em;
+  padding-left: 0.5em;
+  opacity: 0.5;
+  border-bottom: 2px solid var(--base-background-color);
+}
+*/

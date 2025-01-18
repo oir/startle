@@ -1,10 +1,6 @@
-/* adapted to prism.js from pencil.vim
-** https://github.com/preservim/vim-colors-pencil/
-*/
-
 code[class*="language-"],
 pre[class*="language-"] {
-  color: #424242;
+  color: #abb2bf;
   text-align: left;
   white-space: pre;
   word-spacing: normal;
@@ -27,7 +23,7 @@ pre[class*="language-"] ::-moz-selection,
 code[class*="language-"]::-moz-selection,
 code[class*="language-"] ::-moz-selection {
   text-shadow: none;
-  background: #E2E2E2;
+  background: #2C3340;
 }
 
 pre[class*="language-"]::selection,
@@ -35,7 +31,7 @@ pre[class*="language-"] ::selection,
 code[class*="language-"]::selection,
 code[class*="language-"] ::selection {
   text-shadow: none;
-  background: #E2E2E2;
+  background: #2C3340;
 }
 
 @media print {
@@ -52,72 +48,87 @@ pre[class*="language-"] {
   overflow: auto;
 }
 
-:not(pre)>code[class*="language-"],
+:not(pre) > code[class*="language-"],
 pre[class*="language-"] {
-  color: #828282;
+  color: white;
   background: var(--code-theme-background);
 }
 
-:not(pre)>code[class*="language-"] {
+:not(pre) > code[class*="language-"] {
   padding: 0.1em;
   border-radius: 0.3em;
   white-space: normal;
 }
 
-
-.token.builtin {
-  color: #008EC4;
-
-}
-
-.token.boolean {
-  color: #10A778;
-
-}
-
-.token.constant {
-  color: #10A778;
-
-}
-
-.token.string {
-  color: #A89C14;
-
-}
-
-.token.function {
-  color: #20A5BA;
-
-}
-
 .token.keyword {
-  color: #fb007a;
-
+  color: #d55119;
 }
 
 .token.operator {
-  color: #008EC4;
-
+  color: #d55119;
 }
 
-.token.punctuation {
-  color: #008EC4;
-
+.token.boolean {
+  color: #56B6C2;
 }
 
 .token.comment {
-  color: #878787;
-  font-style: italic
+  color: #5C6370; 
+}
+
+.token.string {
+  color: #C8AE9D;
+  
+}
+
+.token.number {
+  color: #D19A66;
+  
+}
+
+.token.attr-name {
+  color: #D19A66;
+  
+}
+
+.token.selector {
+  color: #D19A66;
+  
+}
+
+.token.builtin {
+  color: #56B6C2;
+  
+}
+
+.token.char {
+  color: #56B6C2;
+  
+}
+
+.token.constant {
+  color: #56B6C2;
+  
 }
 
 .token.variable {
-  color: #fb007a;
-
+  color: #FF9057;
+  
 }
 
-.token.hexcode {
-  color: #D75F00;
+.token.class-name {
+  color: #E5C07B;
+  
+}
 
+.token.function {
+  color: #EBEBFF;
+  
+}
+
+.token.tag {
+  color: #E06C75;
+  
 }
 
 .token.important,
