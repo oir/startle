@@ -15,7 +15,8 @@ repetition.
 
 ## Example
 
-`dice.py`:
+
+<div class="code-file" style="--filename:'dice.py'">
 
 ```python
 import random
@@ -58,20 +59,14 @@ if __name__ == "__main__":
     throw_dice(cfg)
 ```
 
+</div>
+
 Note how `parse()` is invoked with the `Config` _class_ as its argument, and
 then returns a config object. Thus, `cfg` will be of type `Config`.
 
 Then `dice.py` could be executed like:
 
-```bash
-~ ❯ python examples/dice.py --sides 6 --count 5 --kind pair
-3 1
-4 4
-1 4
-3 1
-2 1
-~ ❯
-```
+<div id="dice-run-cast"></div>
 
 The steps that are being performed under the hood is very similar to the functional interface:
 `parse()`
@@ -93,22 +88,31 @@ However, there are some differences too:
   descriptions are ignored. Instead, `parse()` takes in a `brief` argument explicitly to define the
   brief displayed when `--help` is passed:
 
-  ```bash
-  ~ ❯ python examples/dice.py --help
-
-  A program to throw dice.
-
-  Usage:
-  examples/dice.py [--sides <int>] [--count <int>] [--kind single|pair]
-
-  where
-  (pos. or opt.)  -s|--sides <int>       The number of sides on the dice. (default: 6)
-  (pos. or opt.)  -c|--count <int>       The number of dice to throw. (default: 1)
-  (pos. or opt.)  -k|--kind single|pair  Whether to throw a single die or a pair of dice. (default: single)
-  (option)        -?|--help              Show this help message and exit.
-
-  ~ ❯
-  ```
+<div id="dice-help-cast"></div>
 
 Besides these points, argument specification is the same as
 [argument specification in the function interface](/function-interface#argument-specification).
+
+
+<script>
+AsciinemaPlayer.create('cast/dice-run.cast', document.getElementById('dice-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 2,
+    rows: 7,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/dice-help.cast', document.getElementById('dice-help-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 2,
+    rows: 15,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+</script>
