@@ -70,8 +70,10 @@ To register such a type `T`, you need to define
   - or a list of strings (for choice-based types, to be joined by `|`)
   to define how help string refers to the variable name in place of the actual value.
 
-An example:<br>
-`program.py`:
+An example:
+
+<div class="code-file" style="--filename:'program.py'">
+
 ```python
 from startle import start, register
 
@@ -81,22 +83,27 @@ def func(nums: tuple[int, float]):
 register(
     tuple[int, float],
     parser=lambda s: tuple([int(s.split(",")[0]), float(s.split(",")[1])]),
-    metavar="pair")
+    metavar="pair",
+)
 
 start(func)
 ```
-```bash
-~ ❯ python program.py --help
 
-Usage:
-  program.py --nums <pair>
+</div>
 
-where
-  (pos. or opt.)  -n|--nums <pair>  (required)
-  (option)        -?|--help         Show this help message and exit.
-
-~ ❯ python program.py 3,4.5
-(3, 4.5)
-```
+<div id="custom-type-run-cast"></div>
 
 See [rational.py](https://github.com/oir/startle/blob/main/examples/rational.py) for a full example.
+
+<script>
+AsciinemaPlayer.create('cast/custom-type-run.cast', document.getElementById('custom-type-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 2,
+    rows: 12,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+</script>
