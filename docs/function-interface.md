@@ -541,7 +541,7 @@ command.
 ~ ❯ python program.py func1 <arguments to func1>
 ```
 
-See example [here](/#multiple-command) or in
+See example [here](/#multiple-commands) or in
 [calc.py](https://github.com/oir/startle/blob/main/examples/calc.py).
 
 You can rename commands by passing in a `dict[str, Callable]` instead of a
