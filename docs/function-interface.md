@@ -558,6 +558,33 @@ start({
 ~ ❯ python program.py baz <arguments to func3>
 ```
 
+## Returning
+
+`start()`'s design is primarily around the use case where it invokes a function executing
+the entire program.
+However, for completeness, `start()` returns, and it returns the object returned by its
+argument function.
+
+This means it is possible to continue execution using the returned value
+from `start()`:
+
+<div class="code-file" style="--filename:'adder.py'">
+
+```python
+from startle import start
+
+def add(numbers: list[int]) -> None:
+    return sum(numbers)
+
+if __name__ == "__main__":
+    total = start(add)
+    print(f"Computed {total}.")
+```
+
+</div>
+
+<div id="adder-run-cast"></div>
+
 <script>
 AsciinemaPlayer.create('cast/wc-run.cast', document.getElementById('wc-run-cast'), {
     autoPlay: true,
@@ -622,6 +649,16 @@ AsciinemaPlayer.create('cast/unk-args-kwargs-typed-run.cast', document.getElemen
     controls: true,
     speed: 2,
     rows: 20,
+    terminalFontFamily: "'Fira Mono', monospace",
+    terminalFontSize: "12px",
+    fit: false,
+    theme: "custom-auto",
+});
+AsciinemaPlayer.create('cast/adder-run.cast', document.getElementById('adder-run-cast'), {
+    autoPlay: true,
+    controls: true,
+    speed: 2,
+    rows: 3,
     terminalFontFamily: "'Fira Mono', monospace",
     terminalFontSize: "12px",
     fit: false,
