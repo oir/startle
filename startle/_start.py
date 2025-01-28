@@ -25,9 +25,9 @@ def start(
             If a list or dict, the functions are treated as subcommands.
         args: The arguments to parse. If None, uses the arguments from the command-line
             (i.e. sys.argv).
-        caught: Whether to catch and print errors instead of raising. This is used
-            to display a more presentable output when a parse error occurs instead
-            of the default traceback.
+        caught: Whether to catch and print (startle specific) errors instead of raising.
+            This is used to display a more presentable output when a parse error occurs instead
+            of the default traceback. This option will never catch non-startle errors.
     Returns:
         The return value of the function `obj`, or the subcommand of `obj` if it is
         a list or dict.
