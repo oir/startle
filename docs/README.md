@@ -71,82 +71,68 @@ parse the arguments, and invoke `word_count`.
 
 <div id="wc-run-cast"></div>
 
-### Multiple commands
-
-You can invoke `start()` with a list of functions instead of a single function.
+You can also invoke `start()` with a list of functions instead of a single function.
 In this case, functions are made available as _commands_ with their own arguments
-and options in your CLI:
+and options in your CLI. See [here](/function-interface#commands).
 
+---
 
-<div class="code-file" style="--filename:'calc.py'">
+**Startle** also allows you to transform a class (possibly a dataclass) into a command line parser:
+
+<div class="code-file" style="--filename:'dice.py'">
 
 ```python
-from startle import start
+import random
+from dataclasses import dataclass
+from typing import Literal
+
+from startle import parse
 
 
-def add(ns: list[int]) -> None:
+@dataclass
+class Config:
     """
-    Add numbers together.
+    Configuration for the dice program.
 
-    Args:
-        ns: The numbers to add together.
+    Attributes:
+        sides: The number of sides on the dice.
+        count: The number of dice to throw.
+        kind: Whether to throw a single die or a pair of dice.
     """
-    total = sum(ns)
-    print(f"{' + '.join(map(str, ns))} = {total}")
+
+    sides: int = 6
+    count: int = 1
+    kind: Literal["single", "pair"] = "single"
 
 
-def sub(a: int, b: int) -> None:
+def throw_dice(cfg: Config) -> None:
     """
-    Subtract a number from another.
-
-    Args:
-        a: The first number.
-        b: The second number
+    Throw the dice according to the configuration.
     """
-    print(f"{a} - {b} = {a - b}")
-
-
-def mul(ns: list[int]) -> None:
-    """
-    Multiply numbers together.
-
-    Args:
-        ns: The numbers to multiply together.
-    """
-    total = 1
-    for n in ns:
-        total *= n
-    print(f"{' * '.join(map(str, ns))} = {total}")
-
-
-def div(a: int, b: int) -> None:
-    """
-    Divide a number by another.
-
-    Args:
-        a: The dividend.
-        b: The divisor.
-    """
-    print(f"{a} / {b} = {a / b}")
+    if cfg.kind == "single":
+        for _ in range(cfg.count):
+            print(random.randint(1, cfg.sides))
+    else:
+        for _ in range(cfg.count):
+            print(random.randint(1, cfg.sides), random.randint(1, cfg.sides))
 
 
 if __name__ == "__main__":
-    start([add, sub, mul, div])
-
+    cfg = parse(Config, brief="A program to throw dice.")
+    throw_dice(cfg)
 ```
 
 </div>
 
-<div id="calc-cast"></div>
+Then `dice.py` could be executed like:
 
-In the invocation `python calc.py add 1 2 3`, first argument is `add`, which causes the execution
-to dispatch to the `add` command (i.e. `add()` function). The rest of the arguments (`1 2 3`) then
-are passed along to `add()`.
+<div id="dice-run-cast"></div>
 
 
 ## Motivation
 
-**Startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
+**Startle** is inspired by [Typer](https://github.com/fastapi/typer), [Fire](https://github.com/google/python-fire),
+and [HFArgumentParser](https://github.com/huggingface/transformers/blob/main/src/transformers/hf_argparser.py),
 but aims to be _non-intrusive_, to have stronger type support, and to have saner defaults.
 Thus, some decisions are done differently:
 
@@ -185,10 +171,11 @@ AsciinemaPlayer.create('cast/wc-run.cast', document.getElementById('wc-run-cast'
     fit: false,
     theme: "custom-auto",
 });
-AsciinemaPlayer.create('cast/calc.cast', document.getElementById('calc-cast'), {
+AsciinemaPlayer.create('cast/dice-run.cast', document.getElementById('dice-run-cast'), {
     autoPlay: true,
     controls: true,
-    rows: 27,
+    speed: 2,
+    rows: 7,
     terminalFontFamily: "'Fira Mono', monospace",
     terminalFontSize: "12px",
     fit: false,

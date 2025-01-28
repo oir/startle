@@ -24,9 +24,9 @@ def parse(
             (i.e. sys.argv).
         brief: The brief description of the parser. This is used to display a brief
             when --help is invoked.
-        caught: Whether to catch and print errors instead of raising. This is used
-            to display a more presentable output when a parse error occurs instead
-            of the default traceback.
+        caught: Whether to catch and print (startle specific) errors instead of raising.
+            This is used to display a more presentable output when a parse error occurs instead
+            of the default traceback. This option will never catch non-startle errors.
     Returns:
         An instance of the class `cls`.
     """
