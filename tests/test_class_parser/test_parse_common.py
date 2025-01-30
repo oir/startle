@@ -9,6 +9,33 @@ from pytest import mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
+@dataclass
+class ConfigDataClass:
+    """
+    A configuration class for the program.
+    """
+
+    count: int = 1
+    amount: float = 1.0
+    label: str = "default"
+
+class ConfigClass:
+    """
+    A configuration class for the program.
+    """
+
+    def __init__(self, count: int = 1, amount: float = 1.0, label: str = "default"):
+        self.count = count
+        self.amount = amount
+        self.label = label
+    
+    def __eq__(self, other):
+        return (
+            self.count == other.count
+            and self.amount == other.amount
+            and self.label == other.label
+        )
+
 
 @mark.parametrize(
     "count",
@@ -37,21 +64,13 @@ from startle.error import ParserConfigError, ParserOptionError, ParserValueError
         lambda l: [f"-l={l}"],
     ],
 )
-def test_dataclass_with_all_defaults(
+@mark.parametrize("Config", [ConfigDataClass, ConfigClass]) 
+def test_class_with_all_defaults(
     count: Callable[[str], list[str]],
     amount: Callable[[str], list[str]],
     label: Callable[[str], list[str]],
+    Config: type,
 ):
-    @dataclass
-    class Config:
-        """
-        A configuration class for the program.
-        """
-
-        count: int = 1
-        amount: float = 1.0
-        label: str = "default"
-
     assert parse(Config, []) == Config()
 
     assert parse(Config, [*count(2)]) == Config(count=2)

@@ -1,7 +1,9 @@
-from ._utils import NS, OS, TS, VS, check_help
+from dataclasses import dataclass, field
+
+from ._utils import NS, OS, TS, VS, check_help_from_func, check_help_from_class
 
 
-def test_simple():
+def test_func_simple():
     def fusion(
         left_path: str,
         right_path: str,
@@ -68,8 +70,46 @@ Fuse two monsters with polymerization.
   [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
 
-    check_help(fusion, "fuse.py", expected)
-    check_help(fusion2, "fuse.py", expected)
+    check_help_from_func(fusion, "fuse.py", expected)
+    check_help_from_func(fusion2, "fuse.py", expected)
+
+
+def test_class_simple():
+    @dataclass
+    class FusionConfig:
+        """
+        Fusion config.
+
+        Attributes:
+            left_path: Path to the first monster.
+            right_path: Path to the second monster.
+            output_path: Path to store the fused monster.
+            components: Components to fuse.
+            alpha: Weighting factor for the first monster.
+        """
+
+        left_path: str
+        right_path: str
+        output_path: str
+        components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+        alpha: float = 0.5
+
+    expected = f"""\
+
+Fuse two monsters with polymerization.
+
+[{TS}]Usage:[/]
+  fuse.py [{NS} {OS}]--left-path[/] [{VS}]<text>[/] [{NS} {OS}]--right-path[/] [{VS}]<text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+
+[{TS}]where[/]
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-l[/][{OS} dim]|[/][{NS} {OS}]--left-path[/] [{VS}]<text>[/]                [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-r[/][{OS} dim]|[/][{NS} {OS}]--right-path[/] [{VS}]<text>[/]               [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: <factory>)[/]              
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
+  [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+"""
+    check_help_from_class(FusionConfig, "Fuse two monsters with polymerization.", "fuse.py", expected)
 
 
 def test_nargs():
@@ -108,4 +148,4 @@ Count the characters in a list of words.
   [dim](option)[/]      [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                             [i dim]Show this help message and exit.[/]                 
 """
 
-    check_help(count_chars, "count_chars.py", expected)
+    check_help_from_func(count_chars, "count_chars.py", expected)
