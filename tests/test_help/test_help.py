@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from ._utils import NS, OS, TS, VS, check_help_from_func, check_help_from_class
+from ._utils import NS, OS, TS, VS, check_help_from_class, check_help_from_func
 
 
 def test_func_simple():
@@ -109,7 +109,9 @@ Fuse two monsters with polymerization.
   [dim](pos. or opt.)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
   [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
-    check_help_from_class(FusionConfig, "Fuse two monsters with polymerization.", "fuse.py", expected)
+    check_help_from_class(
+        FusionConfig, "Fuse two monsters with polymerization.", "fuse.py", expected
+    )
 
 
 def test_nargs():

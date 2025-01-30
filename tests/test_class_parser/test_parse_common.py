@@ -9,6 +9,7 @@ from pytest import mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
+
 @dataclass
 class ConfigDataClass:
     """
@@ -19,6 +20,7 @@ class ConfigDataClass:
     amount: float = 1.0
     label: str = "default"
 
+
 class ConfigClass:
     """
     A configuration class for the program.
@@ -28,7 +30,7 @@ class ConfigClass:
         self.count = count
         self.amount = amount
         self.label = label
-    
+
     def __eq__(self, other):
         return (
             self.count == other.count
@@ -64,7 +66,7 @@ class ConfigClass:
         lambda l: [f"-l={l}"],
     ],
 )
-@mark.parametrize("Config", [ConfigDataClass, ConfigClass]) 
+@mark.parametrize("Config", [ConfigDataClass, ConfigClass])
 def test_class_with_all_defaults(
     count: Callable[[str], list[str]],
     amount: Callable[[str], list[str]],
