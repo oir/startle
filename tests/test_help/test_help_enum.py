@@ -3,7 +3,7 @@ from enum import Enum
 
 from pytest import mark
 
-from ._utils import NS, OS, TS, VS, check_help
+from ._utils import NS, OS, TS, VS, check_help_from_func
 
 # TODO: test how default enum values are displayed in help
 
@@ -48,7 +48,7 @@ def test_enum():
         """
         print(f"Drawing a {shape.value}.")
 
-    check_help(draw, "draw.py", expected_w_names)
+    check_help_from_func(draw, "draw.py", expected_w_names)
 
 
 def test_str_enum_multi_inheritance():
@@ -66,7 +66,7 @@ def test_str_enum_multi_inheritance():
         """
         print(f"Drawing a {shape.value}.")
 
-    check_help(draw, "draw.py", expected_w_values)
+    check_help_from_func(draw, "draw.py", expected_w_values)
 
 
 @mark.skipif(
@@ -89,7 +89,7 @@ def test_strenum():
         """
         print(f"Drawing a {shape.value}.")
 
-    check_help(draw, "draw.py", expected_w_values)
+    check_help_from_func(draw, "draw.py", expected_w_values)
 
 
 def test_intenum():
@@ -109,4 +109,4 @@ def test_intenum():
         """
         print(f"Drawing a {shape.value}.")
 
-    check_help(draw, "draw.py", expected_w_names)
+    check_help_from_func(draw, "draw.py", expected_w_names)
