@@ -75,6 +75,55 @@ Fuse two monsters with polymerization.
 
 
 def test_class_simple():
+    class FusionConfig:
+        """
+        Fusion config.
+
+        Attributes:
+            left_path: Path to the first monster.
+            right_path: Path to the second monster.
+            output_path: Path to store the fused monster.
+            components: Components to fuse.
+            alpha: Weighting factor for the first monster.
+        """
+
+        def __init__(
+            self,
+            left_path: str,
+            right_path: str,
+            /,
+            output_path: str,
+            *,
+            components: list[str] = ["fang", "claw"],
+            alpha: float = 0.5,
+        ):
+            self.left_path = left_path
+            self.right_path = right_path
+            self.output_path = output_path
+            self.components = components
+            self.alpha = alpha
+
+    expected = f"""\
+
+Fuse two monsters with polymerization.
+
+[{TS}]Usage:[/]
+  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+
+[{TS}]where[/]
+  [dim](positional)[/]    [{VS}]<[{NS}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](positional)[/]    [{VS}]<[{NS}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
+  [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+"""
+    check_help_from_class(
+        FusionConfig, "Fuse two monsters with polymerization.", "fuse.py", expected
+    )
+
+
+def test_dataclass_simple():
     @dataclass
     class FusionConfig:
         """
