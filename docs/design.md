@@ -45,6 +45,59 @@ This "non-intrusive" approach has the following benefits:
 - Since `cast_spell()` is native Python, it is easier to reason about, as it is more
   familiar to users who might not know about Startle's own data structures.
 
+
 ## Simple custom parser
 
+It would be preferable to rely on the native `argparse` module for parsing by constructing
+an `ArgumentParser` object from functions or classes, and merely invoking
+`ArgumentParser.parse_args()`, which would have the benefit of being more familiar to
+users. However `argparse` does not support arguments that are both positional and named
+options. To better align with the functional interface where a function argument could be both
+(if between `/` and `*`), a custom parser was needed.
+
+To this end **Startle** has its own `Args` class with a custom, yet simple parsing logic.
+
+This also had the benefit of more easily itegrating `rich` for prettier help strings.
+
+
 ## Enum parsing
+
+Traditionally, enums are used to represent a set of options as a set of names, while possibly
+hiding the actual underlying value. For example, for a suit of cards, one might have:
+```py
+class Suit(Enum):
+    CLUBS = 0
+    DIAMONDS = 1
+    HEARTS = 2
+    SPADES = 3
+```
+Then, the main motivation is to interact with, e.g. `Suit.HEARTS`, instead of the value `2`
+throughout the code.
+
+To align with this, **Startle** will expect to see `hearts` in the command line as opposed
+to `2`, as _names_, rather than _values_ is considered to be the interface.
+Therefore, in the general case, parser is generated based on the names of the options.
+
+However in the special case where values are `str`s, enums may be used in a 
+_value-aware_ manner, interchangeably with a string:
+```py
+class Suit(StrEnum):
+# class Suit(str, Enum):  # alternative, prior to StrEnum availability
+    CLUBS = "clubs"
+    DIAMONDS = "diamonds"
+    HEARTS = "hearts"
+    SPADES = "spades"
+```
+In this case, the _value_ is considered _visible_, and part of the interface.
+Thus, in the special case of string based enums, parser is generated based on the values of the options.
+In this particular example, both names and values would yield the same expected command line
+string, but if our enum had looked like this (for illustration purposes):
+```py
+class Suit(StrEnum):
+# class Suit(str, Enum):  # alternative, prior to StrEnum availability
+    SUIT_CLUBS = "clubs"
+    SUIT_DIAMONDS = "diamonds"
+    SUIT_HEARTS = "hearts"
+    SUIT_SPADES = "spades"
+```
+then `hearts` would be expected from the command line and `suit-hearts` would be unrecognized.
