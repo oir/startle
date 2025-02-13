@@ -4,7 +4,7 @@
 * [CLI from classes](class-interface "Startle • CLI from classes")
 * [Argument specification](arg-spec "Startle • Argument specification")
 * [Types and parsing rules](types "Startle • Types and parsing rules")
-* [Design](design "Startle • Types and parsing rules")
+* [Design](design "Startle • Design")
 
 
 __API__
