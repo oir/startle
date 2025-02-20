@@ -92,6 +92,8 @@ class Arg:
             assert value is None, "Flag options should not have values!"
             self._value = True
         elif self.is_nary:
+            assert value is not None, "Non-flag options should have values!"
+            assert self.container_type is not None, "Programming error!"
             if self._value is None:
                 self._value = self.container_type()
             self._value = self._append(self._value, parse(value, self.type_))

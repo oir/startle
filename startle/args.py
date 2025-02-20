@@ -110,6 +110,7 @@ class Args:
         name, value = name.split("=", 1)
         if name not in self._name2idx:
             if self.has_var_kwargs:
+                assert self._var_kwargs_type is not None
                 self.add(
                     Arg(
                         name=Name(long=name),  # does long always work?
@@ -146,6 +147,7 @@ class Args:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
             if self.has_var_kwargs:
+                assert self._var_kwargs_type is not None
                 self.add(
                     Arg(
                         name=Name(long=name),  # does long always work?
