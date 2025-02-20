@@ -87,10 +87,18 @@ def test_var_kwargs_errors():
     with raises(ParserOptionError, match="Unexpected positional argument: `world`!"):
         # because there is kwargs, but not args, the following is invalid
         check_args(
-            hi_w_nary_kwargs, ["hello", "--arg-a=val1", "--arg-a=val2", "3", "world"], [], {}
+            hi_w_nary_kwargs,
+            ["hello", "--arg-a=val1", "--arg-a=val2", "3", "world"],
+            [],
+            {},
         )
-    
-    check_args(hi_w_kwargs, ["hello", "3", "--arg-a", "--arg-b"], ["hello", 3], {"arg_a": "--arg-b"})
+
+    check_args(
+        hi_w_kwargs,
+        ["hello", "3", "--arg-a", "--arg-b"],
+        ["hello", 3],
+        {"arg_a": "--arg-b"},
+    )
 
 
 def test_var_args_kwargs():

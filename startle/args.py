@@ -23,7 +23,7 @@ class Args:
     # note that _name2idx is many to one, because a name can be both short and long
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
-    
+
     # remaining unk kwargs for functions with **kwargs
     _var_kwargs_type: type | None = None
     _var_kwargs_container_type: type | None = None
@@ -86,12 +86,16 @@ class Args:
             )
         self._var_args = arg
 
-    def enable_var_kwargs(self, type_: type, container_type: type | None = None, is_nary: bool = False) -> None:
+    def enable_var_kwargs(
+        self, type_: type, container_type: type | None = None, is_nary: bool = False
+    ) -> None:
         """
         Enable variadic keyword arguments for parsing unknown named options.
         """
         if is_nary and container_type is None:
-            raise ParserConfigError("Container type must be specified for n-ary options!")
+            raise ParserConfigError(
+                "Container type must be specified for n-ary options!"
+            )
         self._var_kwargs_type = type_
         self._var_kwargs_container_type = container_type
         self._var_kwargs_is_nary = is_nary
@@ -106,13 +110,15 @@ class Args:
         name, value = name.split("=", 1)
         if name not in self._name2idx:
             if self.has_var_kwargs:
-                self.add(Arg(
-                    name=Name(long=name), # does long always work?
-                    type_=self._var_kwargs_type,
-                    container_type=self._var_kwargs_container_type,
-                    is_named=True,
-                    is_nary=self._var_kwargs_is_nary,
-                ))
+                self.add(
+                    Arg(
+                        name=Name(long=name),  # does long always work?
+                        type_=self._var_kwargs_type,
+                        container_type=self._var_kwargs_container_type,
+                        is_named=True,
+                        is_nary=self._var_kwargs_is_nary,
+                    )
+                )
             elif self._var_args:
                 self._var_args.parse(args[idx])
                 return idx + 1
@@ -140,13 +146,15 @@ class Args:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
             if self.has_var_kwargs:
-                self.add(Arg(
-                    name=Name(long=name), # does long always work?
-                    type_=self._var_kwargs_type,
-                    container_type=self._var_kwargs_container_type,
-                    is_named=True,
-                    is_nary=self._var_kwargs_is_nary,
-                ))
+                self.add(
+                    Arg(
+                        name=Name(long=name),  # does long always work?
+                        type_=self._var_kwargs_type,
+                        container_type=self._var_kwargs_container_type,
+                        is_named=True,
+                        is_nary=self._var_kwargs_is_nary,
+                    )
+                )
             elif self._var_args:
                 self._var_args.parse(args[idx])
                 return idx + 1
@@ -424,7 +432,7 @@ class Args:
         )
         if named_str:
             usage_components.append(named_str)
-        #if self._var_kwargs:
+        # if self._var_kwargs:
         #    usage_components.append(
         #        Text.assemble(
         #            "[",

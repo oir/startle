@@ -1,6 +1,5 @@
-from collections import defaultdict
-from dataclasses import dataclass, field
-from typing import Any, cast
+from dataclasses import dataclass
+from typing import Any
 
 from .error import ParserConfigError
 from .metavar import _get_metavar
@@ -100,4 +99,3 @@ class Arg:
             assert value is not None, "Non-flag options should have values!"
             self._value = parse(value, self.type_)
         self._parsed = True
-

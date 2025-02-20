@@ -218,9 +218,9 @@ def make_args_from_params(
             args.add_unknown_args(arg)
         elif param.kind is Parameter.VAR_KEYWORD:
             args.enable_var_kwargs(
-                type_ = normalized_annotation,
-                container_type = container_type,
-                is_nary = nary,
+                type_=normalized_annotation,
+                container_type=container_type,
+                is_nary=nary,
             )
         else:
             args.add(arg)
