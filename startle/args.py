@@ -23,7 +23,15 @@ class Args:
     # note that _name2idx is many to one, because a name can be both short and long
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
-    _var_kwargs: Arg | None = None  # remaining unk kwargs for functions with **kwargs
+    
+    # remaining unk kwargs for functions with **kwargs
+    _var_kwargs_type: type | None = None
+    _var_kwargs_container_type: type | None = None
+    _var_kwargs_is_nary: bool = False
+
+    @property
+    def has_var_kwargs(self) -> bool:
+        return self._var_kwargs_type is not None
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -78,15 +86,15 @@ class Args:
             )
         self._var_args = arg
 
-    def add_unknown_kwargs(self, arg: Arg) -> None:
+    def enable_var_kwargs(self, type_: type, container_type: type | None = None, is_nary: bool = False) -> None:
         """
-        Add the argument that will store the remaining unknown command-line named options.
+        Enable variadic keyword arguments for parsing unknown named options.
         """
-        if self._var_kwargs:
-            raise ParserConfigError(
-                "Only one argument can be marked as var kwargs (with `**kwargs` syntax)!"
-            )
-        self._var_kwargs = arg
+        if is_nary and container_type is None:
+            raise ParserConfigError("Container type must be specified for n-ary options!")
+        self._var_kwargs_type = type_
+        self._var_kwargs_container_type = container_type
+        self._var_kwargs_is_nary = is_nary
 
     def _parse_equals_syntax(self, name: str, args: list[str], idx: int) -> int:
         """
@@ -97,13 +105,19 @@ class Args:
         """
         name, value = name.split("=", 1)
         if name not in self._name2idx:
-            if self._var_kwargs:
-                self._var_kwargs.parse_with_key(name, value)
-                return idx + 1
-            if self._var_args:
+            if self.has_var_kwargs:
+                self.add(Arg(
+                    name=Name(long=name), # does long always work?
+                    type_=self._var_kwargs_type,
+                    container_type=self._var_kwargs_container_type,
+                    is_named=True,
+                    is_nary=self._var_kwargs_is_nary,
+                ))
+            elif self._var_args:
                 self._var_args.parse(args[idx])
                 return idx + 1
-            raise ParserOptionError(f"Unexpected option `{name}`!")
+            else:
+                raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
         if opt._parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
@@ -125,21 +139,19 @@ class Args:
         if "=" in name:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
-            if self._var_kwargs:
-                values = []
-                idx += 1
-                while idx < len(args) and not self._is_name(args[idx]):
-                    values.append(args[idx])
-                    idx += 1
-                if not values:
-                    raise ParserOptionError(f"Option `{name}` is missing argument!")
-                for value in values:
-                    self._var_kwargs.parse_with_key(name, value)
-                return idx
-            if self._var_args:
+            if self.has_var_kwargs:
+                self.add(Arg(
+                    name=Name(long=name), # does long always work?
+                    type_=self._var_kwargs_type,
+                    container_type=self._var_kwargs_container_type,
+                    is_named=True,
+                    is_nary=self._var_kwargs_is_nary,
+                ))
+            elif self._var_args:
                 self._var_args.parse(args[idx])
                 return idx + 1
-            raise ParserOptionError(f"Unexpected option `{name}`!")
+            else:
+                raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
         if opt._parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
@@ -264,16 +276,6 @@ class Args:
 
         if self._var_args and self._var_args._value:
             positional_args += self._var_args._value
-        if self._var_kwargs and self._var_kwargs._value:
-            for key, value in self._var_kwargs._value.items():
-                assert var(key) not in named_args, "Programming error!"
-                if len(value) == 0:
-                    value_ = None
-                elif len(value) == 1:
-                    value_ = value[0]
-                else:
-                    value_ = value
-                named_args[var(key)] = value_
 
         return positional_args, named_args
 
@@ -411,18 +413,42 @@ class Args:
 
         # (2) then print usage line
         console.print(Text("Usage:", style=sty_title))
-        usage_line = Text(f"  {name}")
+        usage_components = [Text(f"  {name}")]
         pos_only_str = Text(" ").join(
             [usage(arg, "usage line") for arg in positional_only]
         )
         if pos_only_str:
-            usage_line += Text(" ") + pos_only_str
+            usage_components.append(pos_only_str)
         named_str = Text(" ").join(
             [usage(opt, "usage line") for opt in positional_and_named + named_only]
         )
         if named_str:
-            usage_line += Text(" ") + named_str
-        console.print(usage_line)
+            usage_components.append(named_str)
+        #if self._var_kwargs:
+        #    usage_components.append(
+        #        Text.assemble(
+        #            "[",
+        #            ("--", f"{sty_opt} {sty_name}"),
+        #            ("<", sty_opt),
+        #            ("key", f"{sty_opt} {sty_name}"),
+        #            (">", sty_opt),
+        #            " ",
+        #            ("<meta>", sty_var),
+        #            " ",
+        #            ("[", "dim"),
+        #            ("--", f"{sty_opt} {sty_name} dim"),
+        #            ("<", f"{sty_opt} dim"),
+        #            ("key", f"{sty_opt} {sty_name} dim"),
+        #            (">", f"{sty_opt} dim"),
+        #            " ",
+        #            ("<meta>", f"{sty_var} dim"),
+        #            " ",
+        #            ("...", "dim"),
+        #            ("]", "dim"),
+        #            "]",
+        #        )
+        #    )
+        console.print(Text(" ").join(usage_components))
 
         if usage_only:
             console.print()

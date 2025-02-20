@@ -13,7 +13,8 @@ from typing import (
 )
 
 from ._type_utils import _normalize_type, _shorten_type_annotation
-from .args import Arg, Args, Name
+from .arg import Arg, Name
+from .args import Args
 from .error import ParserConfigError
 from .value_parser import is_parsable
 
@@ -175,9 +176,6 @@ def make_args_from_params(
         if param.kind is Parameter.VAR_POSITIONAL:
             nary = True
             container_type = list
-        elif param.kind is Parameter.VAR_KEYWORD:
-            nary = True
-            container_type = dict  # this is the only case that can be a dict
 
         # for n-ary options, type should refer to the inner type
         # if inner type is absent from the hint, assume str
@@ -219,7 +217,11 @@ def make_args_from_params(
         if param.kind is Parameter.VAR_POSITIONAL:
             args.add_unknown_args(arg)
         elif param.kind is Parameter.VAR_KEYWORD:
-            args.add_unknown_kwargs(arg)
+            args.enable_var_kwargs(
+                type_ = normalized_annotation,
+                container_type = container_type,
+                is_nary = nary,
+            )
         else:
             args.add(arg)
 

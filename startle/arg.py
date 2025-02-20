@@ -1,5 +1,5 @@
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, cast
 
 from .error import ParserConfigError
@@ -72,21 +72,18 @@ class Arg:
         if not self.metavar:
             self.metavar = _get_metavar(self.type_)
 
-    def parse_with_key(self, key: str, value: str) -> None:
-        """
-        Parse the value with the given key.
-        This method is only applicable to argument that stores **kwargs.
-        """
-        assert self.container_type is dict, "parse_with_key is only for dict options!"
-        assert self._value is None or isinstance(
-            self._value, self.container_type
-        ), "Programming error!"
-
-        if self._value is None:
-            self._value = defaultdict(list)
-
-        self._value = cast(dict[str, list[str]], self._value)
-        self._value[key].append(parse(value, self.type_))
+    def _append(self, container: Any, value: Any) -> Any:
+        assert self.is_nary, "Programming error!"
+        assert value is not None, "N-ary options should have values!"
+        assert self.container_type is not None, "Programming error!"
+        if isinstance(container, list):
+            return container + [value]
+        elif self.container_type is tuple:
+            return container + (value,)
+        elif self.container_type is set:
+            return container | {value}
+        else:
+            raise ParserConfigError("Unsupported container type!")
 
     def parse(self, value: str | None = None):
         """
@@ -95,25 +92,12 @@ class Arg:
         if self.is_flag:
             assert value is None, "Flag options should not have values!"
             self._value = True
-            self._parsed = True
         elif self.is_nary:
-            assert value is not None, "N-ary options should have values!"
-            assert self.container_type is not None, "Programming error!"
-            assert self._value is None or isinstance(
-                self._value, self.container_type
-            ), "Programming error!"
             if self._value is None:
                 self._value = self.container_type()
-            if self.container_type is list:
-                self._value.append(parse(value, self.type_))
-            elif self.container_type is tuple:
-                self._value += (parse(value, self.type_),)
-            elif self.container_type is set:
-                self._value.add(parse(value, self.type_))
-            else:
-                raise ParserConfigError("Unsupported container type!")
-            self._parsed = True
+            self._value = self._append(self._value, parse(value, self.type_))
         else:
             assert value is not None, "Non-flag options should have values!"
             self._value = parse(value, self.type_)
-            self._parsed = True
+        self._parsed = True
+
