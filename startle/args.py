@@ -1,8 +1,8 @@
 import sys
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Literal
 
+from ._help import _Sty, help, usage, var_kwargs_help
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
 
@@ -332,89 +332,6 @@ class Args:
             opt for opt in self._named_args if opt.is_named and not opt.is_positional
         ]
 
-        sty_name = "bold"
-        sty_pos_name = "bold"
-        sty_opt = "green"
-        sty_var = "blue"
-        sty_literal_var = ""
-        sty_title = "bold underline dim"
-
-        def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
-            if kind == "listing":
-                name_list = []
-                if name.short:
-                    name_list.append(
-                        Text(f"-{name.short}", style=f"{sty_name} {sty_opt} not dim")
-                    )
-                if name.long:
-                    name_list.append(
-                        Text(f"--{name.long}", style=f"{sty_name} {sty_opt} not dim")
-                    )
-                return Text("|", style=f"{sty_opt} dim").join(name_list)
-            else:
-                if name.long:
-                    return Text(f"--{name.long}", style=f"{sty_name} {sty_opt}")
-                else:
-                    return Text(f"-{name.short}", style=f"{sty_name} {sty_opt}")
-
-        def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
-            meta = (
-                Text(arg.metavar)
-                if isinstance(arg.metavar, str)
-                else Text("|", style="dim").join(
-                    [Text(m, style=f"{sty_literal_var} not dim") for m in arg.metavar]
-                )
-            )
-            if arg.is_positional and not arg.is_named:
-                text = Text.assemble("<", (f"{arg.name}:", sty_pos_name), meta, ">")
-                text.stylize(sty_var)
-                if arg.is_nary:
-                    repeat = Text("[") + text.copy() + " ...]"
-                    repeat.stylize(f"{sty_var} dim")
-                    text += Text(" ") + repeat
-            elif arg.is_flag:
-                text = name_usage(arg.name, kind)
-            else:
-                if isinstance(arg.metavar, list):
-                    option = meta
-                    option.stylize(sty_var)
-                else:
-                    option = Text(f"<{arg.metavar}>", style=sty_var)
-                if arg.is_nary:
-                    option += Text.assemble(" ", (f"[{option} ...]", "dim"))
-                text = Text.assemble(name_usage(arg.name, kind), " ", option)
-
-            if not arg.required and kind == "usage line":
-                text = Text.assemble("[", text, "]")
-            return text
-
-        def default_value(val: Any) -> str:
-            if isinstance(val, str) and isinstance(val, Enum):
-                return val.value
-            if sys.version_info >= (3, 11):
-                from enum import StrEnum
-
-                if isinstance(val, StrEnum):
-                    return val.value
-            if isinstance(val, Enum):
-                return val.name.lower().replace("_", "-")
-            return str(val)
-
-        def help(arg: Arg) -> Text:
-            helptext = Text(arg.help, style="italic")
-            delim = " " if helptext else ""
-            if arg.is_flag:
-                helptext = Text.assemble(helptext, delim, ("(flag)", sty_opt))
-            elif arg.required:
-                helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
-            else:
-                helptext = Text.assemble(
-                    helptext,
-                    delim,
-                    (f"(default: {default_value(arg.default)})", sty_opt),
-                )
-            return helptext
-
         # (1) print brief if it exists
         console = console or Console()
         console.print()
@@ -422,7 +339,7 @@ class Args:
             console.print(self.brief + "\n")
 
         # (2) then print usage line
-        console.print(Text("Usage:", style=sty_title))
+        console.print(Text("Usage:", style=_Sty.title))
         usage_components = [Text(f"  {name}")]
         pos_only_str = Text(" ").join(
             [usage(arg, "usage line") for arg in positional_only]
@@ -434,30 +351,9 @@ class Args:
         )
         if named_str:
             usage_components.append(named_str)
-        # if self._var_kwargs:
-        #    usage_components.append(
-        #        Text.assemble(
-        #            "[",
-        #            ("--", f"{sty_opt} {sty_name}"),
-        #            ("<", sty_opt),
-        #            ("key", f"{sty_opt} {sty_name}"),
-        #            (">", sty_opt),
-        #            " ",
-        #            ("<meta>", sty_var),
-        #            " ",
-        #            ("[", "dim"),
-        #            ("--", f"{sty_opt} {sty_name} dim"),
-        #            ("<", f"{sty_opt} dim"),
-        #            ("key", f"{sty_opt} {sty_name} dim"),
-        #            (">", f"{sty_opt} dim"),
-        #            " ",
-        #            ("<meta>", f"{sty_var} dim"),
-        #            " ",
-        #            ("...", "dim"),
-        #            ("]", "dim"),
-        #            "]",
-        #        )
-        #    )
+        if self.has_var_kwargs:
+            usage_components.append(var_kwargs_help(self._var_kwargs_type, self._var_kwargs_is_nary, "usage line"))
+
         console.print(Text(" ").join(usage_components))
 
         if usage_only:
@@ -466,7 +362,7 @@ class Args:
 
         # (3) then print help message for each argument
         if positional_only + positional_and_named + named_only:
-            console.print(Text("\nwhere", style=sty_title))
+            console.print(Text("\nwhere", style=_Sty.title))
 
         table = Table(show_header=False, box=None, padding=(0, 0, 0, 2))
 
@@ -480,9 +376,9 @@ class Args:
         table.add_row(
             "[dim](option)[/dim]",
             Text.assemble(
-                ("-?", f"{sty_name} {sty_opt} dim"),
-                ("|", f"{sty_opt} dim"),
-                ("--help", f"{sty_name} {sty_opt} dim"),
+                ("-?", f"{_Sty.name} {_Sty.opt} dim"),
+                ("|", f"{_Sty.opt} dim"),
+                ("--help", f"{_Sty.name} {_Sty.opt} dim"),
             ),
             "[i dim]Show this help message and exit.[/]",
         )
