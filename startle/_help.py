@@ -43,6 +43,7 @@ def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
         else:
             return Text(f"-{name.short}", style=f"{_Sty.name} {_Sty.opt}")
 
+
 def _meta(metavar: list[str] | str) -> Text:
     return (
         Text(metavar)
@@ -52,11 +53,13 @@ def _meta(metavar: list[str] | str) -> Text:
         )
     )
 
+
 def _repeated(text: Text) -> Text:
     repeat = Text("[") + text.copy() + " ...]"
     repeat.stylize("dim")
     return Text.assemble(text, " ", repeat)
-    
+
+
 def _pos_usage(name: Name, metavar: list[str] | str, is_nary: bool) -> Text:
     text = Text.assemble("<", (f"{name}:", _Sty.pos_name), _meta(metavar), ">")
     text.stylize(_Sty.var)
@@ -65,7 +68,12 @@ def _pos_usage(name: Name, metavar: list[str] | str, is_nary: bool) -> Text:
     return text
 
 
-def _opt_usage(name: Name, metavar: list[str] | str, is_nary: bool, kind: Literal["listing", "usage line"]) -> Text:
+def _opt_usage(
+    name: Name,
+    metavar: list[str] | str,
+    is_nary: bool,
+    kind: Literal["listing", "usage line"],
+) -> Text:
     if isinstance(metavar, list):
         option = _meta(metavar)
         option.stylize(_Sty.var)
@@ -122,8 +130,12 @@ def help(arg: Arg) -> Text:
     return helptext
 
 
-def var_kwargs_help(var_kwargs_type, var_kwargs_is_nary, kind: Literal["listing", "usage line"]) -> Text:
+def var_kwargs_help(
+    var_kwargs_type, var_kwargs_is_nary, kind: Literal["listing", "usage line"]
+) -> Text:
     kwargs_metavar = _get_metavar(var_kwargs_type)
     kwargs_meta = _meta(kwargs_metavar)
     if kind == "usage line":
-        return _repeated(_opt_usage(Name("", "<key>"), kwargs_meta, var_kwargs_is_nary, kind))
+        return _repeated(
+            _opt_usage(Name("", "<key>"), kwargs_meta, var_kwargs_is_nary, kind)
+        )
