@@ -3,13 +3,11 @@ import re
 from inspect import Parameter
 from textwrap import dedent
 from typing import (
-    Any,
     Callable,
     Iterable,
     Literal,
     get_args,
     get_origin,
-    get_type_hints,
 )
 
 from ._type_utils import _normalize_type, _shorten_type_annotation
@@ -19,7 +17,9 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
-def _parse_docstring(docstring: str, kind: Literal["function", "class"]) -> tuple[str, dict[str, str]]:
+def _parse_docstring(
+    docstring: str, kind: Literal["function", "class"]
+) -> tuple[str, dict[str, str]]:
     params_headers: list[str]
     if kind == "function":
         params_headers = ["Args:", "Arguments:"]

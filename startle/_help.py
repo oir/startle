@@ -25,6 +25,7 @@ def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
     Format the name of an argument for either detailed options table (kind: listing)
     or the brief usage line (kind: usage line).
     """
+
     def fmt(name: str, short: bool) -> Text:
         if name.startswith("<") and name.endswith(">"):
             # very special case for var kwargs.
@@ -36,7 +37,10 @@ def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
                 (name_, f"{_Sty.name} cyan not dim"),
                 (">", "cyan not dim"),
             )
-        return Text(f"-{name}" if short else f"--{name}", style=f"{_Sty.name} {_Sty.opt} not dim")
+        return Text(
+            f"-{name}" if short else f"--{name}",
+            style=f"{_Sty.name} {_Sty.opt} not dim",
+        )
 
     if kind == "listing":
         name_list = []
@@ -135,7 +139,6 @@ def help(arg: Arg) -> Text:
     return helptext
 
 
-def var_kwargs_help(arg: Arg, kind: Literal["listing", "usage line"]
-) -> Text:
+def var_kwargs_help(arg: Arg, kind: Literal["listing", "usage line"]) -> Text:
     if kind == "usage line":
         return Text.assemble("[", _repeated(_opt_usage(arg, kind)), "]")

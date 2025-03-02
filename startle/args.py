@@ -350,9 +350,7 @@ class Args:
         if named_str:
             usage_components.append(named_str)
         if self.has_var_kwargs:
-            usage_components.append(
-                var_kwargs_help(self._var_kwargs, "usage line")
-            )
+            usage_components.append(var_kwargs_help(self._var_kwargs, "usage line"))
 
         console.print(Text(" ").join(usage_components))
 
