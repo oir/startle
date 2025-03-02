@@ -9,7 +9,6 @@ from typing import Any, Literal
 from rich.text import Text
 
 from .arg import Arg, Name
-from .metavar import _get_metavar
 
 
 class _Sty:
@@ -26,22 +25,31 @@ def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
     Format the name of an argument for either detailed options table (kind: listing)
     or the brief usage line (kind: usage line).
     """
+    def fmt(name: str, short: bool) -> Text:
+        if name.startswith("<") and name.endswith(">"):
+            # very special case for var kwargs.
+            # TODO: maybe this should be done elsewhere / differently?
+            name_ = name.strip("<>")
+            return Text.assemble(
+                ("--", f"{_Sty.name} {_Sty.opt} not dim"),
+                ("<", "cyan not dim"),
+                (name_, f"{_Sty.name} cyan not dim"),
+                (">", "cyan not dim"),
+            )
+        return Text(f"-{name}" if short else f"--{name}", style=f"{_Sty.name} {_Sty.opt} not dim")
+
     if kind == "listing":
         name_list = []
         if name.short:
-            name_list.append(
-                Text(f"-{name.short}", style=f"{_Sty.name} {_Sty.opt} not dim")
-            )
+            name_list.append(fmt(name.short, True))
         if name.long:
-            name_list.append(
-                Text(f"--{name.long}", style=f"{_Sty.name} {_Sty.opt} not dim")
-            )
+            name_list.append(fmt(name.long, False))
         return Text("|", style=f"{_Sty.opt} dim").join(name_list)
     else:
         if name.long:
-            return Text(f"--{name.long}", style=f"{_Sty.name} {_Sty.opt}")
+            return fmt(name.long, False)
         else:
-            return Text(f"-{name.short}", style=f"{_Sty.name} {_Sty.opt}")
+            return fmt(name.short, True)
 
 
 def _meta(metavar: list[str] | str) -> Text:
@@ -60,28 +68,23 @@ def _repeated(text: Text) -> Text:
     return Text.assemble(text, " ", repeat)
 
 
-def _pos_usage(name: Name, metavar: list[str] | str, is_nary: bool) -> Text:
-    text = Text.assemble("<", (f"{name}:", _Sty.pos_name), _meta(metavar), ">")
+def _pos_usage(arg: Arg) -> Text:
+    text = Text.assemble("<", (f"{arg.name}:", _Sty.pos_name), _meta(arg.metavar), ">")
     text.stylize(_Sty.var)
-    if is_nary:
+    if arg.is_nary:
         text = _repeated(text)
     return text
 
 
-def _opt_usage(
-    name: Name,
-    metavar: list[str] | str,
-    is_nary: bool,
-    kind: Literal["listing", "usage line"],
-) -> Text:
-    if isinstance(metavar, list):
-        option = _meta(metavar)
+def _opt_usage(arg: Arg, kind: Literal["listing", "usage line"]) -> Text:
+    if isinstance(arg.metavar, list):
+        option = _meta(arg.metavar)
         option.stylize(_Sty.var)
     else:
-        option = Text(f"<{metavar}>", style=_Sty.var)
-    if is_nary:
+        option = Text(f"<{arg.metavar}>", style=_Sty.var)
+    if arg.is_nary:
         option = _repeated(option)
-    return Text.assemble(name_usage(name, kind), " ", option)
+    return Text.assemble(name_usage(arg.name, kind), " ", option)
 
 
 def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
@@ -90,11 +93,11 @@ def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
     table (kind: listing) or the brief usage line (kind: usage line).
     """
     if arg.is_positional and not arg.is_named:
-        text = _pos_usage(arg.name, arg.metavar, arg.is_nary)
+        text = _pos_usage(arg)
     elif arg.is_flag:
         text = name_usage(arg.name, kind)
     else:
-        text = _opt_usage(arg.name, arg.metavar, arg.is_nary, kind)
+        text = _opt_usage(arg, kind)
 
     if not arg.required and kind == "usage line":
         text = Text.assemble("[", text, "]")
@@ -117,7 +120,9 @@ def default_value(val: Any) -> str:
 def help(arg: Arg) -> Text:
     helptext = Text(arg.help, style="italic")
     delim = " " if helptext else ""
-    if arg.is_flag:
+    if arg.name.long == "<key>":
+        helptext = Text.assemble(helptext, delim, ("(unknown options)", "cyan"))
+    elif arg.is_flag:
         helptext = Text.assemble(helptext, delim, ("(flag)", _Sty.opt))
     elif arg.required:
         helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
@@ -130,12 +135,7 @@ def help(arg: Arg) -> Text:
     return helptext
 
 
-def var_kwargs_help(
-    var_kwargs_type, var_kwargs_is_nary, kind: Literal["listing", "usage line"]
+def var_kwargs_help(arg: Arg, kind: Literal["listing", "usage line"]
 ) -> Text:
-    kwargs_metavar = _get_metavar(var_kwargs_type)
-    kwargs_meta = _meta(kwargs_metavar)
     if kind == "usage line":
-        return _repeated(
-            _opt_usage(Name("", "<key>"), kwargs_meta, var_kwargs_is_nary, kind)
-        )
+        return Text.assemble("[", _repeated(_opt_usage(arg, kind)), "]")

@@ -11,7 +11,8 @@ from .error import ParserConfigError, ParserOptionError
 class Args:
     """
     A parser class to parse command-line arguments.
-    Contains positional and named arguments, as well as var args and var kwargs.
+    Contains positional and named arguments, as well as var args
+    (unknown positional arguments) and var kwargs (unknown options).
     """
 
     brief: str = ""
@@ -23,15 +24,16 @@ class Args:
     # note that _name2idx is many to one, because a name can be both short and long
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
+    _var_kwargs: Arg | None = None  # remaining unk options for functions with **kwargs
 
     # remaining unk kwargs for functions with **kwargs
-    _var_kwargs_type: type | None = None
-    _var_kwargs_container_type: type | None = None
-    _var_kwargs_is_nary: bool = False
+    # _var_kwargs_type: type | None = None
+    # _var_kwargs_container_type: type | None = None
+    # _var_kwargs_is_nary: bool = False
 
     @property
     def has_var_kwargs(self) -> bool:
-        return self._var_kwargs_type is not None
+        return self._var_kwargs is not None
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -86,19 +88,15 @@ class Args:
             )
         self._var_args = arg
 
-    def enable_var_kwargs(
-        self, type_: type, container_type: type | None = None, is_nary: bool = False
-    ) -> None:
+    def enable_var_kwargs(self, arg: Arg) -> None:
         """
         Enable variadic keyword arguments for parsing unknown named options.
         """
-        if is_nary and container_type is None:
+        if arg.is_nary and arg.container_type is None:
             raise ParserConfigError(
                 "Container type must be specified for n-ary options!"
             )
-        self._var_kwargs_type = type_
-        self._var_kwargs_container_type = container_type
-        self._var_kwargs_is_nary = is_nary
+        self._var_kwargs = arg
 
     def _parse_equals_syntax(self, name: str, args: list[str], idx: int) -> int:
         """
@@ -110,14 +108,14 @@ class Args:
         name, value = name.split("=", 1)
         if name not in self._name2idx:
             if self.has_var_kwargs:
-                assert self._var_kwargs_type is not None
+                assert self._var_kwargs.type_ is not None
                 self.add(
                     Arg(
                         name=Name(long=name),  # does long always work?
-                        type_=self._var_kwargs_type,
-                        container_type=self._var_kwargs_container_type,
+                        type_=self._var_kwargs.type_,
+                        container_type=self._var_kwargs.container_type,
                         is_named=True,
-                        is_nary=self._var_kwargs_is_nary,
+                        is_nary=self._var_kwargs.is_nary,
                     )
                 )
             elif self._var_args:
@@ -147,14 +145,14 @@ class Args:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
             if self.has_var_kwargs:
-                assert self._var_kwargs_type is not None
+                assert self._var_kwargs.type_ is not None
                 self.add(
                     Arg(
                         name=Name(long=name),  # does long always work?
-                        type_=self._var_kwargs_type,
-                        container_type=self._var_kwargs_container_type,
+                        type_=self._var_kwargs.type_,
+                        container_type=self._var_kwargs.container_type,
                         is_named=True,
-                        is_nary=self._var_kwargs_is_nary,
+                        is_nary=self._var_kwargs.is_nary,
                     )
                 )
             elif self._var_args:
@@ -353,9 +351,7 @@ class Args:
             usage_components.append(named_str)
         if self.has_var_kwargs:
             usage_components.append(
-                var_kwargs_help(
-                    self._var_kwargs_type, self._var_kwargs_is_nary, "usage line"
-                )
+                var_kwargs_help(self._var_kwargs, "usage line")
             )
 
         console.print(Text(" ").join(usage_components))
@@ -376,6 +372,12 @@ class Args:
             table.add_row("[dim](pos. or opt.)[/dim]", usage(opt), help(opt))
         for opt in named_only:
             table.add_row("[dim](option)[/dim]", usage(opt), help(opt))
+        if self.has_var_kwargs:
+            table.add_row(
+                "[dim](option)[/dim]",
+                usage(self._var_kwargs),
+                help(self._var_kwargs),
+            )
 
         table.add_row(
             "[dim](option)[/dim]",

@@ -19,9 +19,7 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
-def _parse_docstring(
-    docstring: str, hints: dict[str, Any], kind: Literal["function", "class"]
-) -> tuple[str, dict[str, str]]:
+def _parse_docstring(docstring: str, kind: Literal["function", "class"]) -> tuple[str, dict[str, str]]:
     params_headers: list[str]
     if kind == "function":
         params_headers = ["Args:", "Arguments:"]
@@ -76,8 +74,7 @@ def _parse_docstring(
                     param, desc = args_desc.groups()
                     param = param.strip()
                     desc = desc.strip()
-                    if param in hints:
-                        arg_helps[param] = desc
+                    arg_helps[param] = desc
 
     return brief, arg_helps
 
@@ -87,9 +84,8 @@ def _parse_func_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     Parse the docstring of a function and return the brief and the arg descriptions.
     """
     docstring = inspect.getdoc(func) or ""
-    hints = get_type_hints(func)
 
-    return _parse_docstring(docstring, hints, "function")
+    return _parse_docstring(docstring, "function")
 
 
 def _parse_class_docstring(cls: type) -> dict[str, str]:
@@ -97,9 +93,8 @@ def _parse_class_docstring(cls: type) -> dict[str, str]:
     Parse the docstring of a class and return the arg descriptions.
     """
     docstring = inspect.getdoc(cls) or ""
-    hints = get_type_hints(cls.__init__)  # type: ignore
 
-    _, arg_helps = _parse_docstring(docstring, hints, "class")
+    _, arg_helps = _parse_docstring(docstring, "class")
 
     return arg_helps
 
@@ -144,6 +139,8 @@ def make_args_from_params(
             default = None
 
         help = arg_helps.get(param_name, "")
+        if param.kind is Parameter.VAR_KEYWORD:
+            help = help or arg_helps.get(f"**{param_name}", "")
 
         param_name_sub = param_name.replace("_", "-")
         positional = False
@@ -217,11 +214,8 @@ def make_args_from_params(
         if param.kind is Parameter.VAR_POSITIONAL:
             args.add_unknown_args(arg)
         elif param.kind is Parameter.VAR_KEYWORD:
-            args.enable_var_kwargs(
-                type_=normalized_annotation,
-                container_type=container_type,
-                is_nary=nary,
-            )
+            arg.name = Name(long="<key>")
+            args.enable_var_kwargs(arg)
         else:
             args.add(arg)
 
