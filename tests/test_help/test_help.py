@@ -59,13 +59,13 @@ def test_func_simple():
 Fuse two monsters with polymerization.
 
 [{TS}]Usage:[/]
-  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
 
 [{TS}]where[/]
   [dim](positional)[/]    [{VS}]<[{NS}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](positional)[/]    [{VS}]<[{NS}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
   [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
   [dim](option)[/]        [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
   [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
@@ -108,13 +108,13 @@ def test_class_simple():
 Fuse two monsters with polymerization.
 
 [{TS}]Usage:[/]
-  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
 
 [{TS}]where[/]
   [dim](positional)[/]    [{VS}]<[{NS}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](positional)[/]    [{VS}]<[{NS}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
   [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
   [dim](option)[/]        [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
   [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
@@ -148,13 +148,13 @@ def test_dataclass_simple():
 Fuse two monsters with polymerization.
 
 [{TS}]Usage:[/]
-  fuse.py [{NS} {OS}]--left-path[/] [{VS}]<text>[/] [{NS} {OS}]--right-path[/] [{VS}]<text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+  fuse.py [{NS} {OS}]--left-path[/] [{VS}]<text>[/] [{NS} {OS}]--right-path[/] [{VS}]<text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
 
 [{TS}]where[/]
   [dim](pos. or opt.)[/]  [{NS} {OS}]-l[/][{OS} dim]|[/][{NS} {OS}]--left-path[/] [{VS}]<text>[/]                [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](pos. or opt.)[/]  [{NS} {OS}]-r[/][{OS} dim]|[/][{NS} {OS}]--right-path[/] [{VS}]<text>[/]               [i]Path to the second monster.[/] [yellow](required)[/]                
   [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](pos. or opt.)[/]  [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text> [dim][<text> ...][/][/]  [i]Components to fuse.[/] [green](default: <factory>)[/]              
+  [dim](pos. or opt.)[/]  [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: <factory>)[/]              
   [dim](pos. or opt.)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
   [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
@@ -190,11 +190,11 @@ def test_nargs():
 Count the characters in a list of words.
 
 [{TS}]Usage:[/]
-  count_chars.py [{VS}]<[{NS}]words:[/]text>[/] [{VS} dim][[/][{VS} dim]<[{NS}]words:[/]text>[/][{VS} dim] ...][/] [[{NS} {OS}]--extra-words[/] [{VS}]<text> [dim][<text> ...][/][/]] [[{NS} {OS}]--verbose[/]]
+  count_chars.py [{VS}]<[{NS}]words:[/]text>[/] [dim][[/][{VS} dim]<[{NS}]words:[/]text>[/][dim] ...][/] [[{NS} {OS}]--extra-words[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--verbose[/]]
 
 [{TS}]where[/]
-  [dim](positional)[/]  [{VS}]<[{NS}]words:[/]text>[/] [{VS} dim][[/][{VS} dim]<[{NS}]words:[/]text>[/][{VS} dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
-  [dim](option)[/]      [{NS} {OS}]-e[/][{OS} dim]|[/][{NS} {OS}]--extra-words[/] [{VS}]<text> [dim][<text> ...][/][/]  [i]Extra words to count characters in.[/] [green](default: [])[/]
+  [dim](positional)[/]  [{VS}]<[{NS}]words:[/]text>[/] [dim][[/][{VS} dim]<[{NS}]words:[/]text>[/][dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
+  [dim](option)[/]      [{NS} {OS}]-e[/][{OS} dim]|[/][{NS} {OS}]--extra-words[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Extra words to count characters in.[/] [green](default: [])[/]
   [dim](option)[/]      [{NS} {OS}]-v[/][{OS} dim]|[/][{NS} {OS}]--verbose[/][{OS} dim]                        [/]  [i]If true, print extra information.[/] [green](flag)[/]         
   [dim](option)[/]      [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                             [i dim]Show this help message and exit.[/]                 
 """
