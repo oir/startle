@@ -139,6 +139,5 @@ def help(arg: Arg) -> Text:
     return helptext
 
 
-def var_kwargs_help(arg: Arg, kind: Literal["listing", "usage line"]) -> Text:
-    if kind == "usage line":
-        return Text.assemble("[", _repeated(_opt_usage(arg, kind)), "]")
+def var_kwargs_usage_line(arg: Arg) -> Text:
+    return Text.assemble("[", _repeated(_opt_usage(arg, "usage line")), "]")

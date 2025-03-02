@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from ._help import _Sty, help, usage, var_kwargs_help
+from ._help import _Sty, help, usage, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
 
@@ -25,15 +25,6 @@ class Args:
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
     _var_kwargs: Arg | None = None  # remaining unk options for functions with **kwargs
-
-    # remaining unk kwargs for functions with **kwargs
-    # _var_kwargs_type: type | None = None
-    # _var_kwargs_container_type: type | None = None
-    # _var_kwargs_is_nary: bool = False
-
-    @property
-    def has_var_kwargs(self) -> bool:
-        return self._var_kwargs is not None
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -107,7 +98,7 @@ class Args:
         """
         name, value = name.split("=", 1)
         if name not in self._name2idx:
-            if self.has_var_kwargs:
+            if self._var_kwargs:
                 assert self._var_kwargs.type_ is not None
                 self.add(
                     Arg(
@@ -144,7 +135,7 @@ class Args:
         if "=" in name:
             return self._parse_equals_syntax(name, args, idx)
         if name not in self._name2idx:
-            if self.has_var_kwargs:
+            if self._var_kwargs:
                 assert self._var_kwargs.type_ is not None
                 self.add(
                     Arg(
@@ -349,8 +340,8 @@ class Args:
         )
         if named_str:
             usage_components.append(named_str)
-        if self.has_var_kwargs:
-            usage_components.append(var_kwargs_help(self._var_kwargs, "usage line"))
+        if self._var_kwargs:
+            usage_components.append(var_kwargs_usage_line(self._var_kwargs))
 
         console.print(Text(" ").join(usage_components))
 
@@ -370,7 +361,7 @@ class Args:
             table.add_row("[dim](pos. or opt.)[/dim]", usage(opt), help(opt))
         for opt in named_only:
             table.add_row("[dim](option)[/dim]", usage(opt), help(opt))
-        if self.has_var_kwargs:
+        if self._var_kwargs:
             table.add_row(
                 "[dim](option)[/dim]",
                 usage(self._var_kwargs),
