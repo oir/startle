@@ -139,7 +139,9 @@ def make_args_from_params(
             default = None
 
         help = arg_helps.get(param_name, "")
-        if param.kind is Parameter.VAR_KEYWORD:
+        if param.kind is Parameter.VAR_POSITIONAL:
+            help = help or arg_helps.get(f"*{param_name}", "")
+        elif param.kind is Parameter.VAR_KEYWORD:
             help = help or arg_helps.get(f"**{param_name}", "")
 
         param_name_sub = param_name.replace("_", "-")
@@ -212,10 +214,11 @@ def make_args_from_params(
             is_nary=nary,
         )
         if param.kind is Parameter.VAR_POSITIONAL:
-            args.add_unknown_args(arg)
+            arg.name = Name()
+            args.enable_unknown_args(arg)
         elif param.kind is Parameter.VAR_KEYWORD:
             arg.name = Name(long="<key>")
-            args.enable_var_kwargs(arg)
+            args.enable_unknown_opts(arg)
         else:
             args.add(arg)
 

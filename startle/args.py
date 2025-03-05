@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from ._help import _Sty, help, usage, var_kwargs_usage_line
+from ._help import _Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
 
@@ -69,19 +69,22 @@ class Args:
             if arg.name.long:
                 self._name2idx[arg.name.long] = len(self._named_args) - 1
 
-    def add_unknown_args(self, arg: Arg) -> None:
+    def enable_unknown_args(self, arg: Arg) -> None:
         """
-        Add the argument that will store the remaining unknown command-line positional arguments.
+        Enable variadic positional arguments for parsing unknown positional arguments.
+        This argument stores remaining positional arguments as if it was a list[T] type.
         """
-        if self._var_args:
+        if arg.is_nary and arg.container_type is None:
             raise ParserConfigError(
-                "Only one argument can be marked as var args (with `*args` syntax)!"
+                "Container type must be specified for n-ary options!"
             )
         self._var_args = arg
 
-    def enable_var_kwargs(self, arg: Arg) -> None:
+    def enable_unknown_opts(self, arg: Arg) -> None:
         """
         Enable variadic keyword arguments for parsing unknown named options.
+        This Arg itself is not used to store anything, it is used as a reference to generate
+        Arg objects as needed on the fly.
         """
         if arg.is_nary and arg.container_type is None:
             raise ParserConfigError(
@@ -89,7 +92,7 @@ class Args:
             )
         self._var_kwargs = arg
 
-    def _parse_equals_syntax(self, name: str, args: list[str], idx: int) -> int:
+    def _parse_equals_syntax(self, name: str, idx: int) -> int:
         """
         Parse a cli argument as a named argument using the equals syntax (e.g. `--name=value`).
         Return new index after consuming the argument.
@@ -99,7 +102,6 @@ class Args:
         name, value = name.split("=", 1)
         if name not in self._name2idx:
             if self._var_kwargs:
-                assert self._var_kwargs.type_ is not None
                 self.add(
                     Arg(
                         name=Name(long=name),  # does long always work?
@@ -109,9 +111,6 @@ class Args:
                         is_nary=self._var_kwargs.is_nary,
                     )
                 )
-            elif self._var_args:
-                self._var_args.parse(args[idx])
-                return idx + 1
             else:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
@@ -133,7 +132,7 @@ class Args:
             self.print_help()
             raise SystemExit(0)
         if "=" in name:
-            return self._parse_equals_syntax(name, args, idx)
+            return self._parse_equals_syntax(name, idx)
         if name not in self._name2idx:
             if self._var_kwargs:
                 assert self._var_kwargs.type_ is not None
@@ -146,9 +145,6 @@ class Args:
                         is_nary=self._var_kwargs.is_nary,
                     )
                 )
-            elif self._var_args:
-                self._var_args.parse(args[idx])
-                return idx + 1
             else:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[name]]
@@ -228,7 +224,14 @@ class Args:
         while idx < len(args):
             if name := self._is_name(args[idx]):
                 # this must be a named argument / option
-                idx = self._parse_named(name, args, idx)
+                try:
+                    idx = self._parse_named(name, args, idx)
+                except ParserOptionError as e:
+                    if self._var_args and str(e).startswith("Unexpected option"):
+                        self._var_args.parse(args[idx])
+                        idx += 1
+                    else:
+                        raise
             else:
                 # this must be a positional argument
                 idx, positional_idx = self._parse_positional(args, idx, positional_idx)
@@ -335,6 +338,8 @@ class Args:
         )
         if pos_only_str:
             usage_components.append(pos_only_str)
+        if self._var_args:
+            usage_components.append(var_args_usage_line(self._var_args))
         named_str = Text(" ").join(
             [usage(opt, "usage line") for opt in positional_and_named + named_only]
         )
@@ -350,13 +355,18 @@ class Args:
             return
 
         # (3) then print help message for each argument
-        if positional_only + positional_and_named + named_only:
-            console.print(Text("\nwhere", style=_Sty.title))
+        console.print(Text("\nwhere", style=_Sty.title))
 
         table = Table(show_header=False, box=None, padding=(0, 0, 0, 2))
 
         for arg in positional_only:
             table.add_row("[dim](positional)[/dim]", usage(arg), help(arg))
+        if self._var_args:
+            table.add_row(
+                "[dim](positional)[/dim]",
+                usage(self._var_args),
+                help(self._var_args),
+            )
         for opt in positional_and_named:
             table.add_row("[dim](pos. or opt.)[/dim]", usage(opt), help(opt))
         for opt in named_only:
