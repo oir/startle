@@ -338,13 +338,12 @@ class Args:
         )
         if pos_only_str:
             usage_components.append(pos_only_str)
+        for opt in positional_and_named:
+            usage_components.append(usage(opt, "usage line"))
         if self._var_args:
             usage_components.append(var_args_usage_line(self._var_args))
-        named_str = Text(" ").join(
-            [usage(opt, "usage line") for opt in positional_and_named + named_only]
-        )
-        if named_str:
-            usage_components.append(named_str)
+        for opt in named_only:
+            usage_components.append(usage(opt, "usage line"))
         if self._var_kwargs:
             usage_components.append(var_kwargs_usage_line(self._var_kwargs))
 
@@ -361,14 +360,14 @@ class Args:
 
         for arg in positional_only:
             table.add_row("[dim](positional)[/dim]", usage(arg), help(arg))
+        for opt in positional_and_named:
+            table.add_row("[dim](pos. or opt.)[/dim]", usage(opt), help(opt))
         if self._var_args:
             table.add_row(
                 "[dim](positional)[/dim]",
                 usage(self._var_args),
                 help(self._var_args),
             )
-        for opt in positional_and_named:
-            table.add_row("[dim](pos. or opt.)[/dim]", usage(opt), help(opt))
         for opt in named_only:
             table.add_row("[dim](option)[/dim]", usage(opt), help(opt))
         if self._var_kwargs:
