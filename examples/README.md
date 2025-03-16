@@ -12,5 +12,6 @@ you can inspect with `python <example> --help`.
 | `color.py` | Using enums or Literals to represent "choices". |
 | `calc.py` | How to use multiple (free) functions as commands, instead of invoking a single function. |
 | `rational.py` | How to register a perser for a custom user type to make it parsable. |
+| `ls.py` | How to use `*args`-style arguments to parse arbitrary (unknown) positional arguments. |
 | `search_gh.py` | How to use `**kwargs`-style arguments to parse arbirary key-value pairs. |
 | `dice.py` | How to use `parse()` to parse args into a class. |

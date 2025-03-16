@@ -99,7 +99,10 @@ def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
     if arg.is_positional and not arg.is_named:
         text = _pos_usage(arg)
     elif arg.is_flag:
-        text = name_usage(arg.name, kind)
+        if kind == "listing":
+            text = Text.assemble(name_usage(arg.name, kind), " ")
+        else:
+            text = name_usage(arg.name, kind)
     else:
         text = _opt_usage(arg, kind)
 
@@ -124,7 +127,11 @@ def default_value(val: Any) -> str:
 def help(arg: Arg) -> Text:
     helptext = Text(arg.help, style="italic")
     delim = " " if helptext else ""
-    if arg.name.long == "<key>":
+    if str(arg.name) == "":
+        helptext = Text.assemble(
+            helptext, delim, ("(unknown positional arguments)", "cyan")
+        )
+    elif arg.name.long == "<key>":
         helptext = Text.assemble(helptext, delim, ("(unknown options)", "cyan"))
     elif arg.is_flag:
         helptext = Text.assemble(helptext, delim, ("(flag)", _Sty.opt))
@@ -137,6 +144,10 @@ def help(arg: Arg) -> Text:
             (f"(default: {default_value(arg.default)})", _Sty.opt),
         )
     return helptext
+
+
+def var_args_usage_line(arg: Arg) -> Text:
+    return Text.assemble("[", _pos_usage(arg), "]")
 
 
 def var_kwargs_usage_line(arg: Arg) -> Text:
