@@ -99,7 +99,10 @@ def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
     if arg.is_positional and not arg.is_named:
         text = _pos_usage(arg)
     elif arg.is_flag:
-        text = name_usage(arg.name, kind)
+        if kind == "listing":
+            text = Text.assemble(name_usage(arg.name, kind), " ")
+        else:
+            text = name_usage(arg.name, kind)
     else:
         text = _opt_usage(arg, kind)
 

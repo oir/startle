@@ -3,6 +3,34 @@ from dataclasses import dataclass, field
 from ._utils import NS, OS, TS, VS, check_help_from_class, check_help_from_func
 
 
+def dopt(s: str) -> str:
+    return f"[{OS} dim]{s}[/]"
+
+
+def name(s: str) -> str:
+    return f"[{NS} {OS}]{s}[/]"
+
+
+def dname(s: str) -> str:
+    return f"[{NS} {OS} dim]{s}[/]"
+
+
+def pos(left: str, right: str) -> str:
+    return f"[{VS}]<[{NS}]{left}:[/]{right}>[/]"
+
+
+def dpos(left: str, right: str) -> str:
+    return f"[{VS} dim]<[{NS}]{left}:[/]{right}>[/]"
+
+
+def var(s: str) -> str:
+    return f"[{VS}]{s}[/]"
+
+
+def dvar(s: str) -> str:
+    return f"[{VS} dim]{s}[/]"
+
+
 def test_func_simple():
     def fusion(
         left_path: str,
@@ -59,15 +87,15 @@ def test_func_simple():
 Fuse two monsters with polymerization.
 
 [{TS}]Usage:[/]
-  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+  fuse.py {pos("left-path", "text")} {pos("right-path", "text")} {name("--output-path")} {var("<text>")} [{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--alpha")} {var("<float>")}]
 
 [{TS}]where[/]
-  [dim](positional)[/]    [{VS}]<[{NS}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
-  [dim](positional)[/]    [{VS}]<[{NS}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
-  [dim](option)[/]        [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
-  [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+  [dim](positional)[/]    {pos("left-path", "text")}                     [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](positional)[/]    {pos("right-path", "text")}                    [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](pos. or opt.)[/]  {name("-o")}{dopt('|')}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]        {name("-c")}{dopt('|')}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        {name("-a")}{dopt('|')}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
+  [dim](option)[/]        {dname("-?")}{dopt('|')}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
 """
 
     check_help_from_func(fusion, "fuse.py", expected)
@@ -108,15 +136,15 @@ def test_class_simple():
 Fuse two monsters with polymerization.
 
 [{TS}]Usage:[/]
-  fuse.py [{VS}]<[{NS}]left-path:[/]text>[/] [{VS}]<[{NS}]right-path:[/]text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+  fuse.py {pos("left-path", "text")} {pos("right-path", "text")} {name("--output-path")} {var("<text>")} [{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--alpha")} {var("<float>")}]
 
 [{TS}]where[/]
-  [dim](positional)[/]    [{VS}]<[{NS}]left-path:[/]text>[/]                     [i]Path to the first monster.[/] [yellow](required)[/]                 
-  [dim](positional)[/]    [{VS}]<[{NS}]right-path:[/]text>[/]                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
-  [dim](option)[/]        [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
-  [dim](option)[/]        [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+  [dim](positional)[/]    {pos("left-path", "text")}                     [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](positional)[/]    {pos("right-path", "text")}                    [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](pos. or opt.)[/]  {name("-o")}{dopt('|')}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]        {name("-c")}{dopt('|')}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: ['fang', 'claw'])[/]       
+  [dim](option)[/]        {name("-a")}{dopt('|')}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: 0.5)[/]
+  [dim](option)[/]        {dname("-?")}{dopt('|')}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
 """
     check_help_from_class(
         FusionConfig, "Fuse two monsters with polymerization.", "fuse.py", expected
@@ -190,13 +218,13 @@ def test_nargs():
 Count the characters in a list of words.
 
 [{TS}]Usage:[/]
-  count_chars.py [{VS}]<[{NS}]words:[/]text>[/] [dim][[/][{VS} dim]<[{NS}]words:[/]text>[/][dim] ...][/] [[{NS} {OS}]--extra-words[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--verbose[/]]
+  count_chars.py {pos("words", "text")} [dim][[/]{dpos("words", "text")}[dim] ...][/] [{name("--extra-words")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--verbose")}]
 
 [{TS}]where[/]
-  [dim](positional)[/]  [{VS}]<[{NS}]words:[/]text>[/] [dim][[/][{VS} dim]<[{NS}]words:[/]text>[/][dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
-  [dim](option)[/]      [{NS} {OS}]-e[/][{OS} dim]|[/][{NS} {OS}]--extra-words[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Extra words to count characters in.[/] [green](default: [])[/]
-  [dim](option)[/]      [{NS} {OS}]-v[/][{OS} dim]|[/][{NS} {OS}]--verbose[/][{OS} dim]                        [/]  [i]If true, print extra information.[/] [green](flag)[/]         
-  [dim](option)[/]      [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                             [i dim]Show this help message and exit.[/]                 
+  [dim](positional)[/]  {pos("words", "text")} [dim][[/]{dpos("words", "text")}[dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
+  [dim](option)[/]      {name("-e")}{dopt("|")}{name("--extra-words")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Extra words to count characters in.[/] [green](default: [])[/]
+  [dim](option)[/]      {name("-v")}{dopt("|")}{name("--verbose")}                          [i]If true, print extra information.[/] [green](flag)[/]         
+  [dim](option)[/]      {dname("-?")}{dopt("|")}{dname("--help")}                             [i dim]Show this help message and exit.[/]                 
 """
 
     check_help_from_func(count_chars, "count_chars.py", expected)
