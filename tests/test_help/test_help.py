@@ -228,3 +228,48 @@ Count the characters in a list of words.
 """
 
     check_help_from_func(count_chars, "count_chars.py", expected)
+
+
+def test_ordering():
+    from pathlib import Path
+
+    def ls(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
+        """
+        List directory contents.
+
+        Args:
+            index: Index of the command.
+            path: Path to the directory.
+            args: Arguments to pass to `ls`.
+            dummy: Dummy argument.
+            kwargs: Dummy keyword arguments.
+        """
+        pass
+
+    # Help order respects the order of the arguments in the signature:
+    # 1. positional only
+    # 2. positional or keyword
+    # 3. variadic positional (*args)
+    # 4. keyword only
+    # 5. variadic keyword (**kwargs)
+    # However, because startle displays "positional or keyword" arguments within
+    # their "keyword"-like usage, below might be a bit counterintuitive at first
+    # glance.
+
+    expected = f"""\
+
+List directory contents.
+
+[{TS}]Usage:[/]
+  examples/ls.py {pos("index", "int")} {name("--path")} {var("<path>")} [{pos("", "text")} [dim][[/]{dpos("", "text")}[dim] ...][/]] {name("--dummy")} {var("<float>")} [{name("--")}[cyan]<[/][cyan bold]key[/][cyan]>[/] {var("<int>")} [dim][[/]{dname("--")}[cyan dim]<[/][cyan dim bold]key[/][cyan dim]>[/][dim] [/]{dvar("<int>")}[dim] ...][/]]
+
+[{TS}]where[/]
+  [dim](positional)[/]    {pos("index", "int")}            [i]Index of the command.[/] [yellow](required)[/]                         
+  [dim](pos. or opt.)[/]  {name("-p")}{dopt("|")}{name("--path")} {var("<path>")}       [i]Path to the directory.[/] [yellow](required)[/]                        
+  [dim](positional)[/]    {pos("", "text")} [dim][[/]{dpos("", "text")}[dim] ...][/]  [i]Arguments to pass to `ls`.[/] [cyan](unknown positional arguments)[/]
+  [dim](option)[/]        {name("-d")}{dopt("|")}{name("--dummy")} {var("<float>")}     [i]Dummy argument.[/] [yellow](required)[/]                               
+  [dim](option)[/]        {name("--")}[cyan]<[/][cyan bold]key[/][cyan]>[/] {var("<int>")}          [i]Dummy keyword arguments.[/] [cyan](unknown options)[/]               
+  [dim](option)[/]        {dname("-?")}{dopt("|")}{dname("--help")}              [i dim]Show this help message and exit.[/]                         
+"""
+
+    check_help_from_func(ls, "examples/ls.py", expected)
