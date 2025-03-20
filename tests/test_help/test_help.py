@@ -202,6 +202,8 @@ def test_nargs():
         """
         Count the characters in a list of words.
 
+        Some additional explanation in a new paragraph.
+
         Args:
             words: List of words to count characters in.
             extra_words: Extra words to count characters in.
@@ -216,6 +218,8 @@ def test_nargs():
     expected = f"""\
 
 Count the characters in a list of words.
+
+Some additional explanation in a new paragraph.
 
 [{TS}]Usage:[/]
   count_chars.py {pos("words", "text")} [dim][[/]{dpos("words", "text")}[dim] ...][/] [{name("--extra-words")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--verbose")}]
