@@ -26,6 +26,15 @@ def _parse_docstring(
     else:
         params_headers = ["Attributes:"]
 
+    brief_enders = [
+        "Args:",
+        "Arguments:",
+        "Returns:",
+        "Yields:",
+        "Raises:",
+        "Attributes:",
+    ]
+
     brief = ""
     arg_helps: dict[str, str] = {}
 
@@ -34,13 +43,15 @@ def _parse_docstring(
 
         # first, find the brief
         i = 0
-        while i < len(lines) and lines[i].strip() != "":
-            if brief:
-                brief += " "
-            brief += lines[i].strip()
+        while i < len(lines) and lines[i].strip() not in brief_enders:
+            brief += lines[i].rstrip() + "\n"
             i += 1
 
-        # first, find the Args section
+        brief = "\n\n".join(
+            paragraph.replace("\n", " ") for paragraph in brief.rstrip().split("\n\n")
+        )
+
+        # then, find the Args section
         args_section = ""
         i = 0
         while lines[i].strip() not in params_headers:  # find the parameters section

@@ -202,20 +202,41 @@ def test_nargs():
         """
         Count the characters in a list of words.
 
+        Some additional explanation in a new paragraph.
+
         Args:
             words: List of words to count characters in.
             extra_words: Extra words to count characters in.
             verbose: If true, print extra information.
         """
-        for word in words:
-            print(f"{word}: {len(word)}")
-        if verbose:
-            for word in extra_words:
-                print(f"{word}: {len(word)}")
+        pass
+
+    def count_chars2(
+        words: list[str],
+        /,
+        *,
+        extra_words: list[str] = [],
+        verbose: bool = False,
+    ) -> None:
+        """
+        Count the characters
+        in a list of words.
+
+        Some additional explanation
+        in a new paragraph.
+
+        Args:
+            words: List of words to count characters in.
+            extra_words: Extra words to count characters in.
+            verbose: If true, print extra information.
+        """
+        pass
 
     expected = f"""\
 
 Count the characters in a list of words.
+
+Some additional explanation in a new paragraph.
 
 [{TS}]Usage:[/]
   count_chars.py {pos("words", "text")} [dim][[/]{dpos("words", "text")}[dim] ...][/] [{name("--extra-words")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--verbose")}]
@@ -228,6 +249,7 @@ Count the characters in a list of words.
 """
 
     check_help_from_func(count_chars, "count_chars.py", expected)
+    check_help_from_func(count_chars2, "count_chars.py", expected)
 
 
 def test_ordering():
