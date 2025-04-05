@@ -181,6 +181,8 @@ class Args:
                 opt.parse(args[idx + 1])
                 return idx + 2
 
+        raise RuntimeError("Programmer error: should not reach here!")
+
     def _parse_named(self, name: str, args: list[str], idx: int) -> int:
         """
         Parse a cli argument as a named argument / option.
