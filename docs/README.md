@@ -21,6 +21,9 @@ _Give your code a start._ ⚡👀
 **Startle** is _alpha_ and should be considered unstable as its interface is fluid 😅.
 Consider pinning to a version.
 
+**Status:** A useable MVP for parsing into functions and classes. Unstable interface. <br>
+**Roadmap:** See [project board](https://github.com/users/oir/projects/3).
+
 ---
 
 <div style="visibility: hidden; height: 0">
