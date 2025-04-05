@@ -64,7 +64,7 @@ def test_args_with_defaults(hi, count_t):
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
         check_args(hi, ["john", "--count=3", "--count", "4"], [], {})
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
-        check_args(hi, ["john", "--count", "3", "-count=4"], [], {})
+        check_args(hi, ["john", "--count", "3", "--count=4"], [], {})
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
         check_args(hi, ["--count", "3", "john", "--count", "4"], [], {})
 
