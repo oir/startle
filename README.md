@@ -113,6 +113,19 @@ if __name__ == "__main__":
     throw_dice(cfg)
 ```
 
+Then `dice.py` can be executed like:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/a8c7d949-5d36-4b71-8427-2b54dbdac95c" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/26715b4c-a159-4aad-a428-28002ef5c84d" width="100%">
+  <img src="https://github.com/user-attachments/assets/26715b4c-a159-4aad-a428-28002ef5c84d" width="100%">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/e2222195-31c4-4fd9-959e-6ea73d68b49e" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/user-attachments/assets/1069d770-c334-425b-b9df-79eeb56991f6" width="100%">
+  <img src="https://github.com/user-attachments/assets/1069d770-c334-425b-b9df-79eeb56991f6" width="100%">
+</picture>
 
 ---
 <br>
