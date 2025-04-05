@@ -64,10 +64,61 @@ parse the arguments, and invoke `word_count`.
   <img src="https://github.com/user-attachments/assets/36edf935-50a1-48a4-8f60-c30b36e471d1" width="100%">
 </picture>
 
+You can also invoke `start()` with a list of functions instead of a single function.
+In this case, functions are made available as _commands_ with their own arguments
+and options in your CLI. See [here](https://oir.github.io/startle/#/function-interface?id=commands).
+
+---
+
+**Startle** also allows you to transform a class (possibly a dataclass) into a command line parser:
+
+```python
+import random
+from dataclasses import dataclass
+from typing import Literal
+
+from startle import parse
+
+
+@dataclass
+class Config:
+    """
+    Configuration for the dice program.
+
+    Attributes:
+        sides: The number of sides on the dice.
+        count: The number of dice to throw.
+        kind: Whether to throw a single die or a pair of dice.
+    """
+
+    sides: int = 6
+    count: int = 1
+    kind: Literal["single", "pair"] = "single"
+
+
+def throw_dice(cfg: Config) -> None:
+    """
+    Throw the dice according to the configuration.
+    """
+    if cfg.kind == "single":
+        for _ in range(cfg.count):
+            print(random.randint(1, cfg.sides))
+    else:
+        for _ in range(cfg.count):
+            print(random.randint(1, cfg.sides), random.randint(1, cfg.sides))
+
+
+if __name__ == "__main__":
+    cfg = parse(Config, brief="A program to throw dice.")
+    throw_dice(cfg)
+```
+
+
 ---
 <br>
 
-**Startle** is inspired by [Typer](https://github.com/fastapi/typer), and [Fire](https://github.com/google/python-fire),
+**Startle** is inspired by [Typer](https://github.com/fastapi/typer), [Fire](https://github.com/google/python-fire),
+and [HFArgumentParser](https://github.com/huggingface/transformers/blob/main/src/transformers/hf_argparser.py),
 but aims to be _non-intrusive_, to have stronger type support, and to have saner defaults.
 Thus, some decisions are done differently:
 

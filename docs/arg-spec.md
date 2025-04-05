@@ -244,7 +244,7 @@ arguments to your function.
 make it admit any positional argument, this in turn will make your program
 admit any unrecognized command-line arguments and store them in `args` variable.
 
-This is similar to the `parse_unknown_args()` of the native `argparse` module.
+This is similar to the `parse_known_args()` of the native `argparse` module.
 
 An example:
 
