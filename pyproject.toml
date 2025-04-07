@@ -51,7 +51,7 @@ python = ["3.10", "3.11", "3.12", "3.13"]
 select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=startle --cov-report=term-missing --cov-report=lcov"
+addopts = "--cov=startle --cov-branch --cov-report=xml"
 python_files = ["tests/*.py", "tests/**/*.py"]
 
 [tool.coverage.run]
