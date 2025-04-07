@@ -140,10 +140,20 @@ def test_config_err(capsys, run: Callable) -> None:
     def f(help: bool = False) -> None:
         pass
 
+    def f2(dummy: str) -> None:
+        pass
+
     check_exits(
         capsys, run, f, [], "Error: Cannot use `help` as parameter name in `f()`!"
+    )
+    check_exits(
+        capsys, run, [f, f2], [], "Error: Cannot use `help` as parameter name in `f()`!"
     )
     with raises(
         ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
     ):
         run(f, [], caught=False)
+    with raises(
+        ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
+    ):
+        run([f, f2], [], caught=False)
