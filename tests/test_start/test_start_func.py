@@ -1,6 +1,8 @@
 from typing import Callable
 
-from pytest import mark
+from pytest import mark, raises
+
+from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import check, check_exits, run_w_explicit_args, run_w_sys_argv
 
@@ -108,6 +110,16 @@ def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
             ["--name", "Bob", "--count", "3", "--lastname", "Alice"],
             "Error: Unexpected option `lastname`!",
         )
+        with raises(ParserOptionError, match="Required option `name` is not provided!"):
+            run(hi, [], caught=False)
+        with raises(ParserOptionError, match="Option `name` is multiply given!"):
+            run(hi, ["--name", "Bob", "--count", "3", "--name", "Alice"], caught=False)
+        with raises(ParserOptionError, match="Unexpected option `lastname`!"):
+            run(
+                hi,
+                ["--name", "Bob", "--count", "3", "--lastname", "Alice"],
+                caught=False,
+            )
     else:
         check_exits(
             capsys,
@@ -116,6 +128,11 @@ def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
             [],
             "Error: Required positional argument <name> is not provided!",
         )
+        with raises(
+            ParserOptionError,
+            match="Required positional argument <name> is not provided!",
+        ):
+            run(hi, [], caught=False)
 
 
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
@@ -126,3 +143,7 @@ def test_config_err(capsys, run: Callable) -> None:
     check_exits(
         capsys, run, f, [], "Error: Cannot use `help` as parameter name in `f()`!"
     )
+    with raises(
+        ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
+    ):
+        run(f, [], caught=False)
