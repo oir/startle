@@ -38,10 +38,16 @@ def check(
 
 
 def check_exits(
-    capsys, run: Callable, f: Callable, args: list[str], expected: str
+    capsys,
+    run: Callable,
+    f: Callable,
+    args: list[str],
+    expected: str,
+    *,
+    exit_code: str = "1",
 ) -> None:
     with raises(SystemExit) as excinfo:
         run(f, args)
-    assert str(excinfo.value) == "1"
+    assert str(excinfo.value) == exit_code
     captured = capsys.readouterr()
     assert captured.out.startswith(expected)

@@ -66,6 +66,18 @@ def test_calc(capsys, run: Callable) -> None:
     )
 
     check_exits(
+        capsys, run, [add, sub, mul, div], ["--help"], "\nUsage:\n", exit_code="0"
+    )
+    check_exits(
+        capsys,
+        run,
+        [add, sub, mul, div],
+        ["add", "--help"],
+        "\nAdd two numbers.\n\nUsage:\n",
+        exit_code="0",
+    )
+
+    check_exits(
         capsys, run, [add, sub, mul, div], ["2", "3"], "Error: Unknown command `2`!\n"
     )
     check_exits(capsys, run, [add, sub, mul, div], [], "Error: No command given!\n")
