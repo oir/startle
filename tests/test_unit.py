@@ -35,7 +35,7 @@ def test_strip_optional():
 
 
 def test_shorten_type_annotation():
-    from typing import List
+    from typing import Any, List, Literal
 
     assert _shorten_type_annotation(int) == "int"
     assert _shorten_type_annotation(str) == "str"
@@ -63,3 +63,8 @@ def test_shorten_type_annotation():
     )
     assert _shorten_type_annotation(list) == "list"
     assert _shorten_type_annotation(List) == "typing.List"  # TODO:
+    assert _shorten_type_annotation(Any) in ["Any", "typing.Any"]  # TODO:
+    assert _shorten_type_annotation(list[list]) == "list[list]"
+
+    assert _shorten_type_annotation(Literal[1]) == "Literal[1]"
+    assert _shorten_type_annotation(Literal["a"]) == "Literal['a']"

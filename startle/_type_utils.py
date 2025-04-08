@@ -44,7 +44,7 @@ def _shorten_type_annotation(annotation: Any) -> str:
         # It's a simple type, return its name
         if inspect.isclass(annotation):
             return annotation.__name__
-        return str(annotation)
+        return repr(annotation)
 
     if origin is Union or origin is types.UnionType:
         args = get_args(annotation)
@@ -62,4 +62,4 @@ def _shorten_type_annotation(annotation: Any) -> str:
         args_str = ", ".join(_shorten_type_annotation(arg) for arg in args)
         return f"{origin.__name__}[{args_str}]"
 
-    return str(annotation)
+    return repr(annotation)
