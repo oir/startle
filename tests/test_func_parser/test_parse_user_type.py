@@ -5,6 +5,8 @@ from pytest import raises
 
 from startle import register
 from startle.error import ParserConfigError
+from startle.metavar import _METAVARS
+from startle.value_parser import _PARSERS
 
 from ._utils import check_args
 
@@ -62,3 +64,55 @@ def test_unsupported_type():
 
     check_args(mul, ["1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
     check_args(mul2, ["1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
+
+    del _PARSERS[Rational]
+    del _METAVARS[Rational]
+
+
+def test_unsupported_type_wo_meta():
+    with raises(
+        ParserConfigError,
+        match=re.escape("Unsupported type `Rational` for parameter `a` in `mul()`!"),
+    ):
+        check_args(mul, ["1/2", "3/4"], [], {})
+
+    with raises(
+        ParserConfigError,
+        match=re.escape(
+            "Unsupported type `list[Rational]` for parameter `ns` in `mul2()`!"
+        ),
+    ):
+        check_args(mul2, ["1/2", "3/4"], [], {})
+
+    register(
+        Rational,
+        parser=lambda value: Rational(*map(int, value.split("/"))),
+    )
+
+    check_args(mul, ["1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul2, ["1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
+
+    assert Rational not in _METAVARS
+    del _PARSERS[Rational]
+
+
+def test_supported_type_new_meta():
+    def mul3(a: float, b: float) -> float:
+        """
+        Multiply two floats.
+        """
+        y = a * b
+        print(f"{a} * {b} = {y}")
+        return y
+
+    check_args(mul3, ["1.0", "2.0"], [1.0, 2.0], {})
+
+    old_meta = _METAVARS[float]
+    register(float, metavar="x.y")
+    # TODO: check help string for new metavar
+
+    check_args(mul3, ["1.0", "2.0"], [1.0, 2.0], {})
+    assert _METAVARS[float] == "x.y"
+
+    # restore old metavar
+    _METAVARS[float] = old_meta

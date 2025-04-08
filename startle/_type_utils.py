@@ -32,7 +32,7 @@ def _normalize_type(annotation):
             if len(args) == 1:
                 return Optional[args[0]]
             else:
-                return Union[tuple(args)]
+                return Union[tuple(args + [type(None)])]
         else:
             return Union[tuple(args)]
     return annotation
@@ -44,9 +44,8 @@ def _shorten_type_annotation(annotation: Any) -> str:
         # It's a simple type, return its name
         if inspect.isclass(annotation):
             return annotation.__name__
-        return str(annotation)
+        return repr(annotation)
 
-    # Handle Optional types explicitly
     if origin is Union or origin is types.UnionType:
         args = get_args(annotation)
         if type(None) in args:
@@ -54,6 +53,8 @@ def _shorten_type_annotation(annotation: Any) -> str:
             if len(args) == 1:
                 return f"{_shorten_type_annotation(args[0])} | None"
             return " | ".join(_shorten_type_annotation(arg) for arg in args) + " | None"
+        else:
+            return " | ".join(_shorten_type_annotation(arg) for arg in args)
 
     # It's a generic type, process its arguments
     args = get_args(annotation)
@@ -61,4 +62,4 @@ def _shorten_type_annotation(annotation: Any) -> str:
         args_str = ", ".join(_shorten_type_annotation(arg) for arg in args)
         return f"{origin.__name__}[{args_str}]"
 
-    return str(annotation)
+    return repr(annotation)

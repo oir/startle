@@ -2,6 +2,7 @@ import sys
 from typing import Any, Callable, TypeVar
 
 from rich.console import Console
+from rich.text import Text
 
 from .args import Args
 from .cmds import Cmds
@@ -56,8 +57,15 @@ def _start_func(
         args_ = make_args_from_func(func)
     except ParserConfigError as e:
         if caught:
-            console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
+            console = Console(markup=False)
+            console.print(
+                Text.assemble(
+                    ("Error:", "bold red"),
+                    " ",
+                    (str(e), "red"),
+                    "\n",
+                )
+            )
             raise SystemExit(1)
         else:
             raise e
@@ -73,11 +81,24 @@ def _start_func(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if caught:
-            console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]")
+            console = Console(markup=False)
+            console.print(
+                Text.assemble(
+                    ("Error:", "bold red"),
+                    " ",
+                    (str(e), "red"),
+                )
+            )
             args_.print_help(console, usage_only=True)
             console.print(
-                "[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]\n"
+                Text.assemble(
+                    ("For more information, run with ", "dim"),
+                    ("-?", "dim green bold"),
+                    ("|", "dim green"),
+                    ("--help", "dim green bold"),
+                    (".", "dim"),
+                    "\n",
+                )
             )
             raise SystemExit(1)
         else:
@@ -122,8 +143,15 @@ def _start_cmds(
         )
     except ParserConfigError as e:
         if caught:
-            console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
+            console = Console(markup=False)
+            console.print(
+                Text.assemble(
+                    ("Error:", "bold red"),
+                    " ",
+                    (str(e), "red"),
+                    "\n",
+                )
+            )
             raise SystemExit(1)
         else:
             raise e
@@ -142,12 +170,25 @@ def _start_cmds(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if caught:
-            console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]")
+            console = Console(markup=False)
+            console.print(
+                Text.assemble(
+                    ("Error:", "bold red"),
+                    " ",
+                    (str(e), "red"),
+                )
+            )
             if args:  # error happened after parsing the command
                 args.print_help(console, usage_only=True)
                 console.print(
-                    "[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]\n"
+                    Text.assemble(
+                        ("For more information, run with ", "dim"),
+                        ("-?", "dim green bold"),
+                        ("|", "dim green"),
+                        ("--help", "dim green bold"),
+                        (".", "dim"),
+                        "\n",
+                    )
                 )
             else:  # error happened before parsing the command
                 cmds.print_help(console)

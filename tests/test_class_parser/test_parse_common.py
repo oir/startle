@@ -39,6 +39,14 @@ class ConfigClass:
         )
 
 
+def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None:
+    with raises(SystemExit) as excinfo:
+        parse(cls, args)
+    assert str(excinfo.value) == "1"
+    captured = capsys.readouterr()
+    assert captured.out.startswith(expected)
+
+
 @mark.parametrize(
     "count",
     [
@@ -68,6 +76,7 @@ class ConfigClass:
 )
 @mark.parametrize("Config", [ConfigDataClass, ConfigClass])
 def test_class_with_all_defaults(
+    capsys,
     count: Callable[[str], list[str]],
     amount: Callable[[str], list[str]],
     label: Callable[[str], list[str]],
@@ -127,8 +136,31 @@ def test_class_with_all_defaults(
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
         parse(Config, ["--count", "2", "--count", "3"], caught=False)
 
+    check_parse_exits(
+        capsys, Config, ["--unknown"], "Error: Unexpected option `unknown`!\n"
+    )
+    check_parse_exits(capsys, Config, ["a"], "Error: Cannot parse integer from `a`!\n")
+    check_parse_exits(
+        capsys, Config, ["2", "a"], "Error: Cannot parse float from `a`!\n"
+    )
+    check_parse_exits(
+        capsys, Config, ["--count"], "Error: Option `count` is missing argument!\n"
+    )
+    check_parse_exits(
+        capsys,
+        Config,
+        ["--amount", "1.0", "--count"],
+        "Error: Option `count` is missing argument!\n",
+    )
+    check_parse_exits(
+        capsys,
+        Config,
+        ["--count", "2", "--count", "3"],
+        "Error: Option `count` is multiply given!\n",
+    )
 
-def test_dataclass_with_help_attr():
+
+def test_dataclass_with_help_attr(capsys):
     @dataclass
     class Config:
         """
@@ -143,9 +175,12 @@ def test_dataclass_with_help_attr():
         ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
     ):
         parse(Config, [], caught=False)
+    check_parse_exits(
+        capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
+    )
 
 
-def test_dataclass_with_unsupported_attr_type():
+def test_dataclass_with_unsupported_attr_type(capsys):
     @dataclass
     class Config:
         """
@@ -163,3 +198,9 @@ def test_dataclass_with_unsupported_attr_type():
         ),
     ):
         parse(Config, [], caught=False)
+    check_parse_exits(
+        capsys,
+        Config,
+        [],
+        "Error: Unsupported type `list[list[int]]` for parameter `label` in `Config`!\n",
+    )
