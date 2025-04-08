@@ -32,7 +32,7 @@ def _normalize_type(annotation):
             if len(args) == 1:
                 return Optional[args[0]]
             else:
-                return Union[tuple(args)]
+                return Union[tuple(args + [type(None)])]
         else:
             return Union[tuple(args)]
     return annotation
