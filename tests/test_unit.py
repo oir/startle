@@ -35,6 +35,8 @@ def test_strip_optional():
 
 
 def test_shorten_type_annotation():
+    from typing import List
+
     assert _shorten_type_annotation(int) == "int"
     assert _shorten_type_annotation(str) == "str"
     assert _shorten_type_annotation(float) == "float"
@@ -52,3 +54,8 @@ def test_shorten_type_annotation():
     assert _shorten_type_annotation(Union[str, float, None]) == "str | float | None"
     assert _shorten_type_annotation(Union[str, None, float]) == "str | float | None"
     assert _shorten_type_annotation(Optional[str | float]) == "str | float | None"
+
+    assert _shorten_type_annotation(list[int]) == "list[int]"
+    assert _shorten_type_annotation(List[int]) == "list[int]"
+    assert _shorten_type_annotation(List[int | None]) == "list[int | None]"
+    assert _shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
