@@ -25,3 +25,6 @@ def test_strip_optional():
     assert normalize_strip_optional(Union[str, float, None]) is Union[str, float]
     assert normalize_strip_optional(str | float | None) is Union[str, float]
     assert normalize_strip_optional(Optional[str | float]) is Union[str, float]
+
+    assert normalize_strip_optional(Union[str, float]) is Union[str, float]
+    assert normalize_strip_optional(str | float) is Union[str, float]
