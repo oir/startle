@@ -45,3 +45,10 @@ def test_shorten_type_annotation():
     assert _shorten_type_annotation(Union[str, float]) == "str | float"
     assert _shorten_type_annotation(Union[int, None]) == "int | None"
     assert _shorten_type_annotation(Optional[int]) == "int | None"
+
+    assert _shorten_type_annotation(str | float | None) == "str | float | None"
+    assert _shorten_type_annotation(str | None | float) == "str | float | None"
+    assert _shorten_type_annotation(None | str | float) == "str | float | None"
+    assert _shorten_type_annotation(Union[str, float, None]) == "str | float | None"
+    assert _shorten_type_annotation(Union[str, None, float]) == "str | float | None"
+    assert _shorten_type_annotation(Optional[str | float]) == "str | float | None"
