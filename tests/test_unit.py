@@ -58,4 +58,6 @@ def test_shorten_type_annotation():
     assert _shorten_type_annotation(list[int]) == "list[int]"
     assert _shorten_type_annotation(List[int]) == "list[int]"
     assert _shorten_type_annotation(List[int | None]) == "list[int | None]"
-    assert _shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
+    assert (
+        _shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
+    )
