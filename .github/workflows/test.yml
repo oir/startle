@@ -25,9 +25,7 @@ jobs:
         run: hatch run test:pytest
       - name: Run static checks
         run: hatch run test:mypy startle/
-      - name: Coverage
-        uses: coverallsapp/github-action@master
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: coverage.lcov
-          format: python
+          token: ${{ secrets.CODECOV_TOKEN }}

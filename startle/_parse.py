@@ -1,6 +1,7 @@
 from typing import Type, TypeVar
 
 from rich.console import Console
+from rich.text import Text
 
 from .error import ParserConfigError, ParserOptionError, ParserValueError
 from .inspect import make_args_from_class
@@ -35,8 +36,15 @@ def parse(
         args_ = make_args_from_class(cls, brief=brief)
     except ParserConfigError as e:
         if caught:
-            console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]\n")
+            console = Console(markup=False)
+            console.print(
+                Text.assemble(
+                    ("Error:", "bold red"),
+                    " ",
+                    (str(e), "red"),
+                    "\n",
+                )
+            )
             raise SystemExit(1)
         else:
             raise e
@@ -52,12 +60,26 @@ def parse(
         return cls(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if caught:
-            console = Console()
-            console.print(f"[bold red]Error:[/bold red] [red]{e}[/red]")
+            console = Console(markup=False)
+            console.print(
+                Text.assemble(
+                    ("Error:", "bold red"),
+                    " ",
+                    (str(e), "red"),
+                )
+            )
             args_.print_help(console, usage_only=True)
             console.print(
-                "[dim]For more information, run with [green][b]-?[/b]|[b]--help[/b][/green].[/dim]\n"
+                Text.assemble(
+                    ("For more information, run with ", "dim"),
+                    ("-?", "dim green bold"),
+                    ("|", "dim green"),
+                    ("--help", "dim green bold"),
+                    (".", "dim"),
+                    "\n",
+                )
             )
+
             raise SystemExit(1)
         else:
             raise e

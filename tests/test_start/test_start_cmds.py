@@ -1,6 +1,8 @@
 from typing import Callable
 
-from pytest import mark
+from pytest import mark, raises
+
+from startle.error import ParserOptionError
 
 from ._utils import check, check_exits, run_w_explicit_args, run_w_sys_argv
 
@@ -64,6 +66,18 @@ def test_calc(capsys, run: Callable) -> None:
     )
 
     check_exits(
+        capsys, run, [add, sub, mul, div], ["--help"], "\nUsage:\n", exit_code="0"
+    )
+    check_exits(
+        capsys,
+        run,
+        [add, sub, mul, div],
+        ["add", "--help"],
+        "\nAdd two numbers.\n\nUsage:\n",
+        exit_code="0",
+    )
+
+    check_exits(
         capsys, run, [add, sub, mul, div], ["2", "3"], "Error: Unknown command `2`!\n"
     )
     check_exits(capsys, run, [add, sub, mul, div], [], "Error: No command given!\n")
@@ -82,3 +96,12 @@ def test_calc(capsys, run: Callable) -> None:
         ["sub", "2"],
         "Error: Required option `b` is not provided!\n",
     )
+
+    with raises(ParserOptionError, match=r"Unknown command `2`!"):
+        run([add, sub, mul, div], ["2", "3"], caught=False)
+    with raises(ParserOptionError, match=r"No command given!"):
+        run([add, sub, mul, div], [], caught=False)
+    with raises(ParserOptionError, match=r"Unexpected positional argument: `4`!"):
+        run([add, sub, mul, div], ["add", "2", "3", "4"], caught=False)
+    with raises(ParserOptionError, match=r"Required option `b` is not provided!"):
+        run([add, sub, mul, div], ["sub", "2"], caught=False)

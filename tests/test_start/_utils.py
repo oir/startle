@@ -7,17 +7,21 @@ from startle import start
 
 
 def run_w_explicit_args(
-    func: Callable | list[Callable] | dict[str, Callable], args: list[str]
+    func: Callable | list[Callable] | dict[str, Callable],
+    args: list[str],
+    caught: bool = True,
 ) -> None:
-    start(func, args)
+    start(func, args, caught=caught)
 
 
 def run_w_sys_argv(
-    func: Callable | list[Callable] | dict[str, Callable], args: list[str]
+    func: Callable | list[Callable] | dict[str, Callable],
+    args: list[str],
+    caught: bool = True,
 ) -> None:
     old_argv = sys.argv[1:]
     sys.argv[1:] = args
-    start(func)
+    start(func, caught=caught)
     sys.argv[1:] = old_argv
 
 
@@ -34,10 +38,16 @@ def check(
 
 
 def check_exits(
-    capsys, run: Callable, f: Callable, args: list[str], expected: str
+    capsys,
+    run: Callable,
+    f: Callable,
+    args: list[str],
+    expected: str,
+    *,
+    exit_code: str = "1",
 ) -> None:
     with raises(SystemExit) as excinfo:
         run(f, args)
-    assert str(excinfo.value) == "1"
+    assert str(excinfo.value) == exit_code
     captured = capsys.readouterr()
     assert captured.out.startswith(expected)
