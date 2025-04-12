@@ -44,12 +44,19 @@ class Args:
             name = value[1:]
             if not name:
                 raise ParserOptionError("Prefix `-` is not followed by an option!")
-            # ensure(
-            #    len(name) == 1,
-            #    "Options prefixed by `-` have to be short names! "
-            #    "Did you mean `--" + name + "`?",
-            # )
             return name
+        return False
+
+    @staticmethod
+    def _is_combined_short_names(value: str) -> str | Literal[False]:
+        """
+        Check if a string, as provided in the command-line arguments, looks
+        like multiple combined short names (e.g. -abc).
+        """
+        if value.startswith("-") and not value.startswith("--"):
+            value = value[1:].split("=", 1)[0]
+            if len(value) > 1:
+                return value
         return False
 
     def add(self, arg: Arg):
@@ -122,6 +129,59 @@ class Args:
             )
         opt.parse(value)
         return idx + 1
+
+    def _parse_combined_short_names(self, names: str, args: list[str], idx: int) -> int:
+        """
+        Parse a cli argument as a combined short names (e.g. -abc).
+        Return new index after consuming the argument.
+        """
+        for i, name in enumerate(names):
+            if name == "?":
+                self.print_help()
+                raise SystemExit(0)
+            if name not in self._name2idx:
+                raise ParserOptionError(f"Unexpected option `{name}`!")
+            opt = self._named_args[self._name2idx[name]]
+            if opt._parsed and not opt.is_nary:
+                raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
+
+            if i < len(names) - 1:
+                # up until the last option, all options must be flags
+                if not opt.is_flag:
+                    raise ParserOptionError(
+                        f"Option `{opt.name}` is not a flag and cannot be combined!"
+                    )
+                opt.parse()
+            else:
+                # last option can be a flag or a regular option
+                if "=" in args[idx]:
+                    value = args[idx].split("=", 1)[1]
+                    last = f"{name}={value}"
+                    return self._parse_equals_syntax(last, idx)
+                if opt.is_flag:
+                    opt.parse()
+                    return idx + 1
+                if opt.is_nary:
+                    # n-ary option
+                    values = []
+                    idx += 1
+                    while idx < len(args) and not self._is_name(args[idx]):
+                        values.append(args[idx])
+                        idx += 1
+                    if not values:
+                        raise ParserOptionError(
+                            f"Option `{opt.name}` is missing argument!"
+                        )
+                    for value in values:
+                        opt.parse(value)
+                    return idx
+                # not a flag, not n-ary
+                if idx + 1 >= len(args):
+                    raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
+                opt.parse(args[idx + 1])
+                return idx + 2
+
+        raise RuntimeError("Programmer error: should not reach here!")
 
     def _parse_named(self, name: str, args: list[str], idx: int) -> int:
         """
@@ -224,14 +284,17 @@ class Args:
         while idx < len(args):
             if name := self._is_name(args[idx]):
                 # this must be a named argument / option
-                try:
-                    idx = self._parse_named(name, args, idx)
-                except ParserOptionError as e:
-                    if self._var_args and str(e).startswith("Unexpected option"):
-                        self._var_args.parse(args[idx])
-                        idx += 1
-                    else:
-                        raise
+                if names := self._is_combined_short_names(args[idx]):
+                    idx = self._parse_combined_short_names(names, args, idx)
+                else:
+                    try:
+                        idx = self._parse_named(name, args, idx)
+                    except ParserOptionError as e:
+                        if self._var_args and str(e).startswith("Unexpected option"):
+                            self._var_args.parse(args[idx])
+                            idx += 1
+                        else:
+                            raise
             else:
                 # this must be a positional argument
                 idx, positional_idx = self._parse_positional(args, idx, positional_idx)
