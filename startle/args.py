@@ -107,11 +107,12 @@ class Args:
         If the argument is n-ary, it can be repeated.
         """
         name, value = name.split("=", 1)
-        if name not in self._name2idx:
+        normal_name = name.replace("_", "-")
+        if normal_name not in self._name2idx:
             if self._var_kwargs:
                 self.add(
                     Arg(
-                        name=Name(long=name),  # does long always work?
+                        name=Name(long=normal_name),  # does long always work?
                         type_=self._var_kwargs.type_,
                         container_type=self._var_kwargs.container_type,
                         is_named=True,
@@ -120,7 +121,7 @@ class Args:
                 )
             else:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
-        opt = self._named_args[self._name2idx[name]]
+        opt = self._named_args[self._name2idx[normal_name]]
         if opt._parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
         if opt.is_flag:
@@ -193,12 +194,13 @@ class Args:
             raise SystemExit(0)
         if "=" in name:
             return self._parse_equals_syntax(name, idx)
-        if name not in self._name2idx:
+        normal_name = name.replace("_", "-")
+        if normal_name not in self._name2idx:
             if self._var_kwargs:
                 assert self._var_kwargs.type_ is not None
                 self.add(
                     Arg(
-                        name=Name(long=name),  # does long always work?
+                        name=Name(long=normal_name),  # does long always work?
                         type_=self._var_kwargs.type_,
                         container_type=self._var_kwargs.container_type,
                         is_named=True,
@@ -207,7 +209,7 @@ class Args:
                 )
             else:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
-        opt = self._named_args[self._name2idx[name]]
+        opt = self._named_args[self._name2idx[normal_name]]
         if opt._parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 

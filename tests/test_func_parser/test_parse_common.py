@@ -110,21 +110,56 @@ def test_args_without_defaults(opt):
         check_args(hi, ["jane", "--name", "jane"], [], {})
 
 
-def test_args_both_positional_and_keyword():
+@mark.parametrize(
+    "person_name_opt",
+    [
+        ["jane"],
+        ["--person-name", "jane"],
+        ["--person_name", "jane"],
+        ["--person-name=jane"],
+        ["--person_name=jane"],
+        ["-p", "jane"],
+        ["-p=jane"],
+    ],
+)
+@mark.parametrize(
+    "hello_count_opt",
+    [
+        ["3"],
+        ["--hello-count", "3"],
+        ["--hello_count", "3"],
+        ["--hello-count=3"],
+        ["--hello_count=3"],
+        ["-h", "3"],
+        ["-h=3"],
+    ],
+)
+def test_args_both_positional_and_keyword(person_name_opt, hello_count_opt):
     def hi(person_name: str, hello_count: int) -> None:
         for _ in range(hello_count):
             print(f"hello, {person_name}!")
 
-    check_args(hi, ["jane", "3"], ["jane", 3], {})
-    check_args(hi, ["jane", "--hello-count", "3"], ["jane", 3], {})
-    check_args(hi, ["--person-name", "jane", "--hello-count", "3"], ["jane", 3], {})
-    check_args(hi, ["--hello-count", "3", "--person-name", "jane"], ["jane", 3], {})
-    check_args(hi, ["--person-name", "jane", "3"], ["jane", 3], {})
+    check_args(hi, [*person_name_opt, *hello_count_opt], ["jane", 3], {})
 
     with raises(ParserOptionError, match="Option `person-name` is multiply given!"):
-        check_args(hi, ["jane", "--person-name", "john", "--hello-count", "3"], [], {})
+        check_args(
+            hi, [*person_name_opt, "--person-name", "john", *hello_count_opt], [], {}
+        )
+    with raises(ParserOptionError, match="Option `person-name` is multiply given!"):
+        check_args(
+            hi, [*person_name_opt, "--person_name", "john", *hello_count_opt], [], {}
+        )
+    with raises(ParserOptionError, match="Option `person-name` is multiply given!"):
+        check_args(
+            hi, [*person_name_opt, "--person-name=john", *hello_count_opt], [], {}
+        )
+    with raises(ParserOptionError, match="Option `person-name` is multiply given!"):
+        check_args(
+            hi, [*person_name_opt, "--person_name=john", *hello_count_opt], [], {}
+        )
+
     with raises(ParserOptionError, match="Unexpected positional argument: `4`!"):
-        check_args(hi, ["jane", "--hello-count", "3", "4"], [], {})
+        check_args(hi, [*person_name_opt, *hello_count_opt, "4"], [], {})
 
 
 def test_args_both_positional_and_keyword_with_defaults():
