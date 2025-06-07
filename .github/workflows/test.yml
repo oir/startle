@@ -29,3 +29,15 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run examples
+        run: |
+          hatch run test:python examples/calc.py add 2 3
+          hatch run test:python examples/calc.py -?
+          hatch run test:python examples/cat.py examples/wc.py examples/cat.py --delim=\n===\n\n
+          hatch run test:python examples/cat.py --delim=\n===\n\n examples/cat.py examples/wc.py
+          hatch run test:python examples/color.py Alice
+          hatch run test:python examples/color.py --name Bob --color green --style dim
+          hatch run test:python examples/dice.py
+          hatch run test:python examples/dice.py --sides 20 --count 2 --kind pair
+          hatch run test:python examples/rational.py 2/3 4/5
+          hatch run test:python examples/wc.py --kind char examples/wc.py 
