@@ -56,3 +56,9 @@ python_files = ["tests/*.py", "tests/**/*.py"]
 
 [tool.coverage.run]
 omit = ["startle/_version.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: not covered",
+    "@overload",
+]
