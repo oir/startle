@@ -41,7 +41,7 @@ class ConfigClass:
 
 def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None:
     with raises(SystemExit) as excinfo:
-        parse(cls, args)
+        parse(cls, args=args)
     assert str(excinfo.value) == "1"
     captured = capsys.readouterr()
     assert captured.out.startswith(expected)
@@ -82,59 +82,59 @@ def test_class_with_all_defaults(
     label: Callable[[str], list[str]],
     Config: type,
 ):
-    assert parse(Config, []) == Config()
+    assert parse(Config, args=[]) == Config()
 
-    assert parse(Config, [*count(2)]) == Config(count=2)
-    assert parse(Config, ["2"]) == Config(count=2)
-    assert parse(Config, [*amount(2.0)]) == Config(amount=2.0)
-    assert parse(Config, [*label("custom")]) == Config(label="custom")
+    assert parse(Config, args=[*count(2)]) == Config(count=2)
+    assert parse(Config, args=["2"]) == Config(count=2)
+    assert parse(Config, args=[*amount(2.0)]) == Config(amount=2.0)
+    assert parse(Config, args=[*label("custom")]) == Config(label="custom")
 
     # only count and amount
-    assert parse(Config, [*count(2), *amount(2.0)]) == Config(count=2, amount=2.0)
-    assert parse(Config, ["2", *amount(2.0)]) == Config(count=2, amount=2.0)
-    assert parse(Config, [*amount(2.0), "2"]) == Config(count=2, amount=2.0)
-    assert parse(Config, ["2", "2.0"]) == Config(count=2, amount=2.0)
+    assert parse(Config, args=[*count(2), *amount(2.0)]) == Config(count=2, amount=2.0)
+    assert parse(Config, args=["2", *amount(2.0)]) == Config(count=2, amount=2.0)
+    assert parse(Config, args=[*amount(2.0), "2"]) == Config(count=2, amount=2.0)
+    assert parse(Config, args=["2", "2.0"]) == Config(count=2, amount=2.0)
 
     # only count and label
     expected = Config(count=2, label="custom")
-    assert parse(Config, [*count(2), *label("custom")]) == expected
-    assert parse(Config, [*label("custom"), "2"]) == expected
-    assert parse(Config, ["2", *label("custom")]) == expected
-    assert parse(Config, [*label("custom"), "2"]) == expected
+    assert parse(Config, args=[*count(2), *label("custom")]) == expected
+    assert parse(Config, args=[*label("custom"), "2"]) == expected
+    assert parse(Config, args=["2", *label("custom")]) == expected
+    assert parse(Config, args=[*label("custom"), "2"]) == expected
 
     # only amount and label
     expected = Config(amount=2.0, label="custom")
-    assert parse(Config, [*amount(2.0), *label("custom")]) == expected
-    assert parse(Config, [*label("custom"), *amount(2.0)]) == expected
+    assert parse(Config, args=[*amount(2.0), *label("custom")]) == expected
+    assert parse(Config, args=[*label("custom"), *amount(2.0)]) == expected
 
     # all three
     expected = Config(count=2, amount=2.0, label="custom")
-    assert parse(Config, [*count(2), *amount(2.0), *label("custom")]) == expected
-    assert parse(Config, [*count(2), *label("custom"), *amount(2.0)]) == expected
-    assert parse(Config, [*amount(2.0), *label("custom"), *count(2)]) == expected
-    assert parse(Config, [*amount(2.0), *count(2), *label("custom")]) == expected
-    assert parse(Config, [*label("custom"), *count(2), *amount(2.0)]) == expected
-    assert parse(Config, [*label("custom"), *amount(2.0), *count(2)]) == expected
-    assert parse(Config, ["2", *amount(2.0), *label("custom")]) == expected
-    assert parse(Config, [*amount(2.0), "2", *label("custom")]) == expected
-    assert parse(Config, [*amount(2.0), *label("custom"), "2"]) == expected
-    assert parse(Config, ["2", "2.0", *label("custom")]) == expected
-    assert parse(Config, ["2", *label("custom"), "2.0"]) == expected
-    assert parse(Config, [*label("custom"), "2", "2.0"]) == expected
-    assert parse(Config, ["2", "2.0", "custom"]) == expected
+    assert parse(Config, args=[*count(2), *amount(2.0), *label("custom")]) == expected
+    assert parse(Config, args=[*count(2), *label("custom"), *amount(2.0)]) == expected
+    assert parse(Config, args=[*amount(2.0), *label("custom"), *count(2)]) == expected
+    assert parse(Config, args=[*amount(2.0), *count(2), *label("custom")]) == expected
+    assert parse(Config, args=[*label("custom"), *count(2), *amount(2.0)]) == expected
+    assert parse(Config, args=[*label("custom"), *amount(2.0), *count(2)]) == expected
+    assert parse(Config, args=["2", *amount(2.0), *label("custom")]) == expected
+    assert parse(Config, args=[*amount(2.0), "2", *label("custom")]) == expected
+    assert parse(Config, args=[*amount(2.0), *label("custom"), "2"]) == expected
+    assert parse(Config, args=["2", "2.0", *label("custom")]) == expected
+    assert parse(Config, args=["2", *label("custom"), "2.0"]) == expected
+    assert parse(Config, args=[*label("custom"), "2", "2.0"]) == expected
+    assert parse(Config, args=["2", "2.0", "custom"]) == expected
 
     with raises(ParserOptionError, match="Unexpected option `unknown`!"):
-        parse(Config, ["--unknown"], caught=False)
+        parse(Config, args=["--unknown"], caught=False)
     with raises(ParserValueError, match="Cannot parse integer from `a`!"):
-        parse(Config, ["a"], caught=False)
+        parse(Config, args=["a"], caught=False)
     with raises(ParserValueError, match="Cannot parse float from `a`!"):
-        parse(Config, ["2", "a"], caught=False)
+        parse(Config, args=["2", "a"], caught=False)
     with raises(ParserOptionError, match="Option `count` is missing argument!"):
-        parse(Config, ["--count"], caught=False)
+        parse(Config, args=["--count"], caught=False)
     with raises(ParserOptionError, match="Option `count` is missing argument!"):
-        parse(Config, ["--amount", "1.0", "--count"], caught=False)
+        parse(Config, args=["--amount", "1.0", "--count"], caught=False)
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
-        parse(Config, ["--count", "2", "--count", "3"], caught=False)
+        parse(Config, args=["--count", "2", "--count", "3"], caught=False)
 
     check_parse_exits(
         capsys, Config, ["--unknown"], "Error: Unexpected option `unknown`!\n"
@@ -174,7 +174,7 @@ def test_dataclass_with_help_attr(capsys):
     with raises(
         ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
     ):
-        parse(Config, [], caught=False)
+        parse(Config, args=[], caught=False)
     check_parse_exits(
         capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
     )
@@ -197,7 +197,7 @@ def test_dataclass_with_unsupported_attr_type(capsys):
             "Unsupported type `list[list[int]]` for parameter `label` in `Config`!"
         ),
     ):
-        parse(Config, [], caught=False)
+        parse(Config, args=[], caught=False)
     check_parse_exits(
         capsys,
         Config,

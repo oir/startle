@@ -11,6 +11,7 @@ T = TypeVar("T")
 
 def parse(
     cls: Type[T],
+    *,
     args: list[str] | None = None,
     brief: str = "",
     caught: bool = True,

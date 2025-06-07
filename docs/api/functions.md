@@ -5,6 +5,7 @@
 ```python
 def start(
     obj: Callable | list[Callable] | dict[str, Callable],
+    *,
     args: list[str] | None = None,
     caught: bool = True,
 ) -> Any
@@ -34,6 +35,7 @@ Given a function, or a container of functions `obj`, parse its arguments from th
 ```python
 def parse(
     cls: type[~T],
+    *,
     args: list[str] | None = None,
     brief: str = '',
     caught: bool = True,
