@@ -11,7 +11,7 @@ def run_w_explicit_args(
     args: list[str],
     caught: bool = True,
 ) -> None:
-    start(func, args, caught=caught)
+    start(func, args=args, caught=caught)
 
 
 def run_w_sys_argv(
