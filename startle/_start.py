@@ -150,7 +150,7 @@ def _start_cmds(
             _error(str(e), exit=False, endl=False)
             if args:  # error happened after parsing the command
                 args.print_help(console(), usage_only=True)
-                _post_error()
+                _post_error(exit=False)
             else:  # error happened before parsing the command
                 cmds.print_help(console())
             raise SystemExit(1)
