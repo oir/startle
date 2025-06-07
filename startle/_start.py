@@ -1,9 +1,7 @@
 import sys
 from typing import Any, Callable, TypeVar
 
-from rich.console import Console
-from rich.text import Text
-
+from ._console import _error, _post_error, console
 from .args import Args
 from .cmds import Cmds
 from .error import ParserConfigError, ParserOptionError, ParserValueError
@@ -17,6 +15,7 @@ def start(
     *,
     args: list[str] | None = None,
     catch: bool = True,
+    default: str | None = None,
 ) -> Any:
     """
     Given a function, or a container of functions `obj`, parse its arguments from
@@ -30,6 +29,9 @@ def start(
         catch: Whether to catch and print (startle specific) errors instead of raising.
             This is used to display a more presentable output when a parse error occurs instead
             of the default traceback. This option will never catch non-startle errors.
+        default: The default subcommand to run if no subcommand is specified immediately
+            after the program name. This is only used if `obj` is a list or dict, and
+            errors otherwise.
     Returns:
         The return value of the function `obj`, or the subcommand of `obj` if it is
         a list or dict.
@@ -37,6 +39,12 @@ def start(
     if isinstance(obj, list) or isinstance(obj, dict):
         return _start_cmds(obj, args, catch)
     else:
+        if default is not None:
+            msg = "Default subcommand is not supported for a single function."
+            if catch:
+                _error(msg)
+            else:
+                raise ParserConfigError(msg)
         return _start_func(obj, args, catch)
 
 
@@ -58,16 +66,7 @@ def _start_func(
         args_ = make_args_from_func(func)
     except ParserConfigError as e:
         if catch:
-            console = Console(markup=False)
-            console.print(
-                Text.assemble(
-                    ("Error:", "bold red"),
-                    " ",
-                    (str(e), "red"),
-                    "\n",
-                )
-            )
-            raise SystemExit(1)
+            _error(str(e))
         else:
             raise e
 
@@ -82,26 +81,9 @@ def _start_func(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
-            console = Console(markup=False)
-            console.print(
-                Text.assemble(
-                    ("Error:", "bold red"),
-                    " ",
-                    (str(e), "red"),
-                )
-            )
-            args_.print_help(console, usage_only=True)
-            console.print(
-                Text.assemble(
-                    ("For more information, run with ", "dim"),
-                    ("-?", "dim green bold"),
-                    ("|", "dim green"),
-                    ("--help", "dim green bold"),
-                    (".", "dim"),
-                    "\n",
-                )
-            )
-            raise SystemExit(1)
+            _error(str(e), exit=False, endl=False)
+            args_.print_help(console(), usage_only=True)
+            _post_error()
         else:
             raise e
 
@@ -144,16 +126,7 @@ def _start_cmds(
         )
     except ParserConfigError as e:
         if catch:
-            console = Console(markup=False)
-            console.print(
-                Text.assemble(
-                    ("Error:", "bold red"),
-                    " ",
-                    (str(e), "red"),
-                    "\n",
-                )
-            )
-            raise SystemExit(1)
+            _error(str(e))
         else:
             raise e
 
@@ -171,28 +144,12 @@ def _start_cmds(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
-            console = Console(markup=False)
-            console.print(
-                Text.assemble(
-                    ("Error:", "bold red"),
-                    " ",
-                    (str(e), "red"),
-                )
-            )
+            _error(str(e), exit=False, endl=False)
             if args:  # error happened after parsing the command
-                args.print_help(console, usage_only=True)
-                console.print(
-                    Text.assemble(
-                        ("For more information, run with ", "dim"),
-                        ("-?", "dim green bold"),
-                        ("|", "dim green"),
-                        ("--help", "dim green bold"),
-                        (".", "dim"),
-                        "\n",
-                    )
-                )
+                args.print_help(console(), usage_only=True)
+                _post_error()
             else:  # error happened before parsing the command
-                cmds.print_help(console)
+                cmds.print_help(console())
             raise SystemExit(1)
         else:
             raise e
