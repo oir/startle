@@ -73,14 +73,21 @@ def func_api(func: Callable, file: TextIO):
     sig = inspect.signature(func)
     print("```python", file=file)
     print(f"def {func.__name__}(", file=file)
+    last_param_kind = None
     for param in sig.parameters.values():
         maybe_default = ""
         if param.default is not inspect.Parameter.empty:
             maybe_default = f" = {repr(param.default)}"
+        if (
+            last_param_kind is not inspect.Parameter.KEYWORD_ONLY
+            and param.kind is inspect.Parameter.KEYWORD_ONLY
+        ):
+            print("    *,", file=file)
         print(
             f"    {param.name}: {_shorten_type_annotation(param.annotation)}{maybe_default},",
             file=file,
         )
+        last_param_kind = param.kind
     print(f") -> {_shorten_type_annotation(sig.return_annotation)}", file=file)
     print("```\n", file=file)
 
