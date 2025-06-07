@@ -145,7 +145,7 @@ def _start_cmds(
         # finally, call the function with the arguments
         func = cmd2func[cmd]
         return func(*f_args, **f_kwargs)
-    except (ParserOptionError, ParserValueError) as e:
+    except (ParserConfigError, ParserOptionError, ParserValueError) as e:
         if catch:
             _error(str(e), exit=False, endl=False)
             if args:  # error happened after parsing the command

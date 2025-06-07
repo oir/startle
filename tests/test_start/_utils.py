@@ -10,18 +10,20 @@ def run_w_explicit_args(
     func: Callable | list[Callable] | dict[str, Callable],
     args: list[str],
     catch: bool = True,
+    default: str | None = None,
 ) -> None:
-    start(func, args=args, catch=catch)
+    start(func, args=args, catch=catch, default=default)
 
 
 def run_w_sys_argv(
     func: Callable | list[Callable] | dict[str, Callable],
     args: list[str],
     catch: bool = True,
+    default: str | None = None,
 ) -> None:
     old_argv = sys.argv[1:]
     sys.argv[1:] = args
-    start(func, catch=catch)
+    start(func, catch=catch, default=default)
     sys.argv[1:] = old_argv
 
 
