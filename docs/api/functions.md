@@ -5,9 +5,8 @@
 ```python
 def start(
     obj: Callable | list[Callable] | dict[str, Callable],
-    *,
     args: list[str] | None = None,
-    catch: bool = True,
+    caught: bool = True,
 ) -> Any
 ```
 
@@ -19,7 +18,7 @@ Given a function, or a container of functions `obj`, parse its arguments from th
 |------|------|-------------|---------|
 | `obj` | <span class="codey"> Callable \| list[Callable] \| dict[str, Callable] </span> | The function or functions to parse the arguments for and invoke. If a list or dict, the functions are treated as subcommands. | _required_ |
 | `args` | <span class="codey"> list[str] \| None </span> | The arguments to parse. If None, uses the arguments from the command-line (i.e. sys.argv). | `None` |
-| `catch` | <span class="codey"> bool </span> | Whether to catch and print (startle specific) errors instead of raising. This is used to display a more presentable output when a parse error occurs instead of the default traceback. This option will never catch non-startle errors. | `True` |
+| `caught` | <span class="codey"> bool </span> | Whether to catch and print (startle specific) errors instead of raising. This is used to display a more presentable output when a parse error occurs instead of the default traceback. This option will never catch non-startle errors. | `True` |
 
 
 ### Returns: <!-- {docsify-ignore} -->
@@ -35,10 +34,9 @@ Given a function, or a container of functions `obj`, parse its arguments from th
 ```python
 def parse(
     cls: type[~T],
-    *,
     args: list[str] | None = None,
     brief: str = '',
-    catch: bool = True,
+    caught: bool = True,
 ) -> ~T
 ```
 
@@ -51,7 +49,7 @@ Given a class `cls`, parse arguments from the command-line according to the clas
 | `cls` | <span class="codey"> type[~T] </span> | The class to parse the arguments for and construct an instance of. | _required_ |
 | `args` | <span class="codey"> list[str] \| None </span> | The arguments to parse. If None, uses the arguments from the command-line (i.e. sys.argv). | `None` |
 | `brief` | <span class="codey"> str </span> | The brief description of the parser. This is used to display a brief when --help is invoked. | `''` |
-| `catch` | <span class="codey"> bool </span> | Whether to catch and print (startle specific) errors instead of raising. This is used to display a more presentable output when a parse error occurs instead of the default traceback. This option will never catch non-startle errors. | `True` |
+| `caught` | <span class="codey"> bool </span> | Whether to catch and print (startle specific) errors instead of raising. This is used to display a more presentable output when a parse error occurs instead of the default traceback. This option will never catch non-startle errors. | `True` |
 
 
 ### Returns: <!-- {docsify-ignore} -->
