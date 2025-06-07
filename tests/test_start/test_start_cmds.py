@@ -127,6 +127,13 @@ def test_calc(capsys, run: Callable, default: bool) -> None:
         ["boop", "2", "3"],
         "Error: Default command `boop` is not among the subcommands!\n",
     )
+    check_exits(
+        capsys,
+        partial(run, default="add"),
+        add,
+        ["2", "3"],
+        "Error: Default subcommand is not supported for a single function.\n",
+    )
 
     if not default:
         with raises(ParserOptionError, match=r"Unknown command `2`!"):
@@ -146,3 +153,8 @@ def test_calc(capsys, run: Callable, default: bool) -> None:
         ParserConfigError, match="Default command `boop` is not among the subcommands!"
     ):
         run([add, sub, mul, div], ["boop", "2", "3"], default="boop", catch=False)
+    with raises(
+        ParserConfigError,
+        match="Default subcommand is not supported for a single function.",
+    ):
+        run(add, ["2", "3"], default="add", catch=False)
