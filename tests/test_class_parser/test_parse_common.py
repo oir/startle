@@ -124,17 +124,17 @@ def test_class_with_all_defaults(
     assert parse(Config, args=["2", "2.0", "custom"]) == expected
 
     with raises(ParserOptionError, match="Unexpected option `unknown`!"):
-        parse(Config, args=["--unknown"], caught=False)
+        parse(Config, args=["--unknown"], catch=False)
     with raises(ParserValueError, match="Cannot parse integer from `a`!"):
-        parse(Config, args=["a"], caught=False)
+        parse(Config, args=["a"], catch=False)
     with raises(ParserValueError, match="Cannot parse float from `a`!"):
-        parse(Config, args=["2", "a"], caught=False)
+        parse(Config, args=["2", "a"], catch=False)
     with raises(ParserOptionError, match="Option `count` is missing argument!"):
-        parse(Config, args=["--count"], caught=False)
+        parse(Config, args=["--count"], catch=False)
     with raises(ParserOptionError, match="Option `count` is missing argument!"):
-        parse(Config, args=["--amount", "1.0", "--count"], caught=False)
+        parse(Config, args=["--amount", "1.0", "--count"], catch=False)
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
-        parse(Config, args=["--count", "2", "--count", "3"], caught=False)
+        parse(Config, args=["--count", "2", "--count", "3"], catch=False)
 
     check_parse_exits(
         capsys, Config, ["--unknown"], "Error: Unexpected option `unknown`!\n"
@@ -174,7 +174,7 @@ def test_dataclass_with_help_attr(capsys):
     with raises(
         ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
     ):
-        parse(Config, args=[], caught=False)
+        parse(Config, args=[], catch=False)
     check_parse_exits(
         capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
     )
@@ -197,7 +197,7 @@ def test_dataclass_with_unsupported_attr_type(capsys):
             "Unsupported type `list[list[int]]` for parameter `label` in `Config`!"
         ),
     ):
-        parse(Config, args=[], caught=False)
+        parse(Config, args=[], catch=False)
     check_parse_exits(
         capsys,
         Config,

@@ -16,7 +16,7 @@ def start(
     obj: Callable | list[Callable] | dict[str, Callable],
     *,
     args: list[str] | None = None,
-    caught: bool = True,
+    catch: bool = True,
 ) -> Any:
     """
     Given a function, or a container of functions `obj`, parse its arguments from
@@ -27,7 +27,7 @@ def start(
             If a list or dict, the functions are treated as subcommands.
         args: The arguments to parse. If None, uses the arguments from the command-line
             (i.e. sys.argv).
-        caught: Whether to catch and print (startle specific) errors instead of raising.
+        catch: Whether to catch and print (startle specific) errors instead of raising.
             This is used to display a more presentable output when a parse error occurs instead
             of the default traceback. This option will never catch non-startle errors.
     Returns:
@@ -35,13 +35,13 @@ def start(
         a list or dict.
     """
     if isinstance(obj, list) or isinstance(obj, dict):
-        return _start_cmds(obj, args, caught)
+        return _start_cmds(obj, args, catch)
     else:
-        return _start_func(obj, args, caught)
+        return _start_func(obj, args, catch)
 
 
 def _start_func(
-    func: Callable[..., T], args: list[str] | None = None, caught: bool = True
+    func: Callable[..., T], args: list[str] | None = None, catch: bool = True
 ) -> T:
     """
     Given a function `func`, parse its arguments from the CLI and call it.
@@ -49,7 +49,7 @@ def _start_func(
     Args:
         func: The function to parse the arguments for and invoke.
         args: The arguments to parse. If None, uses the arguments from the CLI.
-        caught: Whether to catch and print errors instead of raising.
+        catch: Whether to catch and print errors instead of raising.
     Returns:
         The return value of the function `func`.
     """
@@ -57,7 +57,7 @@ def _start_func(
         # first, make Args object from the function
         args_ = make_args_from_func(func)
     except ParserConfigError as e:
-        if caught:
+        if catch:
             console = Console(markup=False)
             console.print(
                 Text.assemble(
@@ -81,7 +81,7 @@ def _start_func(
         # finally, call the function with the arguments
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
-        if caught:
+        if catch:
             console = Console(markup=False)
             console.print(
                 Text.assemble(
@@ -109,7 +109,7 @@ def _start_func(
 def _start_cmds(
     funcs: list[Callable] | dict[str, Callable],
     cli_args: list[str] | None = None,
-    caught: bool = True,
+    catch: bool = True,
 ):
     """
     Given a list or dict of functions, parse the command from the CLI and call it.
@@ -117,7 +117,7 @@ def _start_cmds(
     Args:
         funcs: The functions to parse the arguments for and invoke.
         cli_args: The arguments to parse. If None, uses the arguments from the CLI.
-        caught: Whether to catch and print errors instead of raising.
+        catch: Whether to catch and print errors instead of raising.
     """
 
     cmd2func: dict[str, Callable]
@@ -143,7 +143,7 @@ def _start_cmds(
             }
         )
     except ParserConfigError as e:
-        if caught:
+        if catch:
             console = Console(markup=False)
             console.print(
                 Text.assemble(
@@ -170,7 +170,7 @@ def _start_cmds(
         func = cmd2func[cmd]
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
-        if caught:
+        if catch:
             console = Console(markup=False)
             console.print(
                 Text.assemble(
