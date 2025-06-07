@@ -32,4 +32,4 @@ jobs:
       - name: Run examples
         run: |
           hatch run test:python examples/calc.py add 2 3
-          hatch run test:python examples/calc.py -h
+          hatch run test:python examples/calc.py -?
