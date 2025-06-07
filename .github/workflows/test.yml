@@ -33,3 +33,7 @@ jobs:
         run: |
           hatch run test:python examples/calc.py add 2 3
           hatch run test:python examples/calc.py -?
+          hatch run test:python examples/cat.py examples/wc.py examples/cat.py --delim=\n===\n\n
+          hatch run test:python examples/cat.py --delim=\n===\n\n examples/cat.py examples/wc.py
+          hatch run test:python examples/color.py Alice
+          hatch run test:python examples/color.py --name Bob --color green --style dim
