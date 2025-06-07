@@ -98,10 +98,10 @@ def test_calc(capsys, run: Callable) -> None:
     )
 
     with raises(ParserOptionError, match=r"Unknown command `2`!"):
-        run([add, sub, mul, div], ["2", "3"], caught=False)
+        run([add, sub, mul, div], ["2", "3"], catch=False)
     with raises(ParserOptionError, match=r"No command given!"):
-        run([add, sub, mul, div], [], caught=False)
+        run([add, sub, mul, div], [], catch=False)
     with raises(ParserOptionError, match=r"Unexpected positional argument: `4`!"):
-        run([add, sub, mul, div], ["add", "2", "3", "4"], caught=False)
+        run([add, sub, mul, div], ["add", "2", "3", "4"], catch=False)
     with raises(ParserOptionError, match=r"Required option `b` is not provided!"):
-        run([add, sub, mul, div], ["sub", "2"], caught=False)
+        run([add, sub, mul, div], ["sub", "2"], catch=False)

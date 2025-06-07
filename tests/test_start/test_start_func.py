@@ -111,14 +111,14 @@ def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
             "Error: Unexpected option `lastname`!",
         )
         with raises(ParserOptionError, match="Required option `name` is not provided!"):
-            run(hi, [], caught=False)
+            run(hi, [], catch=False)
         with raises(ParserOptionError, match="Option `name` is multiply given!"):
-            run(hi, ["--name", "Bob", "--count", "3", "--name", "Alice"], caught=False)
+            run(hi, ["--name", "Bob", "--count", "3", "--name", "Alice"], catch=False)
         with raises(ParserOptionError, match="Unexpected option `lastname`!"):
             run(
                 hi,
                 ["--name", "Bob", "--count", "3", "--lastname", "Alice"],
-                caught=False,
+                catch=False,
             )
     else:
         check_exits(
@@ -132,7 +132,7 @@ def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
             ParserOptionError,
             match="Required positional argument <name> is not provided!",
         ):
-            run(hi, [], caught=False)
+            run(hi, [], catch=False)
 
 
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
@@ -152,8 +152,8 @@ def test_config_err(capsys, run: Callable) -> None:
     with raises(
         ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
     ):
-        run(f, [], caught=False)
+        run(f, [], catch=False)
     with raises(
         ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
     ):
-        run([f, f2], [], caught=False)
+        run([f, f2], [], catch=False)
