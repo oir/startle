@@ -37,7 +37,7 @@ def start(
         a list or dict.
     """
     if isinstance(obj, list) or isinstance(obj, dict):
-        return _start_cmds(obj, args, catch)
+        return _start_cmds(obj, args, catch, default)
     else:
         if default is not None:
             msg = "Default subcommand is not supported for a single function."
@@ -92,6 +92,7 @@ def _start_cmds(
     funcs: list[Callable] | dict[str, Callable],
     cli_args: list[str] | None = None,
     catch: bool = True,
+    default: str | None = None,
 ):
     """
     Given a list or dict of functions, parse the command from the CLI and call it.
@@ -100,6 +101,8 @@ def _start_cmds(
         funcs: The functions to parse the arguments for and invoke.
         cli_args: The arguments to parse. If None, uses the arguments from the CLI.
         catch: Whether to catch and print errors instead of raising.
+        default: The default subcommand to run if no subcommand is specified immediately
+            after the program name.
     """
 
     cmd2func: dict[str, Callable]
@@ -133,7 +136,7 @@ def _start_cmds(
     try:
         # then, parse the arguments from the CLI
         args: Args | None = None
-        cmd, args, remaining = cmds.get_cmd_parser(cli_args)
+        cmd, args, remaining = cmds.get_cmd_parser(cli_args, default=default)
         args.parse(remaining)
 
         # then turn the parsed arguments into function arguments

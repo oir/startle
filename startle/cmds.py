@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass, field
 
 from .args import Args
-from .error import ParserOptionError
+from .error import ParserConfigError, ParserOptionError
 
 
 @dataclass
@@ -19,22 +19,34 @@ class Cmds:
     brief: str = ""
 
     def get_cmd_parser(
-        self, cli_args: list[str] | None = None
+        self, cli_args: list[str] | None = None, *, default: str | None = None
     ) -> tuple[str, Args, list[str]]:
         cli_args = cli_args if cli_args is not None else sys.argv[1:]
 
-        if not cli_args:
+        if default is not None and default not in self.cmd_parsers:
+            raise ParserConfigError(
+                f"Default command `{default}` is not among the subcommands!"
+            )
+
+        if not cli_args and default is None:
             raise ParserOptionError("No command given!")
 
-        cmd = cli_args[0]
-        if cmd in ["-?", "--help"]:
-            self.print_help()
-            raise SystemExit(0)
+        if cli_args:
+            cmd = cli_args[0]
+            if cmd in ["-?", "--help"]:
+                self.print_help()
+                raise SystemExit(0)
 
-        if cmd not in self.cmd_parsers:
-            raise ParserOptionError(f"Unknown command `{cmd}`!")
+            if cmd not in self.cmd_parsers:
+                if default is None:
+                    raise ParserOptionError(f"Unknown command `{cmd}`!")
+                return default, self.cmd_parsers[default], cli_args
 
-        return cmd, self.cmd_parsers[cmd], cli_args[1:]
+            return cmd, self.cmd_parsers[cmd], cli_args[1:]
+
+        assert default is not None, "Programming error!"
+
+        return default, self.cmd_parsers[default], cli_args
 
     def print_help(
         self, console=None, program_name: str | None = None, usage_only: bool = False
