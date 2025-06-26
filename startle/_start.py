@@ -133,9 +133,9 @@ def _start_cmds(
         else:
             raise e
 
+    args: Args | None = None
     try:
         # then, parse the arguments from the CLI
-        args: Args | None = None
         cmd, args, remaining = cmds.get_cmd_parser(cli_args, default=default)
         args.parse(remaining)
 

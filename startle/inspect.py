@@ -6,6 +6,7 @@ from typing import (
     Callable,
     Iterable,
     Literal,
+    cast,
     get_args,
     get_origin,
 )
@@ -202,6 +203,7 @@ def make_args_from_params(
             container_type = orig
             normalized_annotation = args_[0] if args_ else str
         elif normalized_annotation in [list, tuple, set]:
+            normalized_annotation = cast(type, normalized_annotation)
             nary = True
             container_type = normalized_annotation
             normalized_annotation = str
@@ -211,6 +213,9 @@ def make_args_from_params(
                 f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
                 f"for parameter `{param_name}` in `{obj_name}`!"
             )
+
+        # the following should hold if normalized_annotation is parsable
+        normalized_annotation = cast(type, normalized_annotation)
 
         arg = Arg(
             name=name,

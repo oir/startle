@@ -2,7 +2,7 @@ import sys
 from enum import Enum
 from inspect import isclass
 from pathlib import Path
-from typing import Literal, get_args, get_origin
+from typing import Any, Literal, get_args, get_origin
 
 from ._type_utils import _strip_optional
 
@@ -15,7 +15,7 @@ _METAVARS: dict[type, str | list[str]] = {
 }
 
 
-def _get_metavar(type_: type) -> str | list[str]:
+def _get_metavar(type_: Any) -> str | list[str]:
     """
     Get the metavar for a type hint.
     If the result is a list, we assume it is a list of possible choices,
