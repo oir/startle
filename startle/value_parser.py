@@ -48,7 +48,7 @@ def _to_enum(value: str, enum_type: type) -> Enum:
         # otherwise use the name of the member
         member_type: type = getattr(enum_type, "_member_type_", object)
         if member_type is str or (member_type is object and issubclass(enum_type, str)):
-            return enum_type(value)
+            return cast(Enum, enum_type(value))
         try:
             enum_type_ = cast(type[Enum], enum_type)
             return enum_type_[value.upper().replace("-", "_")]
@@ -71,7 +71,7 @@ _PARSERS: dict[type, Callable[[str], Any]] = {
 }
 
 
-def _get_parser(type_: type) -> Callable[[str], Any] | None:
+def _get_parser(type_: Any) -> Callable[[str], Any] | None:
     """
     Get the parser function for a given type.
     """
@@ -102,7 +102,7 @@ def _get_parser(type_: type) -> Callable[[str], Any] | None:
     return None
 
 
-def parse(value: str, type_: type) -> Any:
+def parse(value: str, type_: Any) -> Any:
     """
     Parse or convert a string value to a given type.
     """
@@ -113,7 +113,7 @@ def parse(value: str, type_: type) -> Any:
     raise ParserValueError(f"Unsupported type {type_.__module__}.{type_.__qualname__}!")
 
 
-def is_parsable(type_: type) -> bool:
+def is_parsable(type_: Any) -> bool:
     """
     Check if a type is parsable (supported).
     """
