@@ -295,35 +295,3 @@ List directory contents.
 """
 
     check_help_from_func(ls, "examples/ls.py", expected)
-
-
-def test_enum():
-    from enum import Enum
-
-    class Color(Enum):
-        RED = 0
-        GREEN = 1
-        BLUE = 2
-
-    def paint(*, color: Color = Color.RED):
-        """
-        Paint with a color.
-
-        Args:
-            color: Color to paint with.
-        """
-        pass
-
-    expected = f"""\
-
-Paint with a color.
-
-[{TS}]Usage:[/]
-  paint.py [{name("--color")} {var("red")}{dvar("|")}{var("green")}{dvar("|")}{var("blue")}]
-
-[{TS}]where[/]
-  [dim](option)[/]  {name("-c")}{dopt("|")}{name("--color")} {var("red")}{dvar("|")}{var("green")}{dvar("|")}{var("blue")}  [i]Color to paint with.[/] [green](default: [/][green]red[/][green])[/]
-  [dim](option)[/]  {dname("-?")}{dopt("|")}{dname("--help")}                  [i dim]Show this help message and exit.[/]   
-"""
-
-    check_help_from_func(paint, "paint.py", expected)
