@@ -114,11 +114,6 @@ def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
 def default_value(val: Any) -> Text:
     if isinstance(val, str) and isinstance(val, Enum):
         return Text(val.value, style=_Sty.opt)
-    if sys.version_info >= (3, 11):
-        from enum import StrEnum
-
-        if isinstance(val, StrEnum):
-            return Text(val.value, style=_Sty.opt)
     if isinstance(val, Enum):
         return Text(val.name.lower().replace("_", "-"), style=_Sty.opt)
     if isinstance(val, str) and val == "":
