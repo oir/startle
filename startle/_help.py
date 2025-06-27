@@ -2,7 +2,6 @@
 Utilities for prettifying and formatting of help messages.
 """
 
-import sys
 from enum import Enum
 from typing import Any, Literal
 
@@ -111,17 +110,14 @@ def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
     return text
 
 
-def default_value(val: Any) -> str:
+def default_value(val: Any) -> Text:
     if isinstance(val, str) and isinstance(val, Enum):
-        return val.value
-    if sys.version_info >= (3, 11):
-        from enum import StrEnum
-
-        if isinstance(val, StrEnum):
-            return val.value
+        return Text(val.value, style=_Sty.opt)
     if isinstance(val, Enum):
-        return val.name.lower().replace("_", "-")
-    return str(val)
+        return Text(val.name.lower().replace("_", "-"), style=_Sty.opt)
+    if isinstance(val, str) and val == "":
+        return Text('""', style=f"{_Sty.opt} dim")
+    return Text(str(val), style=_Sty.opt)
 
 
 def help(arg: Arg) -> Text:
@@ -141,7 +137,9 @@ def help(arg: Arg) -> Text:
         helptext = Text.assemble(
             helptext,
             delim,
-            (f"(default: {default_value(arg.default)})", _Sty.opt),
+            ("(default: ", _Sty.opt),
+            default_value(arg.default),
+            (")", _Sty.opt),
         )
     return helptext
 
