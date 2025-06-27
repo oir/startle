@@ -36,7 +36,7 @@ def test_func_simple():
         left_path: str,
         right_path: str,
         /,
-        output_path: str,
+        output_path: str = "",
         *,
         components: list[str] = ["fang", "claw"],
         alpha: float = 0.5,
@@ -61,7 +61,7 @@ def test_func_simple():
         left_path: str,
         right_path: str,
         /,
-        output_path: str,
+        output_path: str = "",
         *,
         components: list[str] = ["fang", "claw"],
         alpha: float = 0.5,
@@ -87,12 +87,12 @@ def test_func_simple():
 Fuse two monsters with polymerization.
 
 [{TS}]Usage:[/]
-  fuse.py {pos("left-path", "text")} {pos("right-path", "text")} {name("--output-path")} {var("<text>")} [{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--alpha")} {var("<float>")}]
+  fuse.py {pos("left-path", "text")} {pos("right-path", "text")} [{name("--output-path")} {var("<text>")}] [{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]] [{name("--alpha")} {var("<float>")}]
 
 [{TS}]where[/]
   [dim](positional)[/]    {pos("left-path", "text")}                     [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](positional)[/]    {pos("right-path", "text")}                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  {name("-o")}{dopt('|')}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](pos. or opt.)[/]  {name("-o")}{dopt('|')}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [green](default: [/][green dim]""[/][green])[/]        
   [dim](option)[/]        {name("-c")}{dopt('|')}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
   [dim](option)[/]        {name("-a")}{dopt('|')}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
   [dim](option)[/]        {dname("-?")}{dopt('|')}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
