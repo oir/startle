@@ -2,7 +2,6 @@
 Utilities for prettifying and formatting of help messages.
 """
 
-import sys
 from enum import Enum
 from typing import Any, Literal
 
