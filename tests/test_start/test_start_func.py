@@ -157,3 +157,32 @@ def test_config_err(capsys, run: Callable) -> None:
         ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
     ):
         run([f, f2], [], catch=False)
+
+
+def test_custom_program_name_help(capsys) -> None:
+    def f(blip: str) -> None:
+        """
+        Do something.
+
+        Args:
+            blip: A string to do something with.
+        """
+        pass
+
+    # here, output is not detected as a tty, so it does not use rich
+    expected = """\
+
+Do something.
+
+Usage:
+  my_program --blip <text>
+
+where
+  (pos. or opt.)  -b|--blip <text>  A string to do something with. (required)
+  (option)        -?|--help         Show this help message and exit.         
+
+"""
+    with raises(SystemExit):
+        run_w_sys_argv(f, ["--help"], name="my_program")
+    captured = capsys.readouterr()
+    assert captured.out == expected
