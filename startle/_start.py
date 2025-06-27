@@ -13,6 +13,7 @@ T = TypeVar("T")
 def start(
     obj: Callable | list[Callable] | dict[str, Callable],
     *,
+    name: str | None = None,
     args: list[str] | None = None,
     catch: bool = True,
     default: str | None = None,
@@ -24,6 +25,8 @@ def start(
     Args:
         obj: The function or functions to parse the arguments for and invoke.
             If a list or dict, the functions are treated as subcommands.
+        name: The name of the program. If None, uses the name of the script
+            (i.e. sys.argv[0]).
         args: The arguments to parse. If None, uses the arguments from the command-line
             (i.e. sys.argv).
         catch: Whether to catch and print (startle specific) errors instead of raising.
@@ -37,7 +40,7 @@ def start(
         a list or dict.
     """
     if isinstance(obj, list) or isinstance(obj, dict):
-        return _start_cmds(obj, args, catch, default)
+        return _start_cmds(obj, name, args, catch, default)
     else:
         if default is not None:
             msg = "Default subcommand is not supported for a single function."
@@ -45,17 +48,21 @@ def start(
                 _error(msg)
             else:
                 raise ParserConfigError(msg)
-        return _start_func(obj, args, catch)
+        return _start_func(obj, name, args, catch)
 
 
 def _start_func(
-    func: Callable[..., T], args: list[str] | None = None, catch: bool = True
+    func: Callable[..., T],
+    name: str | None,
+    args: list[str] | None = None,
+    catch: bool = True,
 ) -> T:
     """
     Given a function `func`, parse its arguments from the CLI and call it.
 
     Args:
         func: The function to parse the arguments for and invoke.
+        name: The name of the program. If None, uses the name of the script.
         args: The arguments to parse. If None, uses the arguments from the CLI.
         catch: Whether to catch and print errors instead of raising.
     Returns:
@@ -63,7 +70,7 @@ def _start_func(
     """
     try:
         # first, make Args object from the function
-        args_ = make_args_from_func(func)
+        args_ = make_args_from_func(func, program_name=name or "")
     except ParserConfigError as e:
         if catch:
             _error(str(e))
@@ -90,6 +97,7 @@ def _start_func(
 
 def _start_cmds(
     funcs: list[Callable] | dict[str, Callable],
+    name: str | None = None,
     cli_args: list[str] | None = None,
     catch: bool = True,
     default: str | None = None,
@@ -99,6 +107,7 @@ def _start_cmds(
 
     Args:
         funcs: The functions to parse the arguments for and invoke.
+        name: The name of the program. If None, uses the name of the script.
         cli_args: The arguments to parse. If None, uses the arguments from the CLI.
         catch: Whether to catch and print errors instead of raising.
         default: The default subcommand to run if no subcommand is specified immediately
@@ -123,7 +132,9 @@ def _start_cmds(
         # first, make Cmds object from the functions
         cmds = Cmds(
             {
-                cmd_name: make_args_from_func(func, program_name=prog_name(cmd_name))
+                cmd_name: make_args_from_func(
+                    func, program_name=name or prog_name(cmd_name)
+                )
                 for cmd_name, func in cmd2func.items()
             }
         )
