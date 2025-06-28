@@ -12,6 +12,7 @@ T = TypeVar("T")
 def parse(
     cls: Type[T],
     *,
+    name: str | None = None,
     args: list[str] | None = None,
     brief: str = "",
     catch: bool = True,
@@ -22,6 +23,8 @@ def parse(
 
     Args:
         cls: The class to parse the arguments for and construct an instance of.
+        name: The name of the program. If None, uses the name of the script
+            (i.e. sys.argv[0]).
         args: The arguments to parse. If None, uses the arguments from the command-line
             (i.e. sys.argv).
         brief: The brief description of the parser. This is used to display a brief
@@ -34,7 +37,7 @@ def parse(
     """
     try:
         # first, make Args object from the class
-        args_ = make_args_from_class(cls, brief=brief)
+        args_ = make_args_from_class(cls, brief=brief, program_name=name or "")
     except ParserConfigError as e:
         if catch:
             console = Console(markup=False)
