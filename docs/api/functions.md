@@ -6,6 +6,7 @@
 def start(
     obj: Callable | list[Callable] | dict[str, Callable],
     *,
+    name: str | None = None,
     args: list[str] | None = None,
     catch: bool = True,
     default: str | None = None,
@@ -19,6 +20,7 @@ Given a function, or a container of functions `obj`, parse its arguments from th
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | `obj` | <span class="codey"> Callable \| list[Callable] \| dict[str, Callable] </span> | The function or functions to parse the arguments for and invoke. If a list or dict, the functions are treated as subcommands. | _required_ |
+| `name` | <span class="codey"> str \| None </span> | The name of the program. If None, uses the name of the script (i.e. sys.argv[0]). | `None` |
 | `args` | <span class="codey"> list[str] \| None </span> | The arguments to parse. If None, uses the arguments from the command-line (i.e. sys.argv). | `None` |
 | `catch` | <span class="codey"> bool </span> | Whether to catch and print (startle specific) errors instead of raising. This is used to display a more presentable output when a parse error occurs instead of the default traceback. This option will never catch non-startle errors. | `True` |
 | `default` | <span class="codey"> str \| None </span> | The default subcommand to run if no subcommand is specified immediately after the program name. This is only used if `obj` is a list or dict, and errors otherwise. | `None` |
@@ -38,6 +40,7 @@ Given a function, or a container of functions `obj`, parse its arguments from th
 def parse(
     cls: type[~T],
     *,
+    name: str | None = None,
     args: list[str] | None = None,
     brief: str = '',
     catch: bool = True,
@@ -51,6 +54,7 @@ Given a class `cls`, parse arguments from the command-line according to the clas
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | `cls` | <span class="codey"> type[~T] </span> | The class to parse the arguments for and construct an instance of. | _required_ |
+| `name` | <span class="codey"> str \| None </span> | The name of the program. If None, uses the name of the script (i.e. sys.argv[0]). | `None` |
 | `args` | <span class="codey"> list[str] \| None </span> | The arguments to parse. If None, uses the arguments from the command-line (i.e. sys.argv). | `None` |
 | `brief` | <span class="codey"> str </span> | The brief description of the parser. This is used to display a brief when --help is invoked. | `''` |
 | `catch` | <span class="codey"> bool </span> | Whether to catch and print (startle specific) errors instead of raising. This is used to display a more presentable output when a parse error occurs instead of the default traceback. This option will never catch non-startle errors. | `True` |
