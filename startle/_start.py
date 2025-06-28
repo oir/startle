@@ -124,19 +124,18 @@ def _start_cmds(
 
         cmd2func = {cmd_name(func): func for func in funcs}
 
-    def prog_name(cmd_name: str) -> str:
+    def cmd_prog_name(cmd_name: str) -> str:
         # TODO: more reliable way of getting the program name
-        return f"{sys.argv[0]} {cmd_name}"
+        return f"{name or sys.argv[0]} {cmd_name}"
 
     try:
         # first, make Cmds object from the functions
         cmds = Cmds(
             {
-                cmd_name: make_args_from_func(
-                    func, program_name=name or prog_name(cmd_name)
-                )
+                cmd_name: make_args_from_func(func, cmd_prog_name(cmd_name))
                 for cmd_name, func in cmd2func.items()
-            }
+            },
+            program_name=name or "",
         )
     except ParserConfigError as e:
         if catch:
