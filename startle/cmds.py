@@ -17,6 +17,7 @@ class Cmds:
 
     cmd_parsers: dict[str, Args] = field(default_factory=dict)
     brief: str = ""
+    program_name: str = ""
 
     def get_cmd_parser(
         self, cli_args: list[str] | None = None, *, default: str | None = None
@@ -48,15 +49,12 @@ class Cmds:
 
         return default, self.cmd_parsers[default], cli_args
 
-    def print_help(
-        self, console=None, program_name: str | None = None, usage_only: bool = False
-    ) -> None:
+    def print_help(self, console=None, usage_only: bool = False) -> None:
         """
         Print the help message to the console.
 
         Args:
             console: A rich console to print to. If None, uses the default console.
-            program_name: The name of the program to use in the help message.
             usage_only: Whether to print only the usage line.
         """
         import sys
@@ -65,7 +63,7 @@ class Cmds:
         from rich.table import Table
         from rich.text import Text
 
-        name = program_name or sys.argv[0]
+        name = self.program_name or sys.argv[0]
 
         sty_pos_name = "bold"
         sty_opt = "green"
