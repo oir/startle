@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from startle._type_utils import (
     _normalize_type,
@@ -18,7 +18,7 @@ def test_normalize_type():
 
 
 def test_strip_optional():
-    def normalize_strip_optional(type_: type) -> type:
+    def normalize_strip_optional(type_: Any) -> Any:
         return _strip_optional(_normalize_type(type_))
 
     assert normalize_strip_optional(int) is int

@@ -10,16 +10,16 @@ from ._utils import Opt, Opts, check_args
 
 
 def check(draw: Callable, shape: type[Enum], opt: Opt):
-    check_args(draw, opt("shape", ["square"]), [shape.SQUARE], {})
-    check_args(draw, opt("shape", ["circle"]), [shape.CIRCLE], {})
-    check_args(draw, opt("shape", ["triangle"]), [shape.TRIANGLE], {})
+    check_args(draw, opt("shape", ["square"]), [shape.SQUARE], {})  # type: ignore
+    check_args(draw, opt("shape", ["circle"]), [shape.CIRCLE], {})  # type: ignore
+    check_args(draw, opt("shape", ["triangle"]), [shape.TRIANGLE], {})  # type: ignore
 
     with raises(ParserValueError, match="Cannot parse enum Shape from `rectangle`!"):
         check_args(draw, opt("shape", ["rectangle"]), [], {})
 
 
 def check_with_default(draw: Callable, shape: type[Enum], opt: Opt):
-    check_args(draw, [], [shape.CIRCLE], {})
+    check_args(draw, [], [shape.CIRCLE], {})  # type: ignore
     check(draw, shape, opt)
 
 

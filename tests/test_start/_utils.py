@@ -44,7 +44,7 @@ def check(
 def check_exits(
     capsys,
     run: Callable,
-    f: Callable,
+    f: Callable | list[Callable] | dict[str, Callable],
     args: list[str],
     expected: str,
     *,

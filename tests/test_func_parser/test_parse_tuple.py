@@ -73,17 +73,17 @@ def test_keyword_tuple(add: Callable, scalar: type, opt: str) -> None:
             check_args(add, [opt, "0", "1", "x"], [], {})
 
 
-def addwh1(*, widths: tuple[int, ...], heights: tuple[float, ...] = []) -> None:
+def addwh1(*, widths: tuple[int, ...], heights: tuple[float, ...] = tuple()) -> None:
     print(sum(widths))
     print(sum(heights))
 
 
-def addwh2(*, widths: tuple[float, ...], heights: tuple[str, ...] = []) -> None:
+def addwh2(*, widths: tuple[float, ...], heights: tuple[str, ...] = tuple()) -> None:
     print(sum(widths))
-    print(sum(heights))
+    print(sum([float(x) for x in heights]))
 
 
-def addwh3(*, widths: tuple[str, ...], heights: tuple[int, ...] = []) -> None:
+def addwh3(*, widths: tuple[str, ...], heights: tuple[int, ...] = tuple()) -> None:
     print(" ".join(widths))
     print(sum(heights))
 
@@ -120,7 +120,10 @@ def test_keyword_nargs_long(
 
     cli = [wopt, "0", "1", "2", "3", "4"]
     check_args(
-        add, cli, [], {"widths": tuple([wscalar(i) for i in range(5)]), "heights": []}
+        add,
+        cli,
+        [],
+        {"widths": tuple([wscalar(i) for i in range(5)]), "heights": tuple()},
     )
 
     with raises(

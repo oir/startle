@@ -6,7 +6,7 @@ from startle.inspect import make_args_from_func
 def check_args(
     f: Callable,
     cli_args: list[str],
-    expected_args: list[str],
+    expected_args: list[Any],
     expected_kwargs: dict[str, Any],
 ):
     """

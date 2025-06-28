@@ -74,7 +74,7 @@ def addwh1(*, widths: list[int], heights: list[float] = []) -> None:
 
 def addwh2(*, widths: list[float], heights: list[str] = []) -> None:
     print(sum(widths))
-    print(sum(heights))
+    print(sum([float(x) for x in heights]))
 
 
 def addwh3(*, widths: list[str], heights: list[int] = []) -> None:
