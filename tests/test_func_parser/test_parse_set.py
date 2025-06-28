@@ -72,17 +72,17 @@ def test_keyword_set(add: Callable, scalar: type, opt: str) -> None:
             check_args(add, [opt, "0", "1", "x"], [], {})
 
 
-def addwh1(*, widths: set[int], heights: set[float] = []) -> None:
+def addwh1(*, widths: set[int], heights: set[float] = set()) -> None:
     print(sum(widths))
     print(sum(heights))
 
 
-def addwh2(*, widths: set[float], heights: set[str] = []) -> None:
+def addwh2(*, widths: set[float], heights: set[str] = set()) -> None:
     print(sum(widths))
-    print(sum(heights))
+    print(sum([float(x) for x in heights]))
 
 
-def addwh3(*, widths: set[str], heights: set[int] = []) -> None:
+def addwh3(*, widths: set[str], heights: set[int] = set()) -> None:
     print(" ".join(widths))
     print(sum(heights))
 
@@ -119,7 +119,7 @@ def test_keyword_nargs_long(
 
     cli = [wopt, "0", "1", "2", "3", "4"]
     check_args(
-        add, cli, [], {"widths": set([wscalar(i) for i in range(5)]), "heights": []}
+        add, cli, [], {"widths": set([wscalar(i) for i in range(5)]), "heights": set()}
     )
 
     with raises(

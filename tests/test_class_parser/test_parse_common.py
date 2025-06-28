@@ -84,40 +84,54 @@ def test_class_with_all_defaults(
 ):
     assert parse(Config, args=[]) == Config()
 
-    assert parse(Config, args=[*count(2)]) == Config(count=2)
+    assert parse(Config, args=[*count("2")]) == Config(count=2)
     assert parse(Config, args=["2"]) == Config(count=2)
-    assert parse(Config, args=[*amount(2.0)]) == Config(amount=2.0)
+    assert parse(Config, args=[*amount("2.0")]) == Config(amount=2.0)
     assert parse(Config, args=[*label("custom")]) == Config(label="custom")
 
     # only count and amount
-    assert parse(Config, args=[*count(2), *amount(2.0)]) == Config(count=2, amount=2.0)
-    assert parse(Config, args=["2", *amount(2.0)]) == Config(count=2, amount=2.0)
-    assert parse(Config, args=[*amount(2.0), "2"]) == Config(count=2, amount=2.0)
+    assert parse(Config, args=[*count("2"), *amount("2.0")]) == Config(
+        count=2, amount=2.0
+    )
+    assert parse(Config, args=["2", *amount("2.0")]) == Config(count=2, amount=2.0)
+    assert parse(Config, args=[*amount("2.0"), "2"]) == Config(count=2, amount=2.0)
     assert parse(Config, args=["2", "2.0"]) == Config(count=2, amount=2.0)
 
     # only count and label
     expected = Config(count=2, label="custom")
-    assert parse(Config, args=[*count(2), *label("custom")]) == expected
+    assert parse(Config, args=[*count("2"), *label("custom")]) == expected
     assert parse(Config, args=[*label("custom"), "2"]) == expected
     assert parse(Config, args=["2", *label("custom")]) == expected
     assert parse(Config, args=[*label("custom"), "2"]) == expected
 
     # only amount and label
     expected = Config(amount=2.0, label="custom")
-    assert parse(Config, args=[*amount(2.0), *label("custom")]) == expected
-    assert parse(Config, args=[*label("custom"), *amount(2.0)]) == expected
+    assert parse(Config, args=[*amount("2.0"), *label("custom")]) == expected
+    assert parse(Config, args=[*label("custom"), *amount("2.0")]) == expected
 
     # all three
     expected = Config(count=2, amount=2.0, label="custom")
-    assert parse(Config, args=[*count(2), *amount(2.0), *label("custom")]) == expected
-    assert parse(Config, args=[*count(2), *label("custom"), *amount(2.0)]) == expected
-    assert parse(Config, args=[*amount(2.0), *label("custom"), *count(2)]) == expected
-    assert parse(Config, args=[*amount(2.0), *count(2), *label("custom")]) == expected
-    assert parse(Config, args=[*label("custom"), *count(2), *amount(2.0)]) == expected
-    assert parse(Config, args=[*label("custom"), *amount(2.0), *count(2)]) == expected
-    assert parse(Config, args=["2", *amount(2.0), *label("custom")]) == expected
-    assert parse(Config, args=[*amount(2.0), "2", *label("custom")]) == expected
-    assert parse(Config, args=[*amount(2.0), *label("custom"), "2"]) == expected
+    assert (
+        parse(Config, args=[*count("2"), *amount("2.0"), *label("custom")]) == expected
+    )
+    assert (
+        parse(Config, args=[*count("2"), *label("custom"), *amount("2.0")]) == expected
+    )
+    assert (
+        parse(Config, args=[*amount("2.0"), *label("custom"), *count("2")]) == expected
+    )
+    assert (
+        parse(Config, args=[*amount("2.0"), *count("2"), *label("custom")]) == expected
+    )
+    assert (
+        parse(Config, args=[*label("custom"), *count("2"), *amount("2.0")]) == expected
+    )
+    assert (
+        parse(Config, args=[*label("custom"), *amount("2.0"), *count("2")]) == expected
+    )
+    assert parse(Config, args=["2", *amount("2.0"), *label("custom")]) == expected
+    assert parse(Config, args=[*amount("2.0"), "2", *label("custom")]) == expected
+    assert parse(Config, args=[*amount("2.0"), *label("custom"), "2"]) == expected
     assert parse(Config, args=["2", "2.0", *label("custom")]) == expected
     assert parse(Config, args=["2", *label("custom"), "2.0"]) == expected
     assert parse(Config, args=[*label("custom"), "2", "2.0"]) == expected
