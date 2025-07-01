@@ -136,6 +136,7 @@ def _start_cmds(
                 for cmd_name, func in cmd2func.items()
             },
             program_name=name or "",
+            default=default or "",
         )
     except ParserConfigError as e:
         if catch:
@@ -146,7 +147,7 @@ def _start_cmds(
     args: Args | None = None
     try:
         # then, parse the arguments from the CLI
-        cmd, args, remaining = cmds.get_cmd_parser(cli_args, default=default)
+        cmd, args, remaining = cmds.get_cmd_parser(cli_args)
         args.parse(remaining)
 
         # then turn the parsed arguments into function arguments
@@ -155,7 +156,7 @@ def _start_cmds(
         # finally, call the function with the arguments
         func = cmd2func[cmd]
         return func(*f_args, **f_kwargs)
-    except (ParserConfigError, ParserOptionError, ParserValueError) as e:
+    except (ParserOptionError, ParserValueError) as e:
         if catch:
             _error(str(e), exit=False, endl=False)
             if args:  # error happened after parsing the command

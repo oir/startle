@@ -18,18 +18,21 @@ class Cmds:
     cmd_parsers: dict[str, Args] = field(default_factory=dict)
     brief: str = ""
     program_name: str = ""
+    default: str = ""
+
+    def __post_init__(self):
+        if self.default and self.default not in self.cmd_parsers:
+            raise ParserConfigError(
+                f"Default command `{self.default}` is not among the subcommands!"
+                f" Available subcommands: {', '.join(self.cmd_parsers.keys())}"
+            )
 
     def get_cmd_parser(
-        self, cli_args: list[str] | None = None, *, default: str | None = None
+        self, cli_args: list[str] | None = None
     ) -> tuple[str, Args, list[str]]:
         cli_args = cli_args if cli_args is not None else sys.argv[1:]
 
-        if default is not None and default not in self.cmd_parsers:
-            raise ParserConfigError(
-                f"Default command `{default}` is not among the subcommands!"
-            )
-
-        if not cli_args and default is None:
+        if not cli_args and not self.default:
             raise ParserOptionError("No command given!")
 
         if cli_args:
@@ -39,15 +42,15 @@ class Cmds:
                 raise SystemExit(0)
 
             if cmd not in self.cmd_parsers:
-                if default is None:
+                if not self.default:
                     raise ParserOptionError(f"Unknown command `{cmd}`!")
-                return default, self.cmd_parsers[default], cli_args
+                return self.default, self.cmd_parsers[self.default], cli_args
 
             return cmd, self.cmd_parsers[cmd], cli_args[1:]
 
-        assert default is not None, "Programming error!"
+        assert self.default, "Programming error!"
 
-        return default, self.cmd_parsers[default], cli_args
+        return self.default, self.cmd_parsers[self.default], cli_args
 
     def print_help(self, console=None, usage_only: bool = False) -> None:
         """
@@ -97,7 +100,10 @@ class Cmds:
             brief = args.brief.split("\n\n")[0]
             table.add_row(
                 Text(cmd, style=f"{sty_pos_name} {sty_var}"),
-                Text(brief, style=sty_help),
+                Text.assemble(
+                    (brief, sty_help),
+                    (" (default command)", "green") if cmd == self.default else "",
+                ),
             )
         console.print(table)
 
