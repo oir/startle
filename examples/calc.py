@@ -48,4 +48,4 @@ def div(a: int, b: int) -> None:
 
 
 if __name__ == "__main__":
-    start([add, sub, mul, div])
+    start([add, sub, mul, div], default="add")

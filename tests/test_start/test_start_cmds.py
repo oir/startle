@@ -125,7 +125,7 @@ def test_calc(capsys, run: Callable, default: bool) -> None:
         partial(run, default="boop"),
         [add, sub, mul, div],
         ["boop", "2", "3"],
-        "Error: Default command `boop` is not among the subcommands!\n",
+        "Error: Default command `boop` is not among the subcommands! Available \nsubcommands: add, sub, mul, div\n",
     )
     check_exits(
         capsys,
