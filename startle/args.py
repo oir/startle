@@ -8,6 +8,16 @@ from .error import ParserConfigError, ParserOptionError
 
 
 @dataclass
+class ParsingState:
+    """
+    A class to hold the state of the parsing process.
+    """
+
+    idx: int = 0
+    positional_idx: int = 0
+
+
+@dataclass
 class Args:
     """
     A parser class to parse command-line arguments.
@@ -99,7 +109,7 @@ class Args:
             )
         self._var_kwargs = arg
 
-    def _parse_equals_syntax(self, name: str, idx: int) -> int:
+    def _parse_equals_syntax(self, name: str, state: ParsingState) -> ParsingState:
         """
         Parse a cli argument as a named argument using the equals syntax (e.g. `--name=value`).
         Return new index after consuming the argument.
@@ -129,9 +139,12 @@ class Args:
                 f"Option `{opt.name}` is a flag and cannot be assigned a value!"
             )
         opt.parse(value)
-        return idx + 1
+        state.idx += 1
+        return state
 
-    def _parse_combined_short_names(self, names: str, args: list[str], idx: int) -> int:
+    def _parse_combined_short_names(
+        self, names: str, args: list[str], state: ParsingState
+    ) -> ParsingState:
         """
         Parse a cli argument as a combined short names (e.g. -abc).
         Return new index after consuming the argument.
@@ -155,36 +168,40 @@ class Args:
                 opt.parse()
             else:
                 # last option can be a flag or a regular option
-                if "=" in args[idx]:
-                    value = args[idx].split("=", 1)[1]
+                if "=" in args[state.idx]:
+                    value = args[state.idx].split("=", 1)[1]
                     last = f"{name}={value}"
-                    return self._parse_equals_syntax(last, idx)
+                    return self._parse_equals_syntax(last, state)
                 if opt.is_flag:
                     opt.parse()
-                    return idx + 1
+                    state.idx += 1
+                    return state
                 if opt.is_nary:
                     # n-ary option
                     values = []
-                    idx += 1
-                    while idx < len(args) and not self._is_name(args[idx]):
-                        values.append(args[idx])
-                        idx += 1
+                    state.idx += 1
+                    while state.idx < len(args) and not self._is_name(args[state.idx]):
+                        values.append(args[state.idx])
+                        state.idx += 1
                     if not values:
                         raise ParserOptionError(
                             f"Option `{opt.name}` is missing argument!"
                         )
                     for value in values:
                         opt.parse(value)
-                    return idx
+                    return state
                 # not a flag, not n-ary
-                if idx + 1 >= len(args):
+                if state.idx + 1 >= len(args):
                     raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
-                opt.parse(args[idx + 1])
-                return idx + 2
+                opt.parse(args[state.idx + 1])
+                state.idx += 2
+                return state
 
         raise RuntimeError("Programmer error: should not reach here!")
 
-    def _parse_named(self, name: str, args: list[str], idx: int) -> int:
+    def _parse_named(
+        self, name: str, args: list[str], state: ParsingState
+    ) -> ParsingState:
         """
         Parse a cli argument as a named argument / option.
         Return new index after consuming the argument.
@@ -193,7 +210,7 @@ class Args:
             self.print_help()
             raise SystemExit(0)
         if "=" in name:
-            return self._parse_equals_syntax(name, idx)
+            return self._parse_equals_syntax(name, state)
         normal_name = name.replace("_", "-")
         if normal_name not in self._name2idx:
             if self._var_kwargs:
@@ -215,29 +232,29 @@ class Args:
 
         if opt.is_flag:
             opt.parse()
-            return idx + 1
+            state.idx += 1
+            return state
         if opt.is_nary:
             # n-ary option
             values = []
-            idx += 1
-            while idx < len(args) and not self._is_name(args[idx]):
-                values.append(args[idx])
-                idx += 1
+            state.idx += 1
+            while state.idx < len(args) and not self._is_name(args[state.idx]):
+                values.append(args[state.idx])
+                state.idx += 1
             if not values:
                 raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
             for value in values:
                 opt.parse(value)
-            return idx
+            return state
 
         # not a flag, not n-ary
-        if idx + 1 >= len(args):
+        if state.idx + 1 >= len(args):
             raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
-        opt.parse(args[idx + 1])
-        return idx + 2
+        opt.parse(args[state.idx + 1])
+        state.idx += 2
+        return state
 
-    def _parse_positional(
-        self, args: list[str], idx: int, positional_idx: int
-    ) -> tuple[int, int]:
+    def _parse_positional(self, args: list[str], state: ParsingState) -> ParsingState:
         """
         Parse a cli argument as a positional argument.
         Return new indices after consuming the argument.
@@ -246,60 +263,61 @@ class Args:
         # skip already parsed positional arguments
         # (because they could have also been named)
         while (
-            positional_idx < len(self._positional_args)
-            and self._positional_args[positional_idx]._parsed
+            state.positional_idx < len(self._positional_args)
+            and self._positional_args[state.positional_idx]._parsed
         ):
-            positional_idx += 1
+            state.positional_idx += 1
 
-        if not positional_idx < len(self._positional_args):
+        if not state.positional_idx < len(self._positional_args):
             if self._var_args:
-                self._var_args.parse(args[idx])
-                return idx + 1, positional_idx
+                self._var_args.parse(args[state.idx])
+                state.idx += 1
+                return state
             else:
                 raise ParserOptionError(
-                    f"Unexpected positional argument: `{args[idx]}`!"
+                    f"Unexpected positional argument: `{args[state.idx]}`!"
                 )
 
-        arg = self._positional_args[positional_idx]
+        arg = self._positional_args[state.positional_idx]
         if arg._parsed:
             raise ParserOptionError(
-                f"Positional argument `{args[idx]}` is multiply given!"
+                f"Positional argument `{args[state.idx]}` is multiply given!"
             )
         if arg.is_nary:
             # n-ary positional arg
             values = []
-            while idx < len(args) and not self._is_name(args[idx]):
-                values.append(args[idx])
-                idx += 1
+            while state.idx < len(args) and not self._is_name(args[state.idx]):
+                values.append(args[state.idx])
+                state.idx += 1
             for value in values:
                 arg.parse(value)
         else:
             # regular positional arg
-            arg.parse(args[idx])
-            idx += 1
-        return idx, positional_idx + 1
+            arg.parse(args[state.idx])
+            state.idx += 1
+        state.positional_idx += 1
+        return state
 
     def _parse(self, args: list[str]):
-        idx = 0
-        positional_idx = 0
+        state = ParsingState()
 
-        while idx < len(args):
-            if name := self._is_name(args[idx]):
+        while state.idx < len(args):
+            if name := self._is_name(args[state.idx]):
                 # this must be a named argument / option
-                if names := self._is_combined_short_names(args[idx]):
-                    idx = self._parse_combined_short_names(names, args, idx)
+                if names := self._is_combined_short_names(args[state.idx]):
+                    state = self._parse_combined_short_names(names, args, state)
                 else:
                     try:
-                        idx = self._parse_named(name, args, idx)
+                        state = self._parse_named(name, args, state)
                     except ParserOptionError as e:
                         if self._var_args and str(e).startswith("Unexpected option"):
-                            self._var_args.parse(args[idx])
-                            idx += 1
+                            self._var_args.parse(args[state.idx])
+                            state.idx += 1
                         else:
                             raise
             else:
                 # this must be a positional argument
-                idx, positional_idx = self._parse_positional(args, idx, positional_idx)
+                state = self._parse_positional(args, state)
 
         # check if all required arguments are given, assign defaults otherwise
         for arg in self._positional_args + self._named_args:
