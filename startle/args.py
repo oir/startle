@@ -16,6 +16,11 @@ class ParsingState:
     idx: int = 0
     positional_idx: int = 0
 
+    # if `--` token is observed, all following arguments are treated as positional
+    # even if they look like options (e.g. `--foo`). This attribute is used to
+    # track that state.
+    positional_only: bool = False
+
 
 @dataclass
 class Args:
@@ -47,8 +52,9 @@ class Args:
         """
         if value.startswith("--"):
             name = value[2:]
-            if not name:
-                raise ParserOptionError("Prefix `--` is not followed by an option!")
+            # if not name:
+            #     raise ParserOptionError("Prefix `--` is not followed by an option!")
+            # this case should not happen anymore
             return name
         if value.startswith("-"):
             name = value[1:]
@@ -302,7 +308,14 @@ class Args:
         state = ParsingState()
 
         while state.idx < len(args):
-            if name := self._is_name(args[state.idx]):
+            if args[state.idx] == "--":
+                if state.positional_only:
+                    raise ParserOptionError("Unexpected `--` token after `--` token!")
+                # all following arguments are positional only
+                state.positional_only = True
+                state.idx += 1
+            name = self._is_name(args[state.idx])
+            if not state.positional_only and name:
                 # this must be a named argument / option
                 if names := self._is_combined_short_names(args[state.idx]):
                     state = self._parse_combined_short_names(names, args, state)
