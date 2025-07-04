@@ -63,7 +63,13 @@ def test_unsupported_type():
     )
 
     check_args(mul, ["1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul, ["-a", "1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul, ["-a", "1/2", "-b", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul, ["1/2", "-b", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul, ["-b", "3/4", "1/2"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul, ["-b", "3/4", "--", "1/2"], [Rational(1, 2), Rational(3, 4)], {})
     check_args(mul2, ["1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
+    check_args(mul2, ["--ns", "1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
 
     del _PARSERS[Rational]
     del _METAVARS[Rational]
