@@ -27,10 +27,13 @@ def test_args_with_defaults(hi, count_t):
     check_args(hi, ["jane", "--count", "3"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["jane", "--count=3"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["--count", "3", "jane"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["--count", "3", "--", "jane"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["--count", "3"], ["john"], {"count": count_t(3)})
+    check_args(hi, ["--count", "3", "--"], ["john"], {"count": count_t(3)})
     check_args(hi, ["jane", "-c", "3"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["jane", "-c=3"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["-c", "3", "jane"], ["jane"], {"count": count_t(3)})
+    check_args(hi, ["-c", "3", "--", "jane"], ["jane"], {"count": count_t(3)})
     check_args(hi, ["-c", "3"], ["john"], {"count": count_t(3)})
 
     with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
@@ -38,10 +41,19 @@ def test_args_with_defaults(hi, count_t):
     with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
         check_args(hi, ["--count", "x", "jane"], [], {})
     with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
+        check_args(hi, ["--count", "x", "--", "jane"], [], {})
+    with raises(ParserValueError, match=f"Cannot parse {typestr} from `x`!"):
         check_args(hi, ["jane", "--count=x"], [], {})
 
     with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
         check_args(hi, ["john", "3"], [], {})
+    with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
+        check_args(hi, ["john", "--", "3"], [], {})
+    with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
+        check_args(hi, ["--", "john", "3"], [], {})
+    with raises(ParserOptionError, match="Unexpected positional argument: `--`!"):
+        # Second `--` will be treated as a positional argument as is
+        check_args(hi, ["--", "john", "--", "3"], [], {})
 
     with raises(ParserOptionError, match="Option `count` is missing argument!"):
         check_args(hi, ["--count"], [], {})
@@ -82,8 +94,10 @@ def test_args_without_defaults(opt):
 
     check_args(hi, ["jane", opt, "3"], ["jane"], {"count": 3})
     check_args(hi, [opt, "3", "jane"], ["jane"], {"count": 3})
+    check_args(hi, [opt, "3", "--", "jane"], ["jane"], {"count": 3})
     check_args(hi, ["jane", f"{opt}=3"], ["jane"], {"count": 3})
     check_args(hi, [f"{opt}=3", "jane"], ["jane"], {"count": 3})
+    check_args(hi, [f"{opt}=3", "--", "jane"], ["jane"], {"count": 3})
 
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
@@ -91,6 +105,8 @@ def test_args_without_defaults(opt):
         check_args(hi, [], [], {})
     with raises(ParserOptionError, match="Required option `count` is not provided!"):
         check_args(hi, ["jane"], [], {})
+    with raises(ParserOptionError, match="Required option `count` is not provided!"):
+        check_args(hi, ["--", "jane"], [], {})
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
     ):
@@ -103,6 +119,10 @@ def test_args_without_defaults(opt):
 
     with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
         check_args(hi, ["jane", "3"], [], {})
+    with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
+        check_args(hi, ["jane", "--", "3"], [], {})
+    with raises(ParserOptionError, match="Unexpected positional argument: `3`!"):
+        check_args(hi, ["--", "jane", "3"], [], {})
 
     with raises(ParserOptionError, match="Unexpected option `name`!"):
         check_args(hi, ["--name", "jane"], [], {})
@@ -173,11 +193,15 @@ def test_args_both_positional_and_keyword_with_defaults():
     check_args(hi, ["--name", "jane"], ["jane", 1], {})
 
     check_args(hi, ["jane", "3"], ["jane", 3], {})
+    check_args(hi, ["--", "jane", "3"], ["jane", 3], {})
+    check_args(hi, ["jane", "--", "3"], ["jane", 3], {})
     check_args(hi, ["jane", "--count", "3"], ["jane", 3], {})
     check_args(hi, ["--name", "jane", "--count", "3"], ["jane", 3], {})
     check_args(hi, ["--name", "jane", "3"], ["jane", 3], {})
+    check_args(hi, ["--name", "jane", "--", "3"], ["jane", 3], {})
     check_args(hi, ["--count", "3", "--name", "jane"], ["jane", 3], {})
     check_args(hi, ["--count", "3", "jane"], ["jane", 3], {})
+    check_args(hi, ["--count", "3", "--", "jane"], ["jane", 3], {})
 
     check_args(hi, ["--count", "3"], ["john", 3], {})
 
@@ -192,6 +216,7 @@ def test_flag(opt):
     check_args(hi, ["jane"], ["jane"], {"verbose": False})
     check_args(hi, ["jane", opt], ["jane"], {"verbose": True})
     check_args(hi, [opt, "jane"], ["jane"], {"verbose": True})
+    check_args(hi, [opt, "--", "jane"], ["jane"], {"verbose": True})
     with raises(
         ParserOptionError, match="Required positional argument <name> is not provided!"
     ):
@@ -226,8 +251,10 @@ def test_bool_but_not_flag(true: str, false: str, optv: str, optn: str):
         value = true if verbose else false
         check_args(hi, ["jane", optv, value], ["jane"], {"verbose": verbose})
         check_args(hi, [optv, value, "jane"], ["jane"], {"verbose": verbose})
+        check_args(hi, [optv, value, "--", "jane"], ["jane"], {"verbose": verbose})
         check_args(hi, ["jane", f"{optv}={value}"], ["jane"], {"verbose": verbose})
         check_args(hi, [f"{optv}={value}", "jane"], ["jane"], {"verbose": verbose})
+        check_args(hi, [f"{optv}={value}", "--", "jane"], ["jane"], {"verbose": verbose})
     with raises(ParserOptionError, match="Option `verbose` is missing argument!"):
         check_args(hi, ["jane", optv], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `yeah`!"):
@@ -348,7 +375,10 @@ def hi_untyped(name, count) -> None:
 
 def test_untyped():
     check_args(hi_untyped, ["jane", "3"], ["jane", "3"], {})
+    check_args(hi_untyped, ["jane", "--", "3"], ["jane", "3"], {})
+    check_args(hi_untyped, ["--", "jane", "3"], ["jane", "3"], {})
     check_args(hi_untyped, ["jane", "--count", "3"], ["jane", "3"], {})
     check_args(hi_untyped, ["--count", "3", "jane"], ["jane", "3"], {})
+    check_args(hi_untyped, ["--count", "3", "--", "jane"], ["jane", "3"], {})
     check_args(hi_untyped, ["--name", "jane", "--count", "3"], ["jane", "3"], {})
     check_args(hi_untyped, ["-n", "jane", "-c", "3"], ["jane", "3"], {})

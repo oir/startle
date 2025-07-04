@@ -186,7 +186,7 @@ class Args:
                     # n-ary option
                     values = []
                     state.idx += 1
-                    while state.idx < len(args) and not self._is_name(args[state.idx]):
+                    while state.idx < len(args) and self._is_name(args[state.idx]) is False:
                         values.append(args[state.idx])
                         state.idx += 1
                     if not values:
@@ -244,7 +244,7 @@ class Args:
             # n-ary option
             values = []
             state.idx += 1
-            while state.idx < len(args) and not self._is_name(args[state.idx]):
+            while state.idx < len(args) and self._is_name(args[state.idx]) is False:
                 values.append(args[state.idx])
                 state.idx += 1
             if not values:
@@ -292,7 +292,7 @@ class Args:
         if arg.is_nary:
             # n-ary positional arg
             values = []
-            while state.idx < len(args) and not self._is_name(args[state.idx]):
+            while state.idx < len(args) and self._is_name(args[state.idx]) is False:
                 values.append(args[state.idx])
                 state.idx += 1
             for value in values:
@@ -308,12 +308,11 @@ class Args:
         state = ParsingState()
 
         while state.idx < len(args):
-            if args[state.idx] == "--":
-                if state.positional_only:
-                    raise ParserOptionError("Unexpected `--` token after `--` token!")
-                # all following arguments are positional only
+            if not state.positional_only and args[state.idx] == "--":
+                # all subsequent arguments will be attempted to be parsed as positional
                 state.positional_only = True
                 state.idx += 1
+                continue
             name = self._is_name(args[state.idx])
             if not state.positional_only and name:
                 # this must be a named argument / option
