@@ -254,7 +254,9 @@ def test_bool_but_not_flag(true: str, false: str, optv: str, optn: str):
         check_args(hi, [optv, value, "--", "jane"], ["jane"], {"verbose": verbose})
         check_args(hi, ["jane", f"{optv}={value}"], ["jane"], {"verbose": verbose})
         check_args(hi, [f"{optv}={value}", "jane"], ["jane"], {"verbose": verbose})
-        check_args(hi, [f"{optv}={value}", "--", "jane"], ["jane"], {"verbose": verbose})
+        check_args(
+            hi, [f"{optv}={value}", "--", "jane"], ["jane"], {"verbose": verbose}
+        )
     with raises(ParserOptionError, match="Option `verbose` is missing argument!"):
         check_args(hi, ["jane", optv], [], {})
     with raises(ParserValueError, match="Cannot parse boolean from `yeah`!"):

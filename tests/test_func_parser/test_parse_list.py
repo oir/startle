@@ -268,7 +268,11 @@ def test_positional_nargs_infeasible():
         print(" ".join(widths))
         print(" ".join(heights))
 
-    for rectangle, type_ in [(rectangle_int, int), (rectangle_float, float), (rectangle_str, str)]:
+    for rectangle, type_ in [
+        (rectangle_int, int),
+        (rectangle_float, float),
+        (rectangle_str, str),
+    ]:
         cli = ["0", "1", "2", "3", "4", "5", "6"]
         with raises(
             ParserOptionError,
@@ -276,7 +280,6 @@ def test_positional_nargs_infeasible():
         ):
             check_args(rectangle, cli, [], {})
 
-        
         # the following works but only once, since "--" has its special meaning only
         # the first time.
         check_args(

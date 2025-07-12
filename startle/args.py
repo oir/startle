@@ -186,7 +186,10 @@ class Args:
                     # n-ary option
                     values = []
                     state.idx += 1
-                    while state.idx < len(args) and self._is_name(args[state.idx]) is False:
+                    while (
+                        state.idx < len(args)
+                        and self._is_name(args[state.idx]) is False
+                    ):
                         values.append(args[state.idx])
                         state.idx += 1
                     if not values:
