@@ -1,125 +1,24 @@
 import inspect
-import re
-from dataclasses import dataclass
 from inspect import Parameter
-from textwrap import dedent
 from typing import (
     Callable,
     Iterable,
-    Literal,
     cast,
     get_args,
     get_origin,
 )
 
+from ._docstr import (
+    _DocstrParam,
+    _DocstrParams,
+    _parse_class_docstring,
+    _parse_func_docstring,
+)
 from ._type_utils import _normalize_type, _shorten_type_annotation
 from .arg import Arg, Name
 from .args import Args
 from .error import ParserConfigError
 from .value_parser import is_parsable
-
-
-@dataclass
-class _DocstrParam:
-    desc: str = ""
-    short_name: str | None = None
-
-
-_DocstrParams = dict[str, _DocstrParam]
-
-
-def _parse_docstring(
-    docstring: str, kind: Literal["function", "class"]
-) -> tuple[str, _DocstrParams]:
-    params_headers: list[str]
-    if kind == "function":
-        params_headers = ["Args:", "Arguments:"]
-    else:
-        params_headers = ["Attributes:"]
-
-    brief_enders = [
-        "Args:",
-        "Arguments:",
-        "Returns:",
-        "Yields:",
-        "Raises:",
-        "Attributes:",
-    ]
-
-    brief = ""
-    arg_helps: _DocstrParams = {}
-
-    if docstring:
-        lines = docstring.split("\n")
-
-        # first, find the brief
-        i = 0
-        while i < len(lines) and lines[i].strip() not in brief_enders:
-            brief += lines[i].rstrip() + "\n"
-            i += 1
-
-        brief = "\n\n".join(
-            paragraph.replace("\n", " ") for paragraph in brief.rstrip().split("\n\n")
-        )
-
-        # then, find the Args section
-        args_section = ""
-        i = 0
-        while lines[i].strip() not in params_headers:  # find the parameters section
-            i += 1
-            if i >= len(lines):
-                break
-        i += 1
-
-        # then run through the lines until we find the first non-indented or empty line
-        while i < len(lines) and lines[i].startswith(" ") and lines[i].strip() != "":
-            args_section += lines[i] + "\n"
-            i += 1
-
-        if args_section:
-            args_section = dedent(args_section).strip()
-
-            # then, merge indented lines together
-            merged_lines: list[str] = []
-            for line in args_section.split("\n"):
-                # if a line is indented, merge it with the previous line
-                if line.lstrip() != line:
-                    if not merged_lines:
-                        return brief, {}
-                    merged_lines[-1] += " " + line.strip()
-                else:
-                    merged_lines.append(line.strip())
-
-            # now each line should be an arg description
-            for line in merged_lines:
-                # attempt to parse like "param_name annotation: description"
-                if args_desc := re.search(r"(\S+)(?:\s+(.*?))?:(.*)", line):
-                    param, annot, desc = args_desc.groups()
-                    param = param.strip()
-                    desc = desc.strip()
-                    arg_helps[param] = _DocstrParam(desc=desc)
-
-    return brief, arg_helps
-
-
-def _parse_func_docstring(func: Callable) -> tuple[str, _DocstrParams]:
-    """
-    Parse the docstring of a function and return the brief and the arg descriptions.
-    """
-    docstring = inspect.getdoc(func) or ""
-
-    return _parse_docstring(docstring, "function")
-
-
-def _parse_class_docstring(cls: type) -> _DocstrParams:
-    """
-    Parse the docstring of a class and return the arg descriptions.
-    """
-    docstring = inspect.getdoc(cls) or ""
-
-    _, arg_helps = _parse_docstring(docstring, "class")
-
-    return arg_helps
 
 
 def make_args_from_params(
