@@ -1,4 +1,8 @@
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable
+
+from pytest import mark
 
 from ._utils import NS, OS, TS, VS, check_help_from_class, check_help_from_func
 
@@ -252,22 +256,52 @@ Some additional explanation in a new paragraph.
     check_help_from_func(count_chars2, "count_chars.py", expected)
 
 
-def test_ordering():
-    from pathlib import Path
+def ls1(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
+    """
+    List directory contents.
 
-    def ls(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
-        """
-        List directory contents.
+    Args:
+        index: Index of the command.
+        path: Path to the directory.
+        args: Arguments to pass to `ls`.
+        dummy: Dummy argument.
+        kwargs: Dummy keyword arguments.
+    """
+    pass
 
-        Args:
-            index: Index of the command.
-            path: Path to the directory.
-            args: Arguments to pass to `ls`.
-            dummy: Dummy argument.
-            kwargs: Dummy keyword arguments.
-        """
-        pass
 
+def ls2(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
+    """
+    List directory contents.
+
+    Args:
+        index: Index of the command.
+        path: Path to the directory.
+        *args: Arguments to pass to `ls`.
+        dummy: Dummy argument.
+        **kwargs: Dummy keyword arguments.
+    """
+    pass
+
+
+def ls3(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
+    """
+    List directory contents.
+
+    Args:
+        index: Index of the
+            command.
+        path: Path to the directory.
+        *args: Arguments to pass
+            to `ls`.
+        dummy: Dummy argument.
+        **kwargs: Dummy keyword arguments.
+    """
+    pass
+
+
+@mark.parametrize("ls", [ls1, ls2, ls3])
+def test_ordering(ls: Callable):
     # Help order respects the order of the arguments in the signature:
     # 1. positional only
     # 2. positional or keyword
