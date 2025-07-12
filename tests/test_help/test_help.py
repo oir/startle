@@ -284,7 +284,23 @@ def ls2(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> N
     pass
 
 
-@mark.parametrize("ls", [ls1, ls2])
+def ls3(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
+    """
+    List directory contents.
+
+    Args:
+        index: Index of the
+            command.
+        path: Path to the directory.
+        *args: Arguments to pass
+            to `ls`.
+        dummy: Dummy argument.
+        **kwargs: Dummy keyword arguments.
+    """
+    pass
+
+
+@mark.parametrize("ls", [ls1, ls2, ls3])
 def test_ordering(ls: Callable):
     # Help order respects the order of the arguments in the signature:
     # 1. positional only
