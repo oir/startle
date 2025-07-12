@@ -1,5 +1,6 @@
 import inspect
 import re
+from dataclasses import dataclass
 from inspect import Parameter
 from textwrap import dedent
 from typing import (
@@ -18,9 +19,18 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
+@dataclass
+class _DocstrParam:
+    desc: str = ""
+    short_name: str | None = None
+
+
+_DocstrParams = dict[str, _DocstrParam]
+
+
 def _parse_docstring(
     docstring: str, kind: Literal["function", "class"]
-) -> tuple[str, dict[str, str]]:
+) -> tuple[str, _DocstrParams]:
     params_headers: list[str]
     if kind == "function":
         params_headers = ["Args:", "Arguments:"]
@@ -37,7 +47,7 @@ def _parse_docstring(
     ]
 
     brief = ""
-    arg_helps: dict[str, str] = {}
+    arg_helps: _DocstrParams = {}
 
     if docstring:
         lines = docstring.split("\n")
@@ -82,16 +92,17 @@ def _parse_docstring(
 
             # now each line should be an arg description
             for line in merged_lines:
-                if args_desc := re.search(r"(\S+)(?:\s+\(.*?\))?:(.*)", line):
-                    param, desc = args_desc.groups()
+                # attempt to parse like "param_name annotation: description"
+                if args_desc := re.search(r"(\S+)(?:\s+(.*?))?:(.*)", line):
+                    param, annot, desc = args_desc.groups()
                     param = param.strip()
                     desc = desc.strip()
-                    arg_helps[param] = desc
+                    arg_helps[param] = _DocstrParam(desc=desc)
 
     return brief, arg_helps
 
 
-def _parse_func_docstring(func: Callable) -> tuple[str, dict[str, str]]:
+def _parse_func_docstring(func: Callable) -> tuple[str, _DocstrParams]:
     """
     Parse the docstring of a function and return the brief and the arg descriptions.
     """
@@ -100,7 +111,7 @@ def _parse_func_docstring(func: Callable) -> tuple[str, dict[str, str]]:
     return _parse_docstring(docstring, "function")
 
 
-def _parse_class_docstring(cls: type) -> dict[str, str]:
+def _parse_class_docstring(cls: type) -> _DocstrParams:
     """
     Parse the docstring of a class and return the arg descriptions.
     """
@@ -115,7 +126,7 @@ def make_args_from_params(
     params: Iterable[tuple[str, Parameter]],
     obj_name: str,
     brief: str = "",
-    arg_helps: dict[str, str] = {},
+    arg_helps: _DocstrParams = {},
     program_name: str = "",
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
@@ -150,11 +161,13 @@ def make_args_from_params(
             required = True
             default = None
 
-        help = arg_helps.get(param_name, "")
+        help = arg_helps.get(param_name, _DocstrParam()).desc
         if param.kind is Parameter.VAR_POSITIONAL:
-            help = help or arg_helps.get(f"*{param_name}", "")
+            # admit both "arg" and "*arg" as valid names
+            help = help or arg_helps.get(f"*{param_name}", _DocstrParam()).desc
         elif param.kind is Parameter.VAR_KEYWORD:
-            help = help or arg_helps.get(f"**{param_name}", "")
+            # admit both "arg" and "**arg" as valid names
+            help = help or arg_helps.get(f"**{param_name}", _DocstrParam()).desc
 
         param_name_sub = param_name.replace("_", "-")
         positional = False
