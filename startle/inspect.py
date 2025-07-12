@@ -21,7 +21,7 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
-def make_args_from_params(
+def _make_args_from_params(
     params: Iterable[tuple[str, Parameter]],
     obj_name: str,
     brief: str = "",
@@ -45,6 +45,18 @@ def make_args_from_params(
             if len(param_name) == 1:
                 used_short_names.add(param_name)
 
+    # Discover if there are any docstring-specified short names,
+    # these also take precedence over the first letter of the parameter name
+    for param_name, param in params:
+        if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
+            if docstr_param := arg_helps.get(param_name):
+                if docstr_param.short_name:
+                    # if this name is already used, this param cannot use it
+                    if docstr_param.short_name in used_short_names:
+                        docstr_param.short_name = None
+                    else:
+                        used_short_names.add(docstr_param.short_name)
+
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
         normalized_annotation = (
@@ -60,13 +72,17 @@ def make_args_from_params(
             required = True
             default = None
 
-        help = arg_helps.get(param_name, _DocstrParam()).desc
-        if param.kind is Parameter.VAR_POSITIONAL:
+        param_key: str | None = None
+        if param_name in arg_helps:
+            param_key = param_name
+        elif param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
             # admit both "arg" and "*arg" as valid names
-            help = help or arg_helps.get(f"*{param_name}", _DocstrParam()).desc
-        elif param.kind is Parameter.VAR_KEYWORD:
+            param_key = f"*{param_name}"
+        elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
             # admit both "arg" and "**arg" as valid names
-            help = help or arg_helps.get(f"**{param_name}", _DocstrParam()).desc
+            param_key = f"**{param_name}"
+
+        docstr_param = arg_helps[param_key] if param_key else _DocstrParam()
 
         param_name_sub = param_name.replace("_", "-")
         positional = False
@@ -90,6 +106,9 @@ def make_args_from_params(
             named = True
             if len(param_name) == 1:
                 name = Name(short=param_name_sub)
+            elif docstr_param.short_name:
+                # no need to check used_short_names, this name is already in there
+                name = Name(short=docstr_param.short_name, long=param_name_sub)
             elif param_name[0] not in used_short_names:
                 name = Name(short=param_name_sub[0], long=param_name_sub)
                 used_short_names.add(param_name_sub[0])
@@ -134,7 +153,7 @@ def make_args_from_params(
             type_=normalized_annotation,
             container_type=container_type,
             metavar=metavar,
-            help=help,
+            help=docstr_param.desc,
             required=required,
             default=default,
             is_positional=positional,
@@ -161,7 +180,7 @@ def make_args_from_func(func: Callable, program_name: str = "") -> Args:
     # Attempt to parse brief and arg descriptions from docstring
     brief, arg_helps = _parse_func_docstring(func)
 
-    return make_args_from_params(
+    return _make_args_from_params(
         params, f"{func.__name__}()", brief, arg_helps, program_name
     )
 
@@ -186,4 +205,4 @@ def make_args_from_class(cls: type, program_name: str = "", brief: str = "") -> 
     # TODO: maybe for regular classes, parse from init, but for dataclasses, parse from the class itself?
     arg_helps = _parse_class_docstring(cls)
 
-    return make_args_from_params(params, cls.__name__, brief, arg_helps, program_name)
+    return _make_args_from_params(params, cls.__name__, brief, arg_helps, program_name)
