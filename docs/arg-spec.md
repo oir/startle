@@ -47,6 +47,31 @@ Some examples:
   - `missile-direction`
   - `-m, --mana-cost`
 
+### Customizing short names
+
+Since descriptions are grabbed from docstrings (see [below](#Help)),
+**Startle** also uses docstrings as a means to specify custom
+characters for the short options, if you want to use a character different
+from the first letter of the argument.
+
+An example:
+```python
+def magic_missile(missile_direction: str, mana_cost: float):
+    """
+    Shoot a magic missile.
+
+    Args:
+        missile_direction [d]: Direction to shoot towards
+        mana_cost: Amount of mana spend required
+    """
+    ...
+```
+Here, `"[d]"` is used to signify using `d` as the short option name for
+`missile_direction`.
+Therefore, this version of the program will admit the following flags:
+- `-d, --missile-direction`
+- `-m, --mana-cost`
+
 ## Type
 
 Target type after parsing the argument is directly obtained from the type
@@ -202,7 +227,7 @@ for an illustration.
 Sometimes it is desirable to limit the possible values for an argument or an option
 to a number of choices, and reject any other value by erroring out.
 
-In **startle**, similar to _unary_-ness or _flag_-ness, this is handled by the
+In **Startle**, similar to _unary_-ness or _flag_-ness, this is handled by the
 type hints corresponding to the argument. If the type is a `typing.Literal` of
 strings, e.g. `Literal["a", "b", "c"]`, or an `Enum` class (a user type deriving
 from `enum.Enum`), allowed types will be limited to the specific options.
