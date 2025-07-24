@@ -47,24 +47,6 @@
         tabComments: true, // default
         tabHeadings: true, // default
       },
-      vueComponents: {
-        icon: {
-          props: ["prefix"],
-          template: `<picture>
-            <source style="vertical-align:middle" media="(prefers-color-scheme: dark)" :srcset="lightSrc" height="22">
-            <source style="vertical-align:middle" media="(prefers-color-scheme: light)" :srcset="darkSrc" height="22">
-            <img style="vertical-align:middle" :src="darkSrc" height="22"> 
-          </picture>`,
-          computed: {
-            lightSrc() {
-              return `img/${this.prefix}-light.svg`;
-            },
-            darkSrc() {
-              return `img/${this.prefix}-dark.svg`;
-            },
-          },
-        },
-      },
       'flexible-alerts': {
         style: 'callout',
       },
