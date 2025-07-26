@@ -1,4 +1,5 @@
 import re
+from typing import Annotated
 
 from pytest import mark, raises
 
@@ -18,7 +19,19 @@ def hi_float(name: str = "john", /, *, count: float = 1.0) -> None:
         print(f"hello, {name}!")
 
 
-@mark.parametrize("hi, count_t", [(hi_int, int), (hi_float, float)])
+def hi_float_annotated(
+    name: Annotated[str, "some metadata"] = "john",
+    /,
+    *,
+    count: Annotated[float, "some metadata"] = 1.0,
+) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
+
+
+@mark.parametrize(
+    "hi, count_t", [(hi_int, int), (hi_float, float), (hi_float_annotated, float)]
+)
 def test_args_with_defaults(hi, count_t):
     typestr = "integer" if count_t is int else "float"
 

@@ -14,7 +14,7 @@ from ._docstr import (
     _parse_class_docstring,
     _parse_func_docstring,
 )
-from ._type_utils import _normalize_type, _shorten_type_annotation
+from ._type_utils import _normalize_type, _shorten_type_annotation, _strip_annotated
 from .arg import Arg, Name
 from .args import Args
 from .error import ParserConfigError
@@ -62,7 +62,7 @@ def _make_args_from_params(
         normalized_annotation = (
             str
             if param.annotation is Parameter.empty
-            else _normalize_type(param.annotation)
+            else _normalize_type(_strip_annotated(param.annotation))
         )
 
         if param.default is not inspect.Parameter.empty:
@@ -128,11 +128,11 @@ def _make_args_from_params(
         if orig in [list, set]:
             nary = True
             container_type = orig
-            normalized_annotation = args_[0] if args_ else str
+            normalized_annotation = _strip_annotated(args_[0]) if args_ else str
         elif orig is tuple and len(args_) == 2 and args_[1] is ...:
             nary = True
             container_type = orig
-            normalized_annotation = args_[0] if args_ else str
+            normalized_annotation = _strip_annotated(args_[0]) if args_ else str
         elif normalized_annotation in [list, tuple, set]:
             normalized_annotation = cast(type, normalized_annotation)
             nary = True
