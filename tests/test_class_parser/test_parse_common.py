@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Callable
+from typing import Annotated, Callable
 
 from pytest import mark, raises
 
@@ -37,6 +37,17 @@ class ConfigClass:
             and self.amount == other.amount
             and self.label == other.label
         )
+
+
+@dataclass
+class ConfigDataClassAnnotated:
+    """
+    A configuration class for the program.
+    """
+
+    count: int = 1
+    amount: Annotated[float, "some metadata"] = 1.0
+    label: Annotated[str, "some metadata"] = "default"
 
 
 def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None:
@@ -74,7 +85,7 @@ def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None
         lambda l: [f"-l={l}"],
     ],
 )
-@mark.parametrize("Config", [ConfigDataClass, ConfigClass])
+@mark.parametrize("Config", [ConfigDataClass, ConfigClass, ConfigDataClassAnnotated])
 def test_class_with_all_defaults(
     capsys,
     count: Callable[[str], list[str]],

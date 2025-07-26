@@ -1,6 +1,6 @@
 import inspect
 import types
-from typing import Any, Optional, Union, get_args, get_origin
+from typing import Annotated, Any, Optional, Union, get_args, get_origin
 
 
 def _strip_optional(type_: Any) -> Any:
@@ -17,6 +17,17 @@ def _strip_optional(type_: Any) -> Any:
             else:
                 return Union[args]
 
+    return type_
+
+
+def _strip_annotated(type_: Any) -> Any:
+    """
+    Strip the Annotated type from a type hint. Given Annotated[T, ...], return T.
+    """
+    if get_origin(type_) is Annotated:
+        args = get_args(type_)
+        if args:
+            return args[0]
     return type_
 
 

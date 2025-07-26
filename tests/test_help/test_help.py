@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from typing import Annotated, Callable
 
 from pytest import mark
 
@@ -236,6 +236,27 @@ def test_nargs():
         """
         pass
 
+    def count_chars3(
+        words: list[str],
+        /,
+        *,
+        extra_words: Annotated[list[str], "some metadata"] = [],
+        verbose: bool = False,
+    ) -> None:
+        """
+        Count the characters
+        in a list of words.
+
+        Some additional explanation
+        in a new paragraph.
+
+        Args:
+            words: List of words to count characters in.
+            extra_words: Extra words to count characters in.
+            verbose: If true, print extra information.
+        """
+        pass
+
     expected = f"""\
 
 Count the characters in a list of words.
@@ -254,6 +275,7 @@ Some additional explanation in a new paragraph.
 
     check_help_from_func(count_chars, "count_chars.py", expected)
     check_help_from_func(count_chars2, "count_chars.py", expected)
+    check_help_from_func(count_chars3, "count_chars.py", expected)
 
 
 def ls1(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> None:
