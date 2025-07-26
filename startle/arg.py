@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from .error import ParserConfigError
 from .metavar import _get_metavar
@@ -30,16 +30,19 @@ class Arg:
     Represents a command-line argument.
 
     Attributes:
-        name (Name): The name of the argument.
-        type_ (type): The type of the argument. For n-ary options, this is the type of the list elements.
-        container_type (type): The container type for n-ary options.
-        is_positional (bool): Whether the argument is positional.
-        is_named (bool): Whether the argument is named.
-        is_nary (bool): Whether the argument can take multiple values.
-        help (str): The help text for the argument.
-        metavar (str): The name to use in help messages for the argument in place of the value that is fed.
-        default (Any): The default value for the argument.
-        required (bool): Whether the argument is required.
+        name: The name of the argument.
+        type_: The type of the argument. For n-ary options, this is the type of the list elements.
+        container_type: The container type for n-ary options.
+        is_positional: Whether the argument is positional.
+        is_named: Whether the argument is named.
+        is_nary: Whether the argument can take multiple values.
+        help: The help text for the argument.
+        metavar: The name to use in help messages for the argument in place of the value that is fed.
+        default: The default value for the argument.
+        default_factory: A callable to generate the default value.
+            This is _only_ used for the help string, because dataclass initializers
+            already handle getting the default value out of these factories.
+        required: Whether the argument is required.
     """
 
     name: Name
@@ -54,6 +57,7 @@ class Arg:
     help: str = ""
     metavar: str | list[str] = ""
     default: Any = None
+    default_factory: Callable[[], Any] | None = None
     required: bool = False
 
     _parsed: bool = False  # if this is already parsed

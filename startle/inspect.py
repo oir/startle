@@ -1,6 +1,8 @@
 import inspect
+from dataclasses import MISSING, fields, is_dataclass
 from inspect import Parameter
 from typing import (
+    Any,
     Callable,
     Iterable,
     cast,
@@ -21,12 +23,27 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
+def _get_default_factories(cls: type) -> dict[str, Any]:
+    """
+    Get the default factory functions for all fields in a dataclass.
+    """
+    if not is_dataclass(cls):
+        raise ValueError(f"{cls} is not a dataclass")
+
+    return {
+        f.name: f.default_factory
+        for f in fields(cls)
+        if f.default_factory is not MISSING
+    }
+
+
 def _make_args_from_params(
     params: Iterable[tuple[str, Parameter]],
     obj_name: str,
     brief: str = "",
     arg_helps: _DocstrParams = {},
     program_name: str = "",
+    default_factories: dict[str, Any] = {},
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
@@ -71,6 +88,8 @@ def _make_args_from_params(
         else:
             required = True
             default = None
+
+        default_factory = default_factories.get(param_name, None)
 
         param_key: str | None = None
         if param_name in arg_helps:
@@ -156,6 +175,7 @@ def _make_args_from_params(
             help=docstr_param.desc,
             required=required,
             default=default,
+            default_factory=default_factory,
             is_positional=positional,
             is_named=named,
             is_nary=nary,
@@ -202,7 +222,9 @@ def make_args_from_class(cls: type, program_name: str = "", brief: str = "") -> 
         (name, param) for name, param in sig.parameters.items() if name != self_name
     ]
 
-    # TODO: maybe for regular classes, parse from init, but for dataclasses, parse from the class itself?
     arg_helps = _parse_class_docstring(cls)
+    default_factories = _get_default_factories(cls) if is_dataclass(cls) else {}
 
-    return _make_args_from_params(params, cls.__name__, brief, arg_helps, program_name)
+    return _make_args_from_params(
+        params, cls.__name__, brief, arg_helps, program_name, default_factories
+    )

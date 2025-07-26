@@ -134,11 +134,14 @@ def help(arg: Arg) -> Text:
     elif arg.required:
         helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
     else:
+        def_val = default_value(arg.default)
+        if arg.default_factory is not None:
+            def_val = Text(f"{arg.default_factory.__name__}()", style=_Sty.opt)
         helptext = Text.assemble(
             helptext,
             delim,
             ("(default: ", _Sty.opt),
-            default_value(arg.default),
+            def_val,
             (")", _Sty.opt),
         )
     return helptext
