@@ -25,10 +25,11 @@ jobs:
         run: hatch run test:pytest
       - name: Run static checks
         run: hatch run test:mypy startle/
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+      - name: Upload coverage reports to Coveralls
+        uses: coverallsapp/github-action@v2
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          format: cobertura
+          file: coverage.xml
       - name: Run examples
         run: |
           hatch run test:python examples/calc.py add 2 3
