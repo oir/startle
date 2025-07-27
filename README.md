@@ -8,7 +8,7 @@
 _Give your code a start._ ⚡👀
 
 ![tests](https://github.com/oir/startle/actions/workflows/test.yml/badge.svg)
-[![codecov](https://codecov.io/gh/oir/startle/graph/badge.svg?token=2MCJPOJWFA)](https://codecov.io/gh/oir/startle)
+[![Coveralls](https://img.shields.io/coverallsCoverage/github/oir/startle?logo=Coveralls)](https://coveralls.io/github/oir/startle)
 [![Docs](https://img.shields.io/badge/docs-2ECE53?logo=docsify&logoColor=fff)](https://oir.github.io/startle/)
 <br>
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/startle?logo=Python&logoColor=FFFFFF)](https://pypi.org/project/startle/)
