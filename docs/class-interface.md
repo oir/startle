@@ -116,3 +116,14 @@ AsciinemaPlayer.create('cast/dice-help.cast', document.getElementById('dice-help
     theme: "custom-auto",
 });
 </script>
+
+> [!INFO]
+> In general, using `field`s in `dataclass` attribute declarations is
+> trivially supported since they implicitly define the class initializer,
+> which is what is used for inspection.
+>
+> In particular `default_factory` argument of the fields is also supported
+> when displaying `--help`.
+>
+> In this case, **Startle** will _call_ the default factory to display the
+> default values, therefore be wary if your factories have any side effects.
