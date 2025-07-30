@@ -134,9 +134,11 @@ def help(arg: Arg) -> Text:
     elif arg.required:
         helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
     else:
-        def_val = default_value(arg.default)
         if arg.default_factory is not None:
-            def_val = Text(f"{arg.default_factory.__name__}()", style=_Sty.opt)
+            # is it harmful to just call the factory here?
+            def_val = default_value(arg.default_factory())
+        else:
+            def_val = default_value(arg.default)
         helptext = Text.assemble(
             helptext,
             delim,

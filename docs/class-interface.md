@@ -79,10 +79,10 @@ The steps that are being performed under the hood is very similar to the functio
   and returns it.
 
 However, there are some differences too:
-- Because `Config.__init__()` is implicit, argument descriptions are parsed from the class docstring
-  from the section underneath `Attributes`.
-- Similarly, since initializer is implicit, there is no `/` or `*` delimiters, which makes every
-  argument positional as well as option.
+- For dataclasses, because `Config.__init__()` is implicit, argument descriptions are parsed
+  from the class docstring from the section underneath `Attributes`.
+- Similarly, for dataclasses, since initializer is implicit, there is no `/` or `*` delimiters,
+  which makes every argument positional as well as option.
 - Since class docstring documents the config class, and not necessarily the program, it would be somewhat
   awkward to extract the _brief_ from the class docstring. Thus, anything other than the attribute
   descriptions are ignored. Instead, `parse()` takes in a `brief` argument explicitly to define the
@@ -116,3 +116,14 @@ AsciinemaPlayer.create('cast/dice-help.cast', document.getElementById('dice-help
     theme: "custom-auto",
 });
 </script>
+
+> [!INFO]
+> In general, using `field`s in `dataclass` attribute declarations is
+> trivially supported since they implicitly define the class initializer,
+> which is what is used for inspection.
+>
+> In particular `default_factory` argument of the fields is also supported
+> when displaying `--help`.
+>
+> In this case, **Startle** will _call_ the default factory to display the
+> default values, therefore be wary if your factories have any side effects.
