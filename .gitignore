@@ -23,6 +23,7 @@ venv/
 # Coverage
 .coverage
 coverage.lcov
+coverage.xml
 
 # Mypy
 .mypy_cache/
