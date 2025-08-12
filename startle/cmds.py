@@ -41,12 +41,14 @@ class Cmds:
                 self.print_help()
                 raise SystemExit(0)
 
-            if cmd not in self.cmd_parsers:
+            normal_cmd = cmd.replace("_", "-")
+
+            if normal_cmd not in self.cmd_parsers:
                 if not self.default:
                     raise ParserOptionError(f"Unknown command `{cmd}`!")
                 return self.default, self.cmd_parsers[self.default], cli_args
 
-            return cmd, self.cmd_parsers[cmd], cli_args[1:]
+            return normal_cmd, self.cmd_parsers[normal_cmd], cli_args[1:]
 
         assert self.default, "Programming error!"
 
