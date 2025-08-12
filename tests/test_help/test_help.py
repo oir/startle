@@ -96,10 +96,10 @@ Fuse two monsters with polymerization.
 [{TS}]where[/]
   [dim](positional)[/]    {pos("left-path", "text")}                     [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](positional)[/]    {pos("right-path", "text")}                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  {name("-o")}{dopt('|')}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [green](default: [/][green dim]""[/][green])[/]        
-  [dim](option)[/]        {name("-c")}{dopt('|')}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
-  [dim](option)[/]        {name("-a")}{dopt('|')}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
-  [dim](option)[/]        {dname("-?")}{dopt('|')}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
+  [dim](pos. or opt.)[/]  {name("-o")}{dopt("|")}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [green](default: [/][green dim]""[/][green])[/]        
+  [dim](option)[/]        {name("-c")}{dopt("|")}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
+  [dim](option)[/]        {name("-a")}{dopt("|")}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
+  [dim](option)[/]        {dname("-?")}{dopt("|")}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
 """
 
     check_help_from_func(fusion, "fuse.py", expected)
@@ -145,10 +145,10 @@ Fuse two monsters with polymerization.
 [{TS}]where[/]
   [dim](positional)[/]    {pos("left-path", "text")}                     [i]Path to the first monster.[/] [yellow](required)[/]                 
   [dim](positional)[/]    {pos("right-path", "text")}                    [i]Path to the second monster.[/] [yellow](required)[/]                
-  [dim](pos. or opt.)[/]  {name("-o")}{dopt('|')}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [yellow](required)[/]           
-  [dim](option)[/]        {name("-c")}{dopt('|')}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
-  [dim](option)[/]        {name("-a")}{dopt('|')}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
-  [dim](option)[/]        {dname("-?")}{dopt('|')}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
+  [dim](pos. or opt.)[/]  {name("-o")}{dopt("|")}{name("--output-path")} {var("<text>")}              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]        {name("-c")}{dopt("|")}{name("--components")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
+  [dim](option)[/]        {name("-a")}{dopt("|")}{name("--alpha")} {var("<float>")}                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
+  [dim](option)[/]        {dname("-?")}{dopt("|")}{dname("--help")}                            [i dim]Show this help message and exit.[/]                      
 """
     check_help_from_class(
         FusionConfig, "Fuse two monsters with polymerization.", "fuse.py", expected

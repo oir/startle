@@ -158,3 +158,48 @@ def test_calc(capsys, run: Callable, default: bool) -> None:
         match="Default subcommand is not supported for a single function.",
     ):
         run(add, ["2", "3"], default="add", catch=False)
+
+
+def this_command(foo: int, bar: str = "baz", /) -> None:
+    print(f"foo: {foo}, bar: {bar}")
+
+
+def that_command(*, foo: int, bar: str = "qux") -> None:
+    print(f"foo: {foo}, bar: {bar}")
+
+
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
+def test_underscores(capsys, run: Callable) -> None:
+    check(
+        capsys,
+        run,
+        [this_command, that_command],
+        ["this-command", "2", "foo"],
+        "foo: 2, bar: foo\n",
+    )
+    check(
+        capsys,
+        run,
+        [this_command, that_command],
+        ["this_command", "2"],
+        "foo: 2, bar: baz\n",
+    )
+    with raises(ParserOptionError, match=r"Unknown command `this-command_`!"):
+        run([this_command, that_command], ["this-command_", "2", "foo"], catch=False)
+
+    check(
+        capsys,
+        run,
+        [this_command, that_command],
+        ["that-command", "--foo", "2"],
+        "foo: 2, bar: qux\n",
+    )
+    check(
+        capsys,
+        run,
+        [this_command, that_command],
+        ["that_command", "--foo", "2"],
+        "foo: 2, bar: qux\n",
+    )
+    with raises(ParserOptionError, match=r"Unknown command `that.command`!"):
+        run([this_command, that_command], ["that.command", "2", "foo"], catch=False)
