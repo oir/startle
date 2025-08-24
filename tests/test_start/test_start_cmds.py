@@ -5,7 +5,12 @@ from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError
 
-from ._utils import check, check_exits, run_w_explicit_args, run_w_sys_argv
+from ._utils import (
+    check,
+    check_exits,
+    run_w_explicit_args,
+    run_w_sys_argv,
+)
 
 
 def add(a: int, b: int) -> None:

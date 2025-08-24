@@ -4,7 +4,13 @@ from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError
 
-from ._utils import check, check_exits, run_w_explicit_args, run_w_sys_argv
+from ._utils import (
+    check,
+    check_exits,
+    remove_trailing_spaces,
+    run_w_explicit_args,
+    run_w_sys_argv,
+)
 
 
 def hi1(name: str, count: int = 1) -> None:
@@ -185,4 +191,4 @@ where
     with raises(SystemExit):
         run_w_sys_argv(f, ["--help"], name="my_program")
     captured = capsys.readouterr()
-    assert captured.out == expected
+    assert remove_trailing_spaces(captured.out) == remove_trailing_spaces(expected)

@@ -405,6 +405,7 @@ class Args:
         import sys
 
         from rich.console import Console
+        from rich.markdown import Markdown
         from rich.table import Table
         from rich.text import Text
 
@@ -426,7 +427,12 @@ class Args:
         console = console or Console()
         console.print()
         if self.brief and not usage_only:
-            console.print(self.brief + "\n")
+            try:
+                md = Markdown(self.brief)
+                console.print(md)
+                console.print()
+            except Exception:
+                console.print(self.brief + "\n")
 
         # (2) then print usage line
         console.print(Text("Usage:", style=_Sty.title))

@@ -10,6 +10,11 @@ OS = "green"
 TS = "bold underline dim"
 
 
+def remove_trailing_spaces(text: str) -> str:
+    lines = text.split("\n")
+    return "\n".join(line.rstrip() for line in lines)
+
+
 def check_help_from_func(f: Callable, program_name: str, expected: str):
     console = Console(width=120, highlight=False, force_terminal=True)
     with console.capture() as capture:
@@ -21,7 +26,7 @@ def check_help_from_func(f: Callable, program_name: str, expected: str):
         console.print(expected)
     expected = capture.get()
 
-    assert result == expected
+    assert remove_trailing_spaces(result) == remove_trailing_spaces(expected)
 
 
 def check_help_from_class(cls: type, brief: str, program_name: str, expected: str):
@@ -35,4 +40,4 @@ def check_help_from_class(cls: type, brief: str, program_name: str, expected: st
         console.print(expected)
     expected = capture.get()
 
-    assert result == expected
+    assert remove_trailing_spaces(result) == remove_trailing_spaces(expected)

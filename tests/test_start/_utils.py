@@ -6,6 +6,11 @@ from pytest import raises
 from startle import start
 
 
+def remove_trailing_spaces(text: str) -> str:
+    lines = text.split("\n")
+    return "\n".join(line.rstrip() for line in lines)
+
+
 def run_w_explicit_args(
     func: Callable | list[Callable] | dict[str, Callable],
     args: list[str],
@@ -38,7 +43,7 @@ def check(
 ) -> None:
     run(f, args)
     captured = capsys.readouterr()
-    assert captured.out == expected
+    assert remove_trailing_spaces(captured.out) == remove_trailing_spaces(expected)
 
 
 def check_exits(
@@ -54,4 +59,6 @@ def check_exits(
         run(f, args)
     assert str(excinfo.value) == exit_code
     captured = capsys.readouterr()
-    assert captured.out.startswith(expected)
+    assert remove_trailing_spaces(captured.out).startswith(
+        remove_trailing_spaces(expected)
+    )
