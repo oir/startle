@@ -27,7 +27,7 @@ class _DocstrParts:
     ]
 
     param_pattern = re.compile(r"(\S+)(?:\s+(.*?))?:(.*)")
-    # "param_name annotation: description"
+    # "param_name annotation: description", annotation optional
 
     short_name_pattern = re.compile(r"(?:(?<=^)|(?<=\s))\[(\S)\](?:(?=\s)|(?=$))")
     # "[a]", "... [a] ...", etc
@@ -54,9 +54,7 @@ def _parse_docstring(
             brief += lines[i].rstrip() + "\n"
             i += 1
 
-        brief = "\n\n".join(
-            paragraph.replace("\n", " ") for paragraph in brief.rstrip().split("\n\n")
-        )
+        brief = brief.rstrip()
 
         # then, find the Args section
         args_section = ""
