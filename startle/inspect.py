@@ -37,23 +37,11 @@ def _get_default_factories(cls: type) -> dict[str, Any]:
     }
 
 
-def _make_args_from_params(
+def _reserve_short_names(
     params: Iterable[tuple[str, Parameter]],
-    obj_name: str,
-    brief: str = "",
     arg_helps: _DocstrParams = {},
-    program_name: str = "",
-    default_factories: dict[str, Any] = {},
-) -> Args:
-    args = Args(brief=brief, program_name=program_name)
-
+) -> set[str]:
     used_short_names = set()
-
-    for param_name, _ in params:
-        if param_name == "help":
-            raise ParserConfigError(
-                f"Cannot use `help` as parameter name in `{obj_name}`!"
-            )
 
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options
@@ -74,6 +62,92 @@ def _make_args_from_params(
                     else:
                         used_short_names.add(docstr_param.short_name)
 
+    return used_short_names
+
+
+def _get_docstr_param(
+    param_name: str,
+    param: Parameter,
+    arg_helps: _DocstrParams,
+) -> _DocstrParam:
+    param_key: str | None = None
+    if param_name in arg_helps:
+        param_key = param_name
+    elif param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
+        # admit both "arg" and "*arg" as valid names
+        param_key = f"*{param_name}"
+    elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
+        # admit both "arg" and "**arg" as valid names
+        param_key = f"**{param_name}"
+
+    return arg_helps[param_key] if param_key else _DocstrParam()
+
+
+def _make_name(
+    param_name_sub: str,
+    named: bool,
+    docstr_param: _DocstrParam,
+    used_short_names: set[str],
+) -> Name:
+    if named:
+        if len(param_name_sub) == 1:
+            return Name(short=param_name_sub)
+        if docstr_param.short_name:
+            # no need to check used_short_names, this name is already in there
+            return Name(short=docstr_param.short_name, long=param_name_sub)
+        if param_name_sub[0] not in used_short_names:
+            used_short_names.add(param_name_sub[0])
+            return Name(short=param_name_sub[0], long=param_name_sub)
+    return Name(long=param_name_sub)
+
+
+def _get_naryness(
+    param: Parameter, normalized_annotation: Any
+) -> tuple[bool, type | None, Any]:
+    """
+    Get the n-ary status, container type, and normalized annotation for a parameter.
+    For n-ary parameters, the type (updated `normalized_annotation`) will refer
+    to the inner type.
+
+    If inner type is absent from the hint, assume str.
+
+    Returns:
+        `nary`, `container_type`, and `normalized_annotation` as a tuple.
+    """
+    if param.kind is Parameter.VAR_POSITIONAL:
+        return True, list, normalized_annotation
+
+    orig = get_origin(normalized_annotation)
+    args_ = get_args(normalized_annotation)
+
+    if orig in [list, set]:
+        return True, orig, _strip_annotated(args_[0]) if args_ else str
+    if orig is tuple and len(args_) == 2 and args_[1] is ...:
+        return True, orig, _strip_annotated(args_[0]) if args_ else str
+    if normalized_annotation in [list, tuple, set]:
+        container_type = cast(type, normalized_annotation)
+        return True, container_type, str
+    return False, None, normalized_annotation
+
+
+def _make_args_from_params(
+    params: Iterable[tuple[str, Parameter]],
+    obj_name: str,
+    brief: str = "",
+    arg_helps: _DocstrParams = {},
+    program_name: str = "",
+    default_factories: dict[str, Any] = {},
+) -> Args:
+    args = Args(brief=brief, program_name=program_name)
+
+    for param_name, _ in params:
+        if param_name == "help":
+            raise ParserConfigError(
+                f"Cannot use `help` as parameter name in `{obj_name}`!"
+            )
+
+    used_short_names = _reserve_short_names(params, arg_helps)
+
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
         normalized_annotation = (
@@ -82,81 +156,29 @@ def _make_args_from_params(
             else _normalize_type(_strip_annotated(param.annotation))
         )
 
-        if param.default is not inspect.Parameter.empty:
-            required = False
-            default = param.default
-        else:
-            required = True
-            default = None
+        required = param.default is inspect.Parameter.empty
+        default = param.default if not required else None
 
         default_factory = default_factories.get(param_name, None)
-
-        param_key: str | None = None
-        if param_name in arg_helps:
-            param_key = param_name
-        elif param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
-            # admit both "arg" and "*arg" as valid names
-            param_key = f"*{param_name}"
-        elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
-            # admit both "arg" and "**arg" as valid names
-            param_key = f"**{param_name}"
-
-        docstr_param = arg_helps[param_key] if param_key else _DocstrParam()
+        docstr_param = _get_docstr_param(param_name, param, arg_helps)
 
         param_name_sub = param_name.replace("_", "-")
-        positional = False
-        named = False
-        name = Name(long=param_name_sub)
-        metavar = ""
-        nary = False
-        container_type: type | None = None
 
-        if param.kind in [
+        positional = param.kind in [
             Parameter.POSITIONAL_ONLY,
             Parameter.POSITIONAL_OR_KEYWORD,
             Parameter.VAR_POSITIONAL,
-        ]:
-            positional = True
-        if param.kind in [
+        ]
+        named = param.kind in [
             Parameter.KEYWORD_ONLY,
             Parameter.POSITIONAL_OR_KEYWORD,
             Parameter.VAR_KEYWORD,
-        ]:
-            named = True
-            if len(param_name) == 1:
-                name = Name(short=param_name_sub)
-            elif docstr_param.short_name:
-                # no need to check used_short_names, this name is already in there
-                name = Name(short=docstr_param.short_name, long=param_name_sub)
-            elif param_name[0] not in used_short_names:
-                name = Name(short=param_name_sub[0], long=param_name_sub)
-                used_short_names.add(param_name_sub[0])
-            else:
-                name = Name(long=param_name_sub)
+        ]
+        name = _make_name(param_name_sub, named, docstr_param, used_short_names)
 
-        if param.kind is Parameter.VAR_POSITIONAL:
-            nary = True
-            container_type = list
-
-        # for n-ary options, type should refer to the inner type
-        # if inner type is absent from the hint, assume str
-
-        orig = get_origin(normalized_annotation)
-        args_ = get_args(normalized_annotation)
-
-        if orig in [list, set]:
-            nary = True
-            container_type = orig
-            normalized_annotation = _strip_annotated(args_[0]) if args_ else str
-        elif orig is tuple and len(args_) == 2 and args_[1] is ...:
-            nary = True
-            container_type = orig
-            normalized_annotation = _strip_annotated(args_[0]) if args_ else str
-        elif normalized_annotation in [list, tuple, set]:
-            normalized_annotation = cast(type, normalized_annotation)
-            nary = True
-            container_type = normalized_annotation
-            normalized_annotation = str
+        nary, container_type, normalized_annotation = _get_naryness(
+            param, normalized_annotation
+        )
 
         if not is_parsable(normalized_annotation):
             raise ParserConfigError(
@@ -171,7 +193,6 @@ def _make_args_from_params(
             name=name,
             type_=normalized_annotation,
             container_type=container_type,
-            metavar=metavar,
             help=docstr_param.desc,
             required=required,
             default=default,
