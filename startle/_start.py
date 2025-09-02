@@ -132,7 +132,9 @@ def _start_cmds(
         # first, make Cmds object from the functions
         cmds = Cmds(
             {
-                cmd_name: make_args_from_func(func, cmd_prog_name(cmd_name))
+                cmd_name: make_args_from_func(
+                    func, program_name=cmd_prog_name(cmd_name)
+                )
                 for cmd_name, func in cmd2func.items()
             },
             program_name=name or "",

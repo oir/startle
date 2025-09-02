@@ -213,7 +213,7 @@ def _make_args_from_params(
     return args
 
 
-def make_args_from_func(func: Callable, program_name: str = "") -> Args:
+def make_args_from_func(func: Callable, *, program_name: str = "") -> Args:
     # Get the signature of the function
     sig = inspect.signature(func)
     params = sig.parameters.items()
@@ -226,7 +226,7 @@ def make_args_from_func(func: Callable, program_name: str = "") -> Args:
     )
 
 
-def make_args_from_class(cls: type, program_name: str = "", brief: str = "") -> Args:
+def make_args_from_class(cls: type, *, program_name: str = "", brief: str = "") -> Args:
     # TODO: check if cls is a class?
 
     func = cls.__init__  # type: ignore
