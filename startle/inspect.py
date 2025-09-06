@@ -5,6 +5,7 @@ from typing import (
     Any,
     Callable,
     Iterable,
+    Literal,
     cast,
     get_args,
     get_origin,
@@ -137,7 +138,21 @@ def _make_args_from_params(
     arg_helps: _DocstrParams = {},
     program_name: str = "",
     default_factories: dict[str, Any] = {},
+    recurse: bool | Literal["child"] = False,
 ) -> Args:
+    """
+    Create an Args object from a list of parameters.
+
+    Args:
+        params: An iterable of (parameter name, Parameter) tuples.
+        obj_name: Name of the object (function or class) these parameters belong to.
+        brief: A brief description of the object, for help string.
+        arg_helps: A mapping from parameter names to their docstring descriptions.
+        program_name: The name of the program, for help string.
+        default_factories: A mapping from parameter names to their default factory functions.
+        recurse: Whether to recurse into non-parsable types to create sub-Args.
+            "child" is same as True, but it also indicates that this is not the root Args.
+    """
     args = Args(brief=brief, program_name=program_name)
 
     for param_name, _ in params:
@@ -164,6 +179,14 @@ def _make_args_from_params(
 
         param_name_sub = param_name.replace("_", "-")
 
+        if recurse == "child" and param.kind in [
+            Parameter.VAR_POSITIONAL,
+            Parameter.VAR_KEYWORD,
+        ]:
+            raise ParserConfigError(
+                f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
+            )
+
         positional = param.kind in [
             Parameter.POSITIONAL_ONLY,
             Parameter.POSITIONAL_OR_KEYWORD,
@@ -180,11 +203,27 @@ def _make_args_from_params(
             param, normalized_annotation
         )
 
+        child_args: Args | None = None
         if not is_parsable(normalized_annotation):
-            raise ParserConfigError(
-                f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
-                f"for parameter `{param_name}` in `{obj_name}`!"
-            )
+            if recurse:
+                if param.kind in [Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD]:
+                    raise ParserConfigError(
+                        f"Cannot recurse into variadic parameter `{param_name}` "
+                        f"in `{obj_name}`!"
+                    )
+                if nary:
+                    raise ParserConfigError(
+                        f"Cannot recurse into n-ary parameter `{param_name}` "
+                        f"in `{obj_name}`!"
+                    )
+                child_args = make_args_from_class(
+                    normalized_annotation, recurse="child" if recurse else False
+                )
+            else:
+                raise ParserConfigError(
+                    f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
+                    f"for parameter `{param_name}` in `{obj_name}`!"
+                )
 
         # the following should hold if normalized_annotation is parsable
         normalized_annotation = cast(type, normalized_annotation)
@@ -200,6 +239,7 @@ def _make_args_from_params(
             is_positional=positional,
             is_named=named,
             is_nary=nary,
+            args=child_args,
         )
         if param.kind is Parameter.VAR_POSITIONAL:
             arg.name = Name()
@@ -213,7 +253,9 @@ def _make_args_from_params(
     return args
 
 
-def make_args_from_func(func: Callable, *, program_name: str = "") -> Args:
+def make_args_from_func(
+    func: Callable, *, program_name: str = "", recurse: bool | Literal["child"] = False
+) -> Args:
     # Get the signature of the function
     sig = inspect.signature(func)
     params = sig.parameters.items()
@@ -222,11 +264,22 @@ def make_args_from_func(func: Callable, *, program_name: str = "") -> Args:
     brief, arg_helps = _parse_func_docstring(func)
 
     return _make_args_from_params(
-        params, f"{func.__name__}()", brief, arg_helps, program_name
+        params,
+        f"{func.__name__}()",
+        brief,
+        arg_helps,
+        program_name,
+        recurse=recurse,
     )
 
 
-def make_args_from_class(cls: type, *, program_name: str = "", brief: str = "") -> Args:
+def make_args_from_class(
+    cls: type,
+    *,
+    program_name: str = "",
+    brief: str = "",
+    recurse: bool | Literal["child"] = False,
+) -> Args:
     # TODO: check if cls is a class?
 
     func = cls.__init__  # type: ignore
@@ -247,5 +300,11 @@ def make_args_from_class(cls: type, *, program_name: str = "", brief: str = "") 
     default_factories = _get_default_factories(cls) if is_dataclass(cls) else {}
 
     return _make_args_from_params(
-        params, cls.__name__, brief, arg_helps, program_name, default_factories
+        params,
+        cls.__name__,
+        brief,
+        arg_helps,
+        program_name,
+        default_factories,
+        recurse,
     )
