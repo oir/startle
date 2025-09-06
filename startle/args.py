@@ -323,13 +323,29 @@ class Args:
         remaining_args = args.copy()
         for arg in self._args:
             if child_args := arg.args:
-                child_args.parse(remaining_args)
+                try:
+                    child_args.parse(remaining_args)
+                except ParserOptionError as e:
+                    estr = str(e)
+                    if estr.startswith("Required option") and estr.endswith(
+                        " is not provided!"
+                    ):
+                        # this is allowed if arg has a default value
+                        if not arg.required:
+                            arg._value = arg.default
+                            arg._parsed = True
+                            continue
+                        # note that we do not consume any args, even partially
+                    raise e
+
                 assert child_args._var_args is not None, "Programming error!"
                 remaining_args = child_args._var_args._value or []
+
                 # construct the actual object
                 init_args, init_kwargs = child_args.make_func_args()
                 arg._value = arg.type_(*init_args, **init_kwargs)
                 arg._parsed = True
+
         return remaining_args
 
     def _parse(self, args: list[str]):

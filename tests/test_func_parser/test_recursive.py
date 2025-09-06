@@ -9,7 +9,7 @@ from ._utils import check_args
 
 
 @dataclass
-class Config:
+class DieConfig:
     """
     Configuration for the dice program.
 
@@ -22,7 +22,7 @@ class Config:
     kind: Literal["single", "pair"] = "single"
 
 
-def throw_dice(cfg: Config, count: int = 1) -> None:
+def throw_dice(cfg: DieConfig, count: int = 1) -> None:
     """
     Throw dice according to the configuration.
 
@@ -50,13 +50,13 @@ def test_recursive_w_defaults(
     if count is not None:
         cli_args += ["--count", str(count)]
 
-    expected_cfg = Config(**config_kwargs)
+    expected_cfg = DieConfig(**config_kwargs)
     expected_count = count if count is not None else 1
     check_args(throw_dice, cli_args, [expected_cfg, expected_count], {}, recurse=True)
 
 
 @dataclass
-class Config2:
+class DieConfig2:
     """
     Configuration for the dice program.
 
@@ -69,7 +69,7 @@ class Config2:
     kind: Literal["single", "pair"]
 
 
-def throw_dice2(cfg: Config2, count: int) -> None:
+def throw_dice2(cfg: DieConfig2, count: int) -> None:
     """
     Throw dice according to the configuration.
 
@@ -111,8 +111,45 @@ def test_recursive_w_required(
         ):
             check_args(throw_dice2, cli_args, [], {}, recurse=True)
     else:
-        expected_cfg = Config2(**config_kwargs)
+        expected_cfg = DieConfig2(**config_kwargs)
         expected_count = count if count is not None else 1
         check_args(
             throw_dice2, cli_args, [expected_cfg, expected_count], {}, recurse=True
         )
+
+
+def throw_dice3(
+    count: int, cfg: DieConfig2 = DieConfig2(sides=6, kind="single")
+) -> None:
+    """
+    Throw dice according to the configuration.
+
+    Args:
+        count: The number of dice to throw.
+        cfg: The configuration for the dice.
+    """
+    pass
+
+
+def test_w_inner_required() -> None:
+    check_args(
+        throw_dice3,
+        ["--sides", "4", "--kind", "pair", "--count", "2"],
+        [2, DieConfig2(sides=4, kind="pair")],
+        {},
+        recurse=True,
+    )
+
+    # DieConfig2 requires sides and kind, however cfg has a default.
+    check_args(
+        throw_dice3,
+        ["--count", "2"],
+        [2, DieConfig2(sides=6, kind="single")],
+        {},
+        recurse=True,
+    )
+
+
+@dataclass
+class BigConfig:
+    pass
