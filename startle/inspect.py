@@ -139,6 +139,7 @@ def _make_args_from_params(
     program_name: str = "",
     default_factories: dict[str, Any] = {},
     recurse: bool | Literal["child"] = False,
+    kw_only: bool = False,
 ) -> Args:
     """
     Create an Args object from a list of parameters.
@@ -152,6 +153,7 @@ def _make_args_from_params(
         default_factories: A mapping from parameter names to their default factory functions.
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
+        kw_only: If true, make all parameters keyword-only, regardless of their definition.
     """
     args = Args(brief=brief, program_name=program_name)
 
@@ -187,16 +189,24 @@ def _make_args_from_params(
                 f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
             )
 
-        positional = param.kind in [
-            Parameter.POSITIONAL_ONLY,
-            Parameter.POSITIONAL_OR_KEYWORD,
-            Parameter.VAR_POSITIONAL,
-        ]
-        named = param.kind in [
-            Parameter.KEYWORD_ONLY,
-            Parameter.POSITIONAL_OR_KEYWORD,
-            Parameter.VAR_KEYWORD,
-        ]
+        positional = (
+            param.kind
+            in [
+                Parameter.POSITIONAL_ONLY,
+                Parameter.POSITIONAL_OR_KEYWORD,
+                Parameter.VAR_POSITIONAL,
+            ]
+            and not kw_only
+        )
+        named = (
+            param.kind
+            in [
+                Parameter.KEYWORD_ONLY,
+                Parameter.POSITIONAL_OR_KEYWORD,
+                Parameter.VAR_KEYWORD,
+            ]
+            or kw_only
+        )
         name = _make_name(param_name_sub, named, docstr_param, used_short_names)
 
         nary, container_type, normalized_annotation = _get_naryness(
@@ -217,7 +227,9 @@ def _make_args_from_params(
                         f"in `{obj_name}`!"
                     )
                 child_args = make_args_from_class(
-                    normalized_annotation, recurse="child" if recurse else False
+                    normalized_annotation,
+                    recurse="child" if recurse else False,
+                    kw_only=True,
                 )
             else:
                 raise ParserConfigError(
@@ -250,11 +262,30 @@ def _make_args_from_params(
         else:
             args.add(arg)
 
+    # We add a positional variadic argument for convenience when parsing
+    # recursively. Child Args will consume its own arguments and leave
+    # the rest for the parent to handle.
+    if recurse == "child":
+        args.enable_unknown_args(
+            Arg(
+                name=Name(),
+                type_=str,
+                is_positional=True,
+                is_nary=True,
+                container_type=list,
+                help="Additional arguments for the parent parser.",
+            )
+        )
+        args._is_child = True
     return args
 
 
 def make_args_from_func(
-    func: Callable, *, program_name: str = "", recurse: bool | Literal["child"] = False
+    func: Callable,
+    *,
+    program_name: str = "",
+    recurse: bool | Literal["child"] = False,
+    kw_only: bool = False,
 ) -> Args:
     """
     Create an Args object from a function signature.
@@ -264,6 +295,7 @@ def make_args_from_func(
         program_name: The name of the program, for help string.
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
+        kw_only: If true, make all parameters keyword-only, regardless of their definition.
     """
     # Get the signature of the function
     sig = inspect.signature(func)
@@ -279,6 +311,7 @@ def make_args_from_func(
         arg_helps,
         program_name,
         recurse=recurse,
+        kw_only=kw_only,
     )
 
 
@@ -288,6 +321,7 @@ def make_args_from_class(
     program_name: str = "",
     brief: str = "",
     recurse: bool | Literal["child"] = False,
+    kw_only: bool = False,
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -298,6 +332,7 @@ def make_args_from_class(
         brief: A brief description of the class, for help string.
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
+        kw_only: If true, make all parameters keyword-only, regardless of their definition.
     """
     # TODO: check if cls is a class?
 
@@ -326,4 +361,5 @@ def make_args_from_class(
         program_name,
         default_factories,
         recurse,
+        kw_only,
     )

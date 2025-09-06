@@ -40,6 +40,21 @@ class Args:
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
     _var_kwargs: Arg | None = None  # remaining unk options for functions with **kwargs
+    _is_child = False  # whether this Args is a child of another Args
+
+    @property
+    def _args(self) -> list[Arg]:
+        """
+        Uniquely listed arguments. Note that an argument can be both positional and named,
+        hence be in both lists.
+        """
+        seen = set()
+        unique_args = []
+        for arg in self._positional_args + self._named_args:
+            if id(arg) not in seen:
+                unique_args.append(arg)
+                seen.add(id(arg))
+        return unique_args
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -52,9 +67,6 @@ class Args:
         """
         if value.startswith("--"):
             name = value[2:]
-            # if not name:
-            #     raise ParserOptionError("Prefix `--` is not followed by an option!")
-            # this case should not happen anymore
             return name
         if value.startswith("-"):
             name = value[1:]
@@ -307,7 +319,21 @@ class Args:
         state.positional_idx += 1
         return state
 
+    def _maybe_parse_children(self, args: list[str]) -> list[str]:
+        remaining_args = args.copy()
+        for arg in self._args:
+            if child_args := arg.args:
+                child_args.parse(remaining_args)
+                assert child_args._var_args is not None, "Programming error!"
+                remaining_args = child_args._var_args._value or []
+                # construct the actual object
+                init_args, init_kwargs = child_args.make_func_args()
+                arg._value = arg.type_(*init_args, **init_kwargs)
+                arg._parsed = True
+        return remaining_args
+
     def _parse(self, args: list[str]):
+        args = self._maybe_parse_children(args)
         state = ParsingState()
 
         while state.idx < len(args):
@@ -374,7 +400,10 @@ class Args:
             if opt not in self._positional_args
         }
 
-        if self._var_args and self._var_args._value:
+        if not self._is_child and self._var_args and self._var_args._value:
+            # Append variadic positional arguments to the end of positional args.
+            # This is only done for the top-level Args, not for child Args, as _var_args
+            # for child Args is only used to pass remaining args to the parent.
             positional_args += self._var_args._value
 
         return positional_args, named_args

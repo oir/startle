@@ -17,6 +17,7 @@ def start(
     args: list[str] | None = None,
     catch: bool = True,
     default: str | None = None,
+    recurse: bool = False,
 ) -> Any:
     """
     Given a function, or a container of functions `obj`, parse its arguments from
@@ -35,6 +36,7 @@ def start(
         default: The default subcommand to run if no subcommand is specified immediately
             after the program name. This is only used if `obj` is a list or dict, and
             errors otherwise.
+        recurse: (experimental) Whether to recursively parse objects using their initializers.
     Returns:
         The return value of the function `obj`, or the subcommand of `obj` if it is
         a list or dict.
@@ -48,7 +50,7 @@ def start(
                 _error(msg)
             else:
                 raise ParserConfigError(msg)
-        return _start_func(obj, name, args, catch)
+        return _start_func(obj, name, args, catch, recurse)
 
 
 def _start_func(
@@ -56,6 +58,7 @@ def _start_func(
     name: str | None,
     args: list[str] | None = None,
     catch: bool = True,
+    recurse: bool = False,
 ) -> T:
     """
     Given a function `func`, parse its arguments from the CLI and call it.
@@ -65,12 +68,13 @@ def _start_func(
         name: The name of the program. If None, uses the name of the script.
         args: The arguments to parse. If None, uses the arguments from the CLI.
         catch: Whether to catch and print errors instead of raising.
+        recurse: (experimental) Whether to recursively parse objects using their initializers.
     Returns:
         The return value of the function `func`.
     """
     try:
         # first, make Args object from the function
-        args_ = make_args_from_func(func, program_name=name or "")
+        args_ = make_args_from_func(func, program_name=name or "", recurse=recurse)
     except ParserConfigError as e:
         if catch:
             _error(str(e))
@@ -119,10 +123,10 @@ def _start_cmds(
         cmd2func = funcs
     else:
 
-        def cmd_name(func: Callable) -> str:
+        def _cmd_name(func: Callable) -> str:
             return func.__name__.replace("_", "-")
 
-        cmd2func = {cmd_name(func): func for func in funcs}
+        cmd2func = {_cmd_name(func): func for func in funcs}
 
     def cmd_prog_name(cmd_name: str) -> str:
         # TODO: more reliable way of getting the program name
