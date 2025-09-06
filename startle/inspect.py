@@ -229,7 +229,7 @@ def _make_args_from_params(
                 child_args = make_args_from_class(
                     normalized_annotation,
                     recurse="child" if recurse else False,
-                    kw_only=True,
+                    kw_only=True,  # children are kw-only for now
                 )
             else:
                 raise ParserConfigError(
