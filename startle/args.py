@@ -320,6 +320,13 @@ class Args:
         return state
 
     def _maybe_parse_children(self, args: list[str]) -> list[str]:
+        """
+        Parse child Args, if any.
+        This method is only relevant when recurse=True is used in start() or parse().
+
+        Returns:
+            Remaining args after parsing child Args.
+        """
         remaining_args = args.copy()
         for arg in self._args:
             if child_args := arg.args:

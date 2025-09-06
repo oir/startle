@@ -1,9 +1,10 @@
+import re
 from dataclasses import dataclass
 from typing import Literal
 
 from pytest import mark, raises
 
-from startle.error import ParserOptionError
+from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import check_args
 
@@ -131,7 +132,7 @@ def throw_dice3(
     pass
 
 
-def test_w_inner_required() -> None:
+def test_recursive_w_inner_required() -> None:
     check_args(
         throw_dice3,
         ["--sides", "4", "--kind", "pair", "--count", "2"],
@@ -149,7 +150,70 @@ def test_w_inner_required() -> None:
         recurse=True,
     )
 
+    # TODO: Decide if this should be handled differently.
+    # Because --kind is required for DieConfig2 but not provided,
+    # we will fail to parse and use the default for cfg.
+    # But because --sides is then not consumed by the child parser,
+    # it will surface up to the parent as an unexpected option.
+    with raises(ParserOptionError, match="Unexpected option `sides`!"):
+        check_args(
+            throw_dice3,
+            ["--count", "2", "--sides", "4"],
+            [2, DieConfig2(sides=6, kind="single")],
+            {},
+            recurse=True,
+        )
 
-@dataclass
-class BigConfig:
-    pass
+
+class ConfigWithVarArgs:
+    def __init__(self, *values: int) -> None:
+        self.values = list(values)
+
+
+class ConfigWithVarKwargs:
+    def __init__(self, **settings: int) -> None:
+        self.settings = settings
+
+
+def test_recursive_unsupported() -> None:
+    def f1(cfg: ConfigWithVarArgs) -> None:
+        pass
+
+    def f2(cfg: ConfigWithVarKwargs) -> None:
+        pass
+
+    with raises(
+        ParserConfigError,
+        match="Cannot have variadic parameter `values` in child Args of `ConfigWithVarArgs`!",
+    ):
+        check_args(f1, [], [], {}, recurse=True)
+    with raises(
+        ParserConfigError,
+        match="Cannot have variadic parameter `settings` in child Args of `ConfigWithVarKwargs`!",
+    ):
+        check_args(f2, [], [], {}, recurse=True)
+
+    def f3(cfgs: list[DieConfig]) -> None:
+        pass
+
+    def f4(*cfgs: DieConfig) -> None:
+        pass
+
+    def f5(**cfgs: DieConfig) -> None:
+        pass
+
+    with raises(
+        ParserConfigError,
+        match=re.escape("Cannot recurse into n-ary parameter `cfgs` in `f3()`!"),
+    ):
+        check_args(f3, [], [], {}, recurse=True)
+    with raises(
+        ParserConfigError,
+        match=re.escape("Cannot recurse into variadic parameter `cfgs` in `f4()`!"),
+    ):
+        check_args(f4, [], [], {}, recurse=True)
+    with raises(
+        ParserConfigError,
+        match=re.escape("Cannot recurse into variadic parameter `cfgs` in `f5()`!"),
+    ):
+        check_args(f5, [], [], {}, recurse=True)
