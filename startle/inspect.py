@@ -256,6 +256,15 @@ def _make_args_from_params(
 def make_args_from_func(
     func: Callable, *, program_name: str = "", recurse: bool | Literal["child"] = False
 ) -> Args:
+    """
+    Create an Args object from a function signature.
+
+    Args:
+        func: The function to create Args from.
+        program_name: The name of the program, for help string.
+        recurse: Whether to recurse into non-parsable types to create sub-Args.
+            "child" is same as True, but it also indicates that this is not the root Args.
+    """
     # Get the signature of the function
     sig = inspect.signature(func)
     params = sig.parameters.items()
@@ -280,6 +289,16 @@ def make_args_from_class(
     brief: str = "",
     recurse: bool | Literal["child"] = False,
 ) -> Args:
+    """
+    Create an Args object from a class's `__init__` signature and docstring.
+
+    Args:
+        cls: The class to create Args from.
+        program_name: The name of the program, for help string.
+        brief: A brief description of the class, for help string.
+        recurse: Whether to recurse into non-parsable types to create sub-Args.
+            "child" is same as True, but it also indicates that this is not the root Args.
+    """
     # TODO: check if cls is a class?
 
     func = cls.__init__  # type: ignore
