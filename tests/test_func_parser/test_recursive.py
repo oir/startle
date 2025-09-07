@@ -217,3 +217,27 @@ def test_recursive_unsupported() -> None:
         match=re.escape("Cannot recurse into variadic parameter `cfgs` in `f5()`!"),
     ):
         check_args(f5, [], [], {}, recurse=True)
+
+    def f6(cfg: DieConfig, sides: int) -> None:
+        pass
+
+    def f7(cfg: DieConfig, cfg2: DieConfig) -> None:
+        pass
+
+    with raises(
+        ParserConfigError,
+        match=re.escape(
+            "Option name `sides` is used multiple times in `f6()`!"
+            " Recursive parsing requires unique option names among all levels."
+        ),
+    ):
+        check_args(f6, [], [], {}, recurse=True)
+
+    with raises(
+        ParserConfigError,
+        match=re.escape(
+            "Option name `sides` is used multiple times in `DieConfig`!"
+            " Recursive parsing requires unique option names among all levels."
+        ),
+    ):
+        check_args(f7, [], [], {}, recurse=True)

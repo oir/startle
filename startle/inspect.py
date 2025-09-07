@@ -140,6 +140,7 @@ def _make_args_from_params(
     default_factories: dict[str, Any] = {},
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
+    _used_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a list of parameters.
@@ -154,6 +155,7 @@ def _make_args_from_params(
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
+        _used_names: A set of already used argument names, to avoid collisions. Updated in place.
     """
     args = Args(brief=brief, program_name=program_name)
 
@@ -164,6 +166,7 @@ def _make_args_from_params(
             )
 
     used_short_names = _reserve_short_names(params, arg_helps)
+    used_names = _used_names or set()  # this only fills up if `recurse` is set
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
@@ -209,6 +212,13 @@ def _make_args_from_params(
         )
         name = _make_name(param_name_sub, named, docstr_param, used_short_names)
 
+        if str(name) in used_names:
+            raise ParserConfigError(
+                f"Option name `{name}` is used multiple times in `{obj_name}`!"
+                " Recursive parsing requires unique option names among all levels."
+            )
+        used_names.add(str(name))
+
         nary, container_type, normalized_annotation = _get_naryness(
             param, normalized_annotation
         )
@@ -230,6 +240,7 @@ def _make_args_from_params(
                     normalized_annotation,
                     recurse="child" if recurse else False,
                     kw_only=True,  # children are kw-only for now
+                    _used_names=used_names,
                 )
             else:
                 raise ParserConfigError(
@@ -286,6 +297,7 @@ def make_args_from_func(
     program_name: str = "",
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
+    _used_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a function signature.
@@ -312,6 +324,7 @@ def make_args_from_func(
         program_name,
         recurse=recurse,
         kw_only=kw_only,
+        _used_names=_used_names,
     )
 
 
@@ -322,6 +335,7 @@ def make_args_from_class(
     brief: str = "",
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
+    _used_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -362,4 +376,5 @@ def make_args_from_class(
         default_factories,
         recurse,
         kw_only,
+        _used_names=_used_names,
     )
