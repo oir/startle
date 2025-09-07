@@ -38,6 +38,25 @@ def _get_default_factories(cls: type) -> dict[str, Any]:
     }
 
 
+def _get_class_initializer_params(cls: type) -> Iterable[tuple[str, Parameter]]:
+    """
+    Get the parameters of the class's `__init__` method, excluding `self`.
+    """
+    func = cls.__init__  # type: ignore
+    # (mypy thinks cls is an instance)
+
+    # Get the signature of the initializer
+    sig = inspect.signature(func)
+
+    # name of the first parameter (usually `self`)
+    self_name = next(iter(sig.parameters))
+
+    # filter out the first parameter
+    return [
+        (name, param) for name, param in sig.parameters.items() if name != self_name
+    ]
+
+
 def _reserve_short_names(
     params: Iterable[tuple[str, Parameter]],
     arg_helps: _DocstrParams = {},
@@ -131,6 +150,50 @@ def _get_naryness(
     return False, None, normalized_annotation
 
 
+def _collect_param_names(
+    params: Iterable[tuple[str, Parameter]],
+    obj_name: str,
+) -> list[str]:
+    """
+    Get all parameter names in the object hierarchy.
+    This is used to detect name collisions, and to reserve short names
+    for recursive parsing, and unused for the general recurse=False case.
+    """
+    used_names_set = set()
+    used_names = list()
+    for param_name, param in params:
+        normalized_annotation = (
+            str
+            if param.annotation is Parameter.empty
+            else _normalize_type(_strip_annotated(param.annotation))
+        )
+        _, _, normalized_annotation = _get_naryness(param, normalized_annotation)
+
+        if is_parsable(normalized_annotation):
+            name = param_name.replace("_", "-")
+            if name in used_names:
+                raise ParserConfigError(
+                    f"Option name `{name}` is used multiple times in `{obj_name}`!"
+                    " Recursive parsing requires unique option names among all levels."
+                )
+            used_names_set.add(name)
+            used_names.append(name)
+        else:
+            child_names = _collect_param_names(
+                _get_class_initializer_params(normalized_annotation),
+                obj_name=normalized_annotation.__name__,
+            )
+            for child_name in child_names:
+                if child_name in used_names:
+                    raise ParserConfigError(
+                        f"Option name `{child_name}` is used multiple times in `{obj_name}`!"
+                        " Recursive parsing requires unique option names among all levels."
+                    )
+                used_names_set.add(child_name)
+                used_names.append(child_name)
+    return used_names
+
+
 def _make_args_from_params(
     params: Iterable[tuple[str, Parameter]],
     obj_name: str,
@@ -140,7 +203,6 @@ def _make_args_from_params(
     default_factories: dict[str, Any] = {},
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
-    _used_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a list of parameters.
@@ -155,7 +217,6 @@ def _make_args_from_params(
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
-        _used_names: A set of already used argument names, to avoid collisions. Updated in place.
     """
     args = Args(brief=brief, program_name=program_name)
 
@@ -165,8 +226,11 @@ def _make_args_from_params(
                 f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
+    # TODO: short name reservation needs to be done _after_ we discover
+    # _all_ the parameter names for recursive case, because any parameter
+    # in any level can be a single-letter in the signature.
     used_short_names = _reserve_short_names(params, arg_helps)
-    used_names = _used_names or set()  # this only fills up if `recurse` is set
+    _used_names = _collect_param_names(params, obj_name) if recurse else set()
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
@@ -212,13 +276,6 @@ def _make_args_from_params(
         )
         name = _make_name(param_name_sub, named, docstr_param, used_short_names)
 
-        if str(name) in used_names:
-            raise ParserConfigError(
-                f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                " Recursive parsing requires unique option names among all levels."
-            )
-        used_names.add(str(name))
-
         nary, container_type, normalized_annotation = _get_naryness(
             param, normalized_annotation
         )
@@ -240,7 +297,6 @@ def _make_args_from_params(
                     normalized_annotation,
                     recurse="child" if recurse else False,
                     kw_only=True,  # children are kw-only for now
-                    _used_names=used_names,
                 )
             else:
                 raise ParserConfigError(
@@ -297,7 +353,6 @@ def make_args_from_func(
     program_name: str = "",
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
-    _used_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a function signature.
@@ -324,7 +379,6 @@ def make_args_from_func(
         program_name,
         recurse=recurse,
         kw_only=kw_only,
-        _used_names=_used_names,
     )
 
 
@@ -335,7 +389,6 @@ def make_args_from_class(
     brief: str = "",
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
-    _used_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -350,20 +403,7 @@ def make_args_from_class(
     """
     # TODO: check if cls is a class?
 
-    func = cls.__init__  # type: ignore
-    # (mypy thinks cls is an instance)
-
-    # Get the signature of the initializer
-    sig = inspect.signature(func)
-
-    # name of the first parameter (usually `self`)
-    self_name = next(iter(sig.parameters))
-
-    # filter out the first parameter
-    params = [
-        (name, param) for name, param in sig.parameters.items() if name != self_name
-    ]
-
+    params = _get_class_initializer_params(cls)
     arg_helps = _parse_class_docstring(cls)
     default_factories = _get_default_factories(cls) if is_dataclass(cls) else {}
 
@@ -376,5 +416,4 @@ def make_args_from_class(
         default_factories,
         recurse,
         kw_only,
-        _used_names=_used_names,
     )

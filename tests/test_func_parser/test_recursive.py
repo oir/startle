@@ -236,7 +236,7 @@ def test_recursive_unsupported() -> None:
     with raises(
         ParserConfigError,
         match=re.escape(
-            "Option name `sides` is used multiple times in `DieConfig`!"
+            "Option name `sides` is used multiple times in `f7()`!"
             " Recursive parsing requires unique option names among all levels."
         ),
     ):
