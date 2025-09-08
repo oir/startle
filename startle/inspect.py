@@ -303,6 +303,7 @@ def _make_args_from_params(
                     recurse="child" if recurse else False,
                     kw_only=True,  # children are kw-only for now
                 )
+                child_args._parent = args
             else:
                 raise ParserConfigError(
                     f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
@@ -348,7 +349,6 @@ def _make_args_from_params(
                 help="Additional arguments for the parent parser.",
             )
         )
-        args._is_child = True
     return args
 
 

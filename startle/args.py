@@ -40,7 +40,7 @@ class Args:
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
     _var_kwargs: Arg | None = None  # remaining unk options for functions with **kwargs
-    _is_child = False  # whether this Args is a child of another Args
+    _parent: "Args | None" = None  # parent Args instance
 
     @property
     def _args(self) -> list[Arg]:
@@ -423,7 +423,7 @@ class Args:
             if opt not in self._positional_args
         }
 
-        if not self._is_child and self._var_args and self._var_args._value:
+        if not self._parent and self._var_args and self._var_args._value:
             # Append variadic positional arguments to the end of positional args.
             # This is only done for the top-level Args, not for child Args, as _var_args
             # for child Args is only used to pass remaining args to the parent.
@@ -446,6 +446,43 @@ class Args:
             self._parse(sys.argv[1:])
         return self
 
+    def _traverse_args(self) -> tuple[list[Arg], list[Arg], list[Arg]]:
+        """
+        Recursively traverse all Args and return three lists as a tuple of
+        (positional only, positional and named, named only).
+        Skips var args and var kwargs.
+        """
+        positional_only = []
+        positional_and_named = []
+        named_only = []
+
+        for arg in self._positional_args:
+            if arg.args:
+                child_pos_only, child_pos_and_named, child_named_only = (
+                    arg.args._traverse_args()
+                )
+                positional_only += child_pos_only
+                positional_and_named += child_pos_and_named
+                named_only += child_named_only
+            else:
+                if arg.is_positional and not arg.is_named:
+                    positional_only.append(arg)
+                elif arg.is_positional and arg.is_named:
+                    positional_and_named.append(arg)
+        for opt in self._named_args:
+            if opt.is_named and not opt.is_positional:
+                if opt.args:
+                    child_pos_only, child_pos_and_named, child_named_only = (
+                        opt.args._traverse_args()
+                    )
+                    positional_only += child_pos_only
+                    positional_and_named += child_pos_and_named
+                    named_only += child_named_only
+                else:
+                    named_only.append(opt)
+
+        return positional_only, positional_and_named, named_only
+
     def print_help(self, console=None, usage_only: bool = False) -> None:
         """
         Print the help message to the console.
@@ -461,19 +498,13 @@ class Args:
         from rich.table import Table
         from rich.text import Text
 
+        if self._parent:
+            # only the top-level Args can print help
+            return self._parent.print_help(console, usage_only)
+
         name = self.program_name or sys.argv[0]
 
-        positional_only = [
-            arg
-            for arg in self._positional_args
-            if arg.is_positional and not arg.is_named
-        ]
-        positional_and_named = [
-            arg for arg in self._positional_args if arg.is_positional and arg.is_named
-        ]
-        named_only = [
-            opt for opt in self._named_args if opt.is_named and not opt.is_positional
-        ]
+        positional_only, positional_and_named, named_only = self._traverse_args()
 
         # (1) print brief if it exists
         console = console or Console()
