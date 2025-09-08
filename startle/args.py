@@ -8,7 +8,7 @@ from .error import ParserConfigError, ParserOptionError
 
 
 @dataclass
-class ParsingState:
+class _ParsingState:
     """
     A class to hold the state of the parsing process.
     """
@@ -127,7 +127,7 @@ class Args:
             )
         self._var_kwargs = arg
 
-    def _parse_equals_syntax(self, name: str, state: ParsingState) -> ParsingState:
+    def _parse_equals_syntax(self, name: str, state: _ParsingState) -> _ParsingState:
         """
         Parse a cli argument as a named argument using the equals syntax (e.g. `--name=value`).
         Return new index after consuming the argument.
@@ -161,8 +161,8 @@ class Args:
         return state
 
     def _parse_combined_short_names(
-        self, names: str, args: list[str], state: ParsingState
-    ) -> ParsingState:
+        self, names: str, args: list[str], state: _ParsingState
+    ) -> _ParsingState:
         """
         Parse a cli argument as a combined short names (e.g. -abc).
         Return new index after consuming the argument.
@@ -221,8 +221,8 @@ class Args:
         raise RuntimeError("Programmer error: should not reach here!")
 
     def _parse_named(
-        self, name: str, args: list[str], state: ParsingState
-    ) -> ParsingState:
+        self, name: str, args: list[str], state: _ParsingState
+    ) -> _ParsingState:
         """
         Parse a cli argument as a named argument / option.
         Return new index after consuming the argument.
@@ -275,7 +275,7 @@ class Args:
         state.idx += 2
         return state
 
-    def _parse_positional(self, args: list[str], state: ParsingState) -> ParsingState:
+    def _parse_positional(self, args: list[str], state: _ParsingState) -> _ParsingState:
         """
         Parse a cli argument as a positional argument.
         Return new indices after consuming the argument.
@@ -357,7 +357,7 @@ class Args:
 
     def _parse(self, args: list[str]):
         args = self._maybe_parse_children(args)
-        state = ParsingState()
+        state = _ParsingState()
 
         while state.idx < len(args):
             if not state.positional_only and args[state.idx] == "--":

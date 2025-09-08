@@ -34,22 +34,30 @@ def throw_dice(cfg: DieConfig, count: int = 1) -> None:
     pass
 
 
+@mark.parametrize("sides_opt", ["--sides", "-s"])
+@mark.parametrize("kind_opt", ["--kind", "-k"])
+@mark.parametrize("count_opt", ["--count", "-c"])
 @mark.parametrize("sides", [4, 6, None])
 @mark.parametrize("kind", ["single", "pair", None])
 @mark.parametrize("count", [1, 2, None])
 def test_recursive_w_defaults(
-    sides: int | None, kind: Literal["single", "pair"] | None, count: int | None
+    sides_opt: str,
+    kind_opt: str,
+    count_opt: str,
+    sides: int | None,
+    kind: Literal["single", "pair"] | None,
+    count: int | None,
 ) -> None:
     cli_args = []
     config_kwargs = {}
     if sides is not None:
-        cli_args += ["--sides", str(sides)]
+        cli_args += [sides_opt, str(sides)]
         config_kwargs["sides"] = sides
     if kind is not None:
-        cli_args += ["--kind", kind]
+        cli_args += [kind_opt, kind]
         config_kwargs["kind"] = kind
     if count is not None:
-        cli_args += ["--count", str(count)]
+        cli_args += [count_opt, str(count)]
 
     expected_cfg = DieConfig(**config_kwargs)
     expected_count = count if count is not None else 1
@@ -81,22 +89,30 @@ def throw_dice2(cfg: DieConfig2, count: int) -> None:
     pass
 
 
+@mark.parametrize("sides_opt", ["--sides", "-s"])
+@mark.parametrize("kind_opt", ["--kind", "-k"])
+@mark.parametrize("count_opt", ["--count", "-c"])
 @mark.parametrize("sides", [4, 6, None])
 @mark.parametrize("kind", ["single", "pair", None])
 @mark.parametrize("count", [1, 2, None])
 def test_recursive_w_required(
-    sides: int | None, kind: Literal["single", "pair"] | None, count: int | None
+    sides_opt: str,
+    kind_opt: str,
+    count_opt: str,
+    sides: int | None,
+    kind: Literal["single", "pair"] | None,
+    count: int | None,
 ) -> None:
     cli_args = []
     config_kwargs = {}
     if sides is not None:
-        cli_args += ["--sides", str(sides)]
+        cli_args += [sides_opt, str(sides)]
         config_kwargs["sides"] = sides
     if kind is not None:
-        cli_args += ["--kind", kind]
+        cli_args += [kind_opt, kind]
         config_kwargs["kind"] = kind
     if count is not None:
-        cli_args += ["--count", str(count)]
+        cli_args += [count_opt, str(count)]
 
     if sides is None:
         with raises(
