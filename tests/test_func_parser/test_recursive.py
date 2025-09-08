@@ -1,11 +1,18 @@
 import re
-from dataclasses import dataclass
-from typing import Literal
+from dataclasses import dataclass, field
+from typing import Callable, Literal
 
 from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError
 
+from ..test_help._utils import (
+    NS,
+    OS,
+    TS,
+    VS,
+    check_help_from_func,
+)
 from ._utils import check_args
 
 
@@ -257,3 +264,146 @@ def test_recursive_unsupported() -> None:
         ),
     ):
         check_args(f7, [], [], {}, recurse=True)
+
+
+@dataclass
+class FusionConfig:
+    """
+    Fusion config.
+
+    Attributes:
+        left_path: Path to the first monster.
+        right_path: Path to the second monster.
+        output_path: Path to store the fused monster.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    left_path: str
+    right_path: str
+    output_path: str
+    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+    alpha: float = 0.5
+
+
+@dataclass
+class InputPaths:
+    """
+    Input paths for fusion.
+
+    Attributes:
+        left_path: Path to the first monster.
+        right_path: Path to the second monster.
+    """
+
+    left_path: str
+    right_path: str
+
+
+@dataclass
+class IOPaths:
+    """
+    Input and output paths for fusion.
+
+    Attributes:
+        input_paths: Input paths for the fusion.
+        output_path: Path to store the fused monster.
+    """
+
+    input_paths: InputPaths
+    output_path: str
+
+
+@dataclass
+class FusionConfig2:
+    """
+    Fusion config with separate input and output paths.
+
+    Attributes:
+        io_paths: Input and output paths for the fusion.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    io_paths: IOPaths
+    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+    alpha: float = 0.5
+
+
+def fuse1(cfg: FusionConfig) -> None:
+    """
+    Fuse two monsters with polymerization.
+
+    Args:
+        cfg: The fusion configuration.
+    """
+    pass
+
+
+def fuse2(cfg: FusionConfig2) -> None:
+    """
+    Fuse two monsters with polymerization.
+
+    Args:
+        cfg: The fusion configuration.
+    """
+    pass
+
+
+@mark.parametrize("fuse", [fuse1, fuse2])
+def test_recursive_dataclass_help(fuse: Callable) -> None:
+    if fuse is fuse1:
+        expected = FusionConfig(
+            left_path="monster1.dat",
+            right_path="monster2.dat",
+            output_path="fused_monster.dat",
+            components=["wing", "tail"],
+            alpha=0.7,
+        )
+    else:
+        expected = FusionConfig2(
+            io_paths=IOPaths(
+                input_paths=InputPaths(
+                    left_path="monster1.dat", right_path="monster2.dat"
+                ),
+                output_path="fused_monster.dat",
+            ),
+            components=["wing", "tail"],
+            alpha=0.7,
+        )
+    check_args(
+        fuse,
+        [
+            "--left-path",
+            "monster1.dat",
+            "--right-path",
+            "monster2.dat",
+            "--output-path",
+            "fused_monster.dat",
+            "--components",
+            "wing",
+            "tail",
+            "--alpha",
+            "0.7",
+        ],
+        [expected],
+        {},
+        recurse=True,
+    )
+
+    expected = f"""\
+
+Fuse two monsters with polymerization.
+
+[{TS}]Usage:[/]
+  fuse.py [{NS} {OS}]--left-path[/] [{VS}]<text>[/] [{NS} {OS}]--right-path[/] [{VS}]<text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+
+[{TS}]where[/]
+  [dim](option)[/]  [{NS} {OS}]-l[/][{OS} dim]|[/][{NS} {OS}]--left-path[/] [{VS}]<text>[/]                [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](option)[/]  [{NS} {OS}]-r[/][{OS} dim]|[/][{NS} {OS}]--right-path[/] [{VS}]<text>[/]               [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](option)[/]  [{NS} {OS}]-o[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]  [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
+  [dim](option)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
+  [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+"""
+    check_help_from_func(fuse, "fuse.py", expected, recurse=True)
