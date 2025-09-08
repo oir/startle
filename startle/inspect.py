@@ -59,16 +59,16 @@ def _get_class_initializer_params(cls: type) -> Iterable[tuple[str, Parameter]]:
 
 def _reserve_short_names(
     params: Iterable[tuple[str, Parameter]],
+    used_names: list[str],
     arg_helps: _DocstrParams = {},
 ) -> set[str]:
     used_short_names = set()
 
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options
-    for param_name, param in params:
-        if param.kind in [Parameter.KEYWORD_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
-            if len(param_name) == 1:
-                used_short_names.add(param_name)
+    for param_name in used_names:
+        if len(param_name) == 1:
+            used_short_names.add(param_name)
 
     # Discover if there are any docstring-specified short names,
     # these also take precedence over the first letter of the parameter name
@@ -153,11 +153,13 @@ def _get_naryness(
 def _collect_param_names(
     params: Iterable[tuple[str, Parameter]],
     obj_name: str,
+    recurse: bool | Literal["child"] = False,
+    kw_only: bool = False,
 ) -> list[str]:
     """
     Get all parameter names in the object hierarchy.
     This is used to detect name collisions, and to reserve short names
-    for recursive parsing, and unused for the general recurse=False case.
+    for recursive parsing. Unused for the general recurse=False case.
     """
     used_names_set = set()
     used_names = list()
@@ -171,17 +173,23 @@ def _collect_param_names(
 
         if is_parsable(normalized_annotation):
             name = param_name.replace("_", "-")
-            if name in used_names:
-                raise ParserConfigError(
-                    f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                    " Recursive parsing requires unique option names among all levels."
-                )
-            used_names_set.add(name)
-            used_names.append(name)
-        else:
+            if (
+                param.kind in [Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY]
+                or kw_only
+            ):
+                if name in used_names:
+                    raise ParserConfigError(
+                        f"Option name `{name}` is used multiple times in `{obj_name}`!"
+                        " Recursive parsing requires unique option names among all levels."
+                    )
+                used_names_set.add(name)
+                used_names.append(name)
+        elif recurse:
             child_names = _collect_param_names(
                 _get_class_initializer_params(normalized_annotation),
                 obj_name=normalized_annotation.__name__,
+                recurse="child",
+                kw_only=True,  # children are kw-only for now
             )
             for child_name in child_names:
                 if child_name in used_names:
@@ -226,11 +234,8 @@ def _make_args_from_params(
                 f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
-    # TODO: short name reservation needs to be done _after_ we discover
-    # _all_ the parameter names for recursive case, because any parameter
-    # in any level can be a single-letter in the signature.
-    used_short_names = _reserve_short_names(params, arg_helps)
-    _used_names = _collect_param_names(params, obj_name) if recurse else set()
+    used_names = _collect_param_names(params, obj_name, recurse, kw_only)
+    used_short_names = _reserve_short_names(params, used_names, arg_helps)
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
