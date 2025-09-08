@@ -279,7 +279,6 @@ def _make_args_from_params(
             ]
             or kw_only
         )
-        name = _make_name(param_name_sub, named, docstr_param, used_short_names)
 
         nary, container_type, normalized_annotation = _get_naryness(
             param, normalized_annotation
@@ -304,11 +303,14 @@ def _make_args_from_params(
                     kw_only=True,  # children are kw-only for now
                 )
                 child_args._parent = args
+                name = Name(long=param_name_sub)
             else:
                 raise ParserConfigError(
                     f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
                     f"for parameter `{param_name}` in `{obj_name}`!"
                 )
+        else:
+            name = _make_name(param_name_sub, named, docstr_param, used_short_names)
 
         # the following should hold if normalized_annotation is parsable
         normalized_annotation = cast(type, normalized_annotation)
