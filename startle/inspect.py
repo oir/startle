@@ -61,8 +61,9 @@ def _reserve_short_names(
     params: Iterable[tuple[str, Parameter]],
     used_names: list[str],
     arg_helps: _DocstrParams = {},
+    used_short_names: set[str] | None = None,
 ) -> set[str]:
-    used_short_names = set()
+    used_short_names = used_short_names or set()
 
     # Discover if there are any named options that are of length 1
     # If so, those cannot be used as short names for other options
@@ -211,6 +212,7 @@ def _make_args_from_params(
     default_factories: dict[str, Any] = {},
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
+    _used_short_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a list of parameters.
@@ -225,6 +227,8 @@ def _make_args_from_params(
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
+        _used_short_names: (internal) set of already used short names coming from parent Args.
+            Modified in-place if not None.
     """
     args = Args(brief=brief, program_name=program_name)
 
@@ -235,7 +239,10 @@ def _make_args_from_params(
             )
 
     used_names = _collect_param_names(params, obj_name, recurse, kw_only)
-    used_short_names = _reserve_short_names(params, used_names, arg_helps)
+    used_short_names = _used_short_names if _used_short_names is not None else set()
+    used_short_names |= _reserve_short_names(
+        params, used_names, arg_helps, used_short_names
+    )
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
@@ -301,6 +308,7 @@ def _make_args_from_params(
                     normalized_annotation,
                     recurse="child" if recurse else False,
                     kw_only=True,  # children are kw-only for now
+                    _used_short_names=used_short_names,
                 )
                 child_args._parent = args
                 name = Name(long=param_name_sub)
@@ -396,6 +404,7 @@ def make_args_from_class(
     brief: str = "",
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
+    _used_short_names: set[str] | None = None,
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -407,6 +416,8 @@ def make_args_from_class(
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
+        _used_short_names: (internal) set of already used short names coming from parent Args.
+            Modified in-place if not None.
     """
     # TODO: check if cls is a class?
 
@@ -423,4 +434,5 @@ def make_args_from_class(
         default_factories,
         recurse,
         kw_only,
+        _used_short_names,
     )
