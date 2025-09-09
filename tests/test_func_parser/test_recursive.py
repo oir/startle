@@ -407,3 +407,62 @@ Fuse two monsters with polymerization.
   [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
     check_help_from_func(fuse, "fuse.py", expected, recurse=True)
+
+
+@dataclass
+class IOPaths2:
+    """
+    Input and output paths for fusion.
+
+    Attributes:
+        input_paths: Input paths for the fusion.
+        output_path [l]: Path to store the fused monster.
+    """
+
+    input_paths: InputPaths
+    output_path: str
+
+
+@dataclass
+class FusionConfig3:
+    """
+    Fusion config with separate input and output paths.
+
+    Attributes:
+        io_paths: Input and output paths for the fusion.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    io_paths: IOPaths2
+    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+    alpha: float = 0.5
+
+
+def fuse3(cfg: FusionConfig3) -> None:
+    """
+    Fuse two monsters with polymerization.
+
+    Args:
+        cfg: The fusion configuration.
+    """
+    pass
+
+
+def test_recursive_dataclass_help_2() -> None:
+    expected = f"""\
+
+Fuse two monsters with polymerization.
+
+[{TS}]Usage:[/]
+  fuse.py [{NS} {OS}]--left-path[/] [{VS}]<text>[/] [{NS} {OS}]--right-path[/] [{VS}]<text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+
+[{TS}]where[/]
+  [dim](option)[/]  [{NS} {OS}]--left-path[/] [{VS}]<text>[/]                   [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](option)[/]  [{NS} {OS}]-r[/][{OS} dim]|[/][{NS} {OS}]--right-path[/] [{VS}]<text>[/]               [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](option)[/]  [{NS} {OS}]-l[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]  [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
+  [dim](option)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
+  [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+"""
+    check_help_from_func(fuse3, "fuse.py", expected, recurse=True)
