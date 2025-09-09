@@ -17,7 +17,12 @@ from ._docstr import (
     _parse_class_docstring,
     _parse_func_docstring,
 )
-from ._type_utils import _normalize_type, _shorten_type_annotation, _strip_annotated
+from ._type_utils import (
+    _normalize_type,
+    _shorten_type_annotation,
+    _strip_annotated,
+    _strip_optional,
+)
 from .arg import Arg, Name
 from .args import Args
 from .error import ParserConfigError
@@ -304,6 +309,7 @@ def _make_args_from_params(
                         f"Cannot recurse into n-ary parameter `{param_name}` "
                         f"in `{obj_name}`!"
                     )
+                normalized_annotation = _strip_optional(normalized_annotation)
                 child_args = make_args_from_class(
                     normalized_annotation,
                     recurse="child" if recurse else False,

@@ -155,9 +155,27 @@ def throw_dice3(
     pass
 
 
+def throw_dice4(count: int, cfg: DieConfig2 | None = None) -> None:
+    """
+    Throw dice according to the configuration.
+
+    Args:
+        count: The number of dice to throw.
+        cfg: The configuration for the dice.
+    """
+    pass
+
+
 def test_recursive_w_inner_required() -> None:
     check_args(
         throw_dice3,
+        ["--sides", "4", "--kind", "pair", "--count", "2"],
+        [2, DieConfig2(sides=4, kind="pair")],
+        {},
+        recurse=True,
+    )
+    check_args(
+        throw_dice4,
         ["--sides", "4", "--kind", "pair", "--count", "2"],
         [2, DieConfig2(sides=4, kind="pair")],
         {},
@@ -169,6 +187,13 @@ def test_recursive_w_inner_required() -> None:
         throw_dice3,
         ["--count", "2"],
         [2, DieConfig2(sides=6, kind="single")],
+        {},
+        recurse=True,
+    )
+    check_args(
+        throw_dice4,
+        ["--count", "2"],
+        [2, None],
         {},
         recurse=True,
     )
