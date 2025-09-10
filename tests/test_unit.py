@@ -1,6 +1,8 @@
 import re
 from typing import Any, Optional, Union
 
+from pytest import raises
+
 from startle._type_utils import (
     _normalize_type,
     _shorten_type_annotation,
@@ -8,8 +10,6 @@ from startle._type_utils import (
 )
 from startle.arg import Arg, Name
 from startle.error import ParserConfigError
-
-from pytest import raises
 
 
 def test_normalize_type():
@@ -80,11 +80,23 @@ def test_arg_properties():
     assert not a.is_flag
     assert not a.is_nary
 
-    a = Arg(name=Name(long="blip"), type_=bool, is_positional=False, is_named=True, default=False)
+    a = Arg(
+        name=Name(long="blip"),
+        type_=bool,
+        is_positional=False,
+        is_named=True,
+        default=False,
+    )
     assert a.is_flag
     assert not a.is_nary
 
-    a = Arg(name=Name(long="blip"), type_=bool, is_positional=False, is_named=True, required=True)
+    a = Arg(
+        name=Name(long="blip"),
+        type_=bool,
+        is_positional=False,
+        is_named=True,
+        required=True,
+    )
     assert not a.is_flag
     assert not a.is_nary
 
@@ -110,7 +122,10 @@ def test_arg_properties():
     assert not a.is_flag
     assert a.is_nary
 
-    with raises(ParserConfigError, match=re.escape("An argument should be either positional or named (or both)!")):
+    with raises(
+        ParserConfigError,
+        match=re.escape("An argument should be either positional or named (or both)!"),
+    ):
         a = Arg(name=Name(long="blip"), type_=int)
 
     with raises(ParserConfigError, match=re.escape("Unsupported container type!")):
