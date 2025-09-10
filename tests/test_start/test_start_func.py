@@ -165,13 +165,14 @@ def test_config_err(capsys, run: Callable) -> None:
         run([f, f2], [], catch=False)
 
 
-def test_custom_program_name_help(capsys) -> None:
-    def f(blip: str) -> None:
+@mark.parametrize("help_cmd", ["--help", "-?", "-?b", "-b?"])
+def test_custom_program_name_help(capsys, help_cmd: str) -> None:
+    def f(*, blip: bool = False) -> None:
         """
         Do something.
 
         Args:
-            blip: A string to do something with.
+            blip: Whether to blip or not.
         """
         pass
 
@@ -181,14 +182,14 @@ def test_custom_program_name_help(capsys) -> None:
 Do something.
 
 Usage:
-  my_program --blip <text>
+  my_program [--blip]
 
 where
-  (pos. or opt.)  -b|--blip <text>  A string to do something with. (required)
-  (option)        -?|--help         Show this help message and exit.         
+  (option)  -b|--blip   Whether to blip or not. (flag)
+  (option)  -?|--help   Show this help message and exit.
 
 """
     with raises(SystemExit):
-        run_w_sys_argv(f, ["--help"], name="my_program")
+        run_w_sys_argv(f, [help_cmd], name="my_program")
     captured = capsys.readouterr()
     assert remove_trailing_spaces(captured.out) == remove_trailing_spaces(expected)
