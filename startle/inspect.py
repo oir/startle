@@ -29,6 +29,26 @@ from .error import ParserConfigError
 from .value_parser import is_parsable
 
 
+def _is_positional(kind: Any) -> bool:
+    return kind in [
+        Parameter.POSITIONAL_ONLY,
+        Parameter.POSITIONAL_OR_KEYWORD,
+        Parameter.VAR_POSITIONAL,
+    ]
+
+
+def _is_keyword(kind: Any) -> bool:
+    return kind in [
+        Parameter.KEYWORD_ONLY,
+        Parameter.POSITIONAL_OR_KEYWORD,
+        Parameter.VAR_KEYWORD,
+    ]
+
+
+def _is_variadic(kind: Any) -> bool:
+    return kind in [Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD]
+
+
 def _get_default_factories(cls: type) -> dict[str, Any]:
     """
     Get the default factory functions for all fields in a dataclass.
@@ -165,11 +185,16 @@ def _collect_param_names(
     """
     Get all parameter names in the object hierarchy.
     This is used to detect name collisions, and to reserve short names
-    for recursive parsing. Unused for the general recurse=False case.
+    for recursive parsing.
     """
     used_names_set = set()
     used_names = list()
     for param_name, param in params:
+        if param_name == "help":
+            raise ParserConfigError(
+                f"Cannot use `help` as parameter name in `{obj_name}`!"
+            )
+
         normalized_annotation = (
             str
             if param.annotation is Parameter.empty
@@ -237,12 +262,6 @@ def _make_args_from_params(
     """
     args = Args(brief=brief, program_name=program_name)
 
-    for param_name, _ in params:
-        if param_name == "help":
-            raise ParserConfigError(
-                f"Cannot use `help` as parameter name in `{obj_name}`!"
-            )
-
     used_names = _collect_param_names(params, obj_name, recurse, kw_only)
     used_short_names = _used_short_names if _used_short_names is not None else set()
     used_short_names |= _reserve_short_names(
@@ -265,68 +284,49 @@ def _make_args_from_params(
 
         param_name_sub = param_name.replace("_", "-")
 
-        if recurse == "child" and param.kind in [
-            Parameter.VAR_POSITIONAL,
-            Parameter.VAR_KEYWORD,
-        ]:
+        if recurse == "child" and _is_variadic(param.kind):
             raise ParserConfigError(
                 f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
             )
 
-        positional = (
-            param.kind
-            in [
-                Parameter.POSITIONAL_ONLY,
-                Parameter.POSITIONAL_OR_KEYWORD,
-                Parameter.VAR_POSITIONAL,
-            ]
-            and not kw_only
-        )
-        named = (
-            param.kind
-            in [
-                Parameter.KEYWORD_ONLY,
-                Parameter.POSITIONAL_OR_KEYWORD,
-                Parameter.VAR_KEYWORD,
-            ]
-            or kw_only
-        )
+        positional = _is_positional(param.kind) and not kw_only
+        named = _is_keyword(param.kind) or kw_only
 
         nary, container_type, normalized_annotation = _get_naryness(
             param, normalized_annotation
         )
 
         child_args: Args | None = None
-        if not is_parsable(normalized_annotation):
-            if recurse:
-                if param.kind in [Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD]:
-                    raise ParserConfigError(
-                        f"Cannot recurse into variadic parameter `{param_name}` "
-                        f"in `{obj_name}`!"
-                    )
-                if nary:
-                    raise ParserConfigError(
-                        f"Cannot recurse into n-ary parameter `{param_name}` "
-                        f"in `{obj_name}`!"
-                    )
-                normalized_annotation = _strip_optional(normalized_annotation)
-                child_args = make_args_from_class(
-                    normalized_annotation,
-                    recurse="child" if recurse else False,
-                    kw_only=True,  # children are kw-only for now
-                    _used_short_names=used_short_names,
-                )
-                child_args._parent = args
-                name = Name(long=param_name_sub)
-            else:
-                raise ParserConfigError(
-                    f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
-                    f"for parameter `{param_name}` in `{obj_name}`!"
-                )
-        else:
+        if is_parsable(normalized_annotation):
             name = _make_name(param_name_sub, named, docstr_param, used_short_names)
+        elif recurse:
+            if _is_variadic(param.kind):
+                raise ParserConfigError(
+                    f"Cannot recurse into variadic parameter `{param_name}` "
+                    f"in `{obj_name}`!"
+                )
+            if nary:
+                raise ParserConfigError(
+                    f"Cannot recurse into n-ary parameter `{param_name}` "
+                    f"in `{obj_name}`!"
+                )
+            normalized_annotation = _strip_optional(normalized_annotation)
+            child_args = make_args_from_class(
+                normalized_annotation,
+                recurse="child" if recurse else False,
+                kw_only=True,  # children are kw-only for now
+                _used_short_names=used_short_names,
+            )
+            child_args._parent = args
+            name = Name(long=param_name_sub)
+        else:
+            raise ParserConfigError(
+                f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
+                f"for parameter `{param_name}` in `{obj_name}`!"
+            )
 
         # the following should hold if normalized_annotation is parsable
+        # TODO: double check below for Optional[...]
         normalized_annotation = cast(type, normalized_annotation)
 
         arg = Arg(
