@@ -45,6 +45,9 @@ version-file = "startle/_version.py"
 dependencies = [ "pytest", "pytest-cov", "mypy" ]
 args = ["-ra", "-q"]
 
+[tool.hatch.envs.test]
+dependencies = [ "pytest", "pytest-cov", "mypy" ]
+
 [[tool.hatch.envs.hatch-test.matrix]]
 python = ["3.10", "3.11", "3.12", "3.13"]
 
