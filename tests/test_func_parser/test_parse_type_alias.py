@@ -14,17 +14,10 @@ from startle.error import ParserOptionError, ParserValueError
 
 from ._utils import check_args
 
-type MyFloat2 = float
-
-
-def hi_int(name: str = "john", /, *, count: int = 1) -> None:
-    for _ in range(count):
-        print(f"hello, {name}!")
-
-
-def hi_float(name: str = "john", /, *, count: float = 1.0) -> None:
-    for _ in range(int(count)):
-        print(f"hello, {name}!")
+type MyFloat = float
+type MyStr = str
+type MyFloat2 = MyFloat
+type MyFloat3 = Annotated[MyFloat, "some metadata"]
 
 
 def hi_float_annotated(
@@ -37,8 +30,31 @@ def hi_float_annotated(
         print(f"hello, {name}!")
 
 
+def hi_type_alias(name: MyStr = "john", /, *, count: MyFloat = 1.0) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
+
+
+def hi_type_alias_nested(name: MyStr = "john", /, *, count: MyFloat2 = 1.0) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
+
+
+def hi_type_alias_nested_annotated(
+    name: MyStr = "john", /, *, count: MyFloat3 = 1.0
+) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
+
+
 @mark.parametrize(
-    "hi, count_t", [(hi_int, int), (hi_float, float), (hi_float_annotated, float)]
+    "hi, count_t",
+    [
+        (hi_float_annotated, float),
+        (hi_type_alias, float),
+        (hi_type_alias_nested, float),
+        (hi_type_alias_nested_annotated, float),
+    ],
 )
 def test_args_with_defaults(hi, count_t):
     typestr = "integer" if count_t is int else "float"
