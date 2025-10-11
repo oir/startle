@@ -15,6 +15,7 @@ from startle import parse
 from startle.error import ParserOptionError, ParserValueError
 
 from ._utils import check_args
+from .test_parse_class import check_parse_exits
 
 type MyFloat = float
 type MyStr = str
@@ -238,3 +239,26 @@ def test_class_with_all_defaults(
         parse(Config, args=["--amount", "1.0", "--count"], catch=False)
     with raises(ParserOptionError, match="Option `count` is multiply given!"):
         parse(Config, args=["--count", "2", "--count", "3"], catch=False)
+
+    check_parse_exits(
+        capsys, Config, ["--unknown"], "Error: Unexpected option `unknown`!\n"
+    )
+    check_parse_exits(capsys, Config, ["a"], "Error: Cannot parse integer from `a`!\n")
+    check_parse_exits(
+        capsys, Config, ["2", "a"], "Error: Cannot parse float from `a`!\n"
+    )
+    check_parse_exits(
+        capsys, Config, ["--count"], "Error: Option `count` is missing argument!\n"
+    )
+    check_parse_exits(
+        capsys,
+        Config,
+        ["--amount", "1.0", "--count"],
+        "Error: Option `count` is missing argument!\n",
+    )
+    check_parse_exits(
+        capsys,
+        Config,
+        ["--count", "2", "--count", "3"],
+        "Error: Option `count` is multiply given!\n",
+    )
