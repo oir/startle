@@ -22,7 +22,7 @@ jobs:
       - name: Install
         run: pip install hatch mypy .[test]
       - name: Run tests
-        run: hatch run test:pytest
+        run: hatch test --all
       - name: Run static checks
         run: hatch run test:mypy startle/
       - name: Upload coverage reports to Coveralls

@@ -1,4 +1,5 @@
 import inspect
+import sys
 import types
 from typing import Annotated, Any, Optional, Union, get_args, get_origin
 
@@ -31,7 +32,19 @@ def _strip_annotated(type_: Any) -> Any:
     return type_
 
 
-def _normalize_type(annotation: Any) -> Any:
+def _resolve_type_alias(type_: Any) -> Any:
+    """
+    Resolve type aliases to their underlying types.
+    """
+    if sys.version_info >= (3, 12):
+        from typing import TypeAliasType
+
+        if isinstance(type_, TypeAliasType):
+            return type_.__value__
+    return type_
+
+
+def _normalize_union_type(annotation: Any) -> Any:
     """
     Normalize a type annotation by unifying Union and Optional types.
     """
@@ -47,6 +60,21 @@ def _normalize_type(annotation: Any) -> Any:
         else:
             return Union[tuple(args)]
     return annotation
+
+
+def _normalize_type(annotation: Any) -> Any:
+    """
+    Normalize a type annotation by stripping Annotated, resolving type aliases,
+    and unifying Union and Optional types.
+    """
+    prev: Any = None
+    curr: Any = annotation
+    while prev != curr:
+        prev = curr
+        curr = _strip_annotated(curr)
+        curr = _resolve_type_alias(curr)
+        curr = _normalize_union_type(curr)
+    return curr
 
 
 def _shorten_type_annotation(annotation: Any) -> str:

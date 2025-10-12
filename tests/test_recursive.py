@@ -6,14 +6,14 @@ from pytest import mark, raises
 
 from startle.error import ParserConfigError, ParserOptionError
 
-from ..test_help._utils import (
+from ._utils import check_args
+from .test_help._utils import (
     NS,
     OS,
     TS,
     VS,
     check_help_from_func,
 )
-from ._utils import check_args
 
 
 @dataclass

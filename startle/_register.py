@@ -1,8 +1,10 @@
 from typing import Any, Callable
 
+from ._type_utils import _normalize_type
+
 
 def register(
-    type_: type,
+    type_: Any,
     parser: Callable[[str], Any] | None = None,
     metavar: str | list[str] | None = None,
 ) -> None:
@@ -11,7 +13,7 @@ def register(
     `parser` can be omitted to specify a custom metavar for an already parsable type.
 
     Args:
-        type_: The type to register the parser and metavar for.
+        type_: The type or annotation to register the parser and metavar for.
         parser: A function that takes a string and returns a value of the type.
         metavar: The metavar to use for the type in the help message.
             If None, default metavar "val" is used.
@@ -22,6 +24,8 @@ def register(
 
     from .metavar import _METAVARS
     from .value_parser import _PARSERS
+
+    type_ = _normalize_type(type_)
 
     if parser:
         _PARSERS[type_] = parser
