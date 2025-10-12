@@ -25,7 +25,7 @@ jobs:
       - name: Install
         run: pip install hatch .[test]
       - name: Run tests
-        run: hatch run test:pytest
+        run: hatch test --all
       - name: Build dist
         run: hatch build
       - name: Publish
