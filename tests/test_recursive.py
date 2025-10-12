@@ -522,3 +522,37 @@ Fuse two monsters with polymerization.
   [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
     check_help_from_func(fuse3, "fuse.py", expected, recurse=True)
+
+
+@dataclass
+class FusionConfig4:
+    """
+    Fusion config with separate input and output paths.
+
+    Attributes:
+        io_paths: Input and output paths for the fusion.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    io_paths: IOPaths2 | tuple[str, str]
+    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+    alpha: float = 0.5
+
+
+def fuse4(cfg: FusionConfig4) -> None:
+    """
+    Fuse two monsters with polymerization.
+
+    Args:
+        cfg: The fusion configuration.
+    """
+    pass
+
+
+def test_recursive_dataclass_non_class() -> None:
+    with raises(
+        ParserConfigError,
+        match="Cannot recurse into parameter `io_paths` of non-class type `IOPaths2 | tuple[str, str]` in `fuse4()`!",
+    ):
+        check_help_from_func(fuse4, "fuse.py", "", recurse=True)
