@@ -288,12 +288,33 @@ def mul(a: Rational, b: Rational) -> Rational:
     return y
 
 
-@mark.parametrize("mul_f", [mul])
+def mul2(a: MyRational, b: Rational) -> Rational:
+    """
+    Multiply two rational numbers.
+    """
+    y = Rational(a.num * b.num, a.den * b.den)
+    print(f"{a} * {b} = {y}")
+    return y
+
+
+def mul3(a: MyRational, b: MyRational) -> MyRational:
+    """
+    Multiply two rational numbers.
+    """
+    y = Rational(a.num * b.num, a.den * b.den)
+    print(f"{a} * {b} = {y}")
+    return y
+
+
+@mark.parametrize("mul_f", [mul, mul2, mul3])
 @mark.parametrize("register_t", [Rational, MyRational])
 def test_unsupported_type(mul_f, register_t):
+    a_type = "Rational" if mul_f is mul else "MyRational"
     with raises(
         ParserConfigError,
-        match=re.escape("Unsupported type `Rational` for parameter `a` in `mul()`!"),
+        match=re.escape(
+            f"Unsupported type `{a_type}` for parameter `a` in `{mul_f.__name__}()`!"
+        ),
     ):
         check_args(mul_f, ["1/2", "3/4"], [], {})
 
