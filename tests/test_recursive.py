@@ -41,6 +41,17 @@ def throw_dice(cfg: DieConfig, count: int = 1) -> None:
     pass
 
 
+def throw_dice_union(cfg: DieConfig | str, count: int = 1) -> None:
+    """
+    Throw dice according to the configuration.
+
+    Args:
+        cfg: The configuration for the dice or a string.
+        count: The number of dice to throw.
+    """
+    pass
+
+
 @mark.parametrize("sides_opt", ["--sides", "-s"])
 @mark.parametrize("kind_opt", ["--kind", "-k"])
 @mark.parametrize("count_opt", ["--count", "-c"])
@@ -69,6 +80,13 @@ def test_recursive_w_defaults(
     expected_cfg = DieConfig(**config_kwargs)
     expected_count = count if count is not None else 1
     check_args(throw_dice, cli_args, [expected_cfg, expected_count], {}, recurse=True)
+    with raises(
+        ParserConfigError,
+        match="Cannot recurse into parameter `cfg` of non-class type `DieConfig | str` in `throw_dice_union()`!",
+    ):
+        check_args(
+            throw_dice_union, cli_args, [expected_cfg, expected_count], {}, recurse=True
+        )
 
 
 @dataclass

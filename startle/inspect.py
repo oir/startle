@@ -311,6 +311,11 @@ def _make_args_from_params(
                     f"in `{obj_name}`!"
                 )
             normalized_annotation = _strip_optional(normalized_annotation)
+            if not isinstance(normalized_annotation, type):
+                raise ParserConfigError(
+                    f"Cannot recurse into parameter `{param_name}` of non-class type "
+                    f"`{_shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
+                )
             child_args = make_args_from_class(
                 normalized_annotation,
                 recurse="child" if recurse else False,
