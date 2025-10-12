@@ -6,13 +6,16 @@ the new `type` syntax for type aliases, it is a syntax error in older versions,
 that cannot be gracefully handled with `if sys.version_info < (3, 12): ...`.
 """
 
+import re
 from dataclasses import dataclass
 from typing import Annotated, Callable
 
 from pytest import mark, raises
 
-from startle import parse
-from startle.error import ParserOptionError, ParserValueError
+from startle import parse, register
+from startle.error import ParserConfigError, ParserOptionError, ParserValueError
+from startle.metavar import _METAVARS
+from startle.value_parser import _PARSERS
 
 from ._utils import check_args
 from .test_parse_class import check_parse_exits
@@ -262,3 +265,50 @@ def test_class_with_all_defaults(
         ["--count", "2", "--count", "3"],
         "Error: Option `count` is multiply given!\n",
     )
+
+
+@dataclass
+class Rational:
+    num: int
+    den: int
+
+    def __repr__(self):
+        return f"{self.num}/{self.den}"
+
+
+type MyRational = Rational
+
+
+def mul(a: Rational, b: Rational) -> Rational:
+    """
+    Multiply two rational numbers.
+    """
+    y = Rational(a.num * b.num, a.den * b.den)
+    print(f"{a} * {b} = {y}")
+    return y
+
+
+@mark.parametrize("mul_f", [mul])
+@mark.parametrize("register_t", [Rational, MyRational])
+def test_unsupported_type(mul_f, register_t):
+    with raises(
+        ParserConfigError,
+        match=re.escape("Unsupported type `Rational` for parameter `a` in `mul()`!"),
+    ):
+        check_args(mul_f, ["1/2", "3/4"], [], {})
+
+    register(
+        register_t,
+        parser=lambda value: Rational(*map(int, value.split("/"))),
+        metavar="<int>/<int>",
+    )
+
+    check_args(mul_f, ["1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul_f, ["-a", "1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul_f, ["-a", "1/2", "-b", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul_f, ["1/2", "-b", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul_f, ["-b", "3/4", "1/2"], [Rational(1, 2), Rational(3, 4)], {})
+    check_args(mul_f, ["-b", "3/4", "--", "1/2"], [Rational(1, 2), Rational(3, 4)], {})
+
+    del _PARSERS[Rational]
+    del _METAVARS[Rational]
