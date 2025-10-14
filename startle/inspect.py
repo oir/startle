@@ -198,7 +198,7 @@ def _collect_param_names(
         normalized_annotation = (
             str
             if param.annotation is Parameter.empty
-            else _normalize_type(_strip_annotated(param.annotation))
+            else _normalize_type(param.annotation)
         )
         _, _, normalized_annotation = _get_naryness(param, normalized_annotation)
 
