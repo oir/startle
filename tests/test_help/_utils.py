@@ -20,9 +20,8 @@ def check_help_from_func(
 ):
     console = Console(width=120, highlight=False, force_terminal=True)
     with console.capture() as capture:
-        make_args_from_func(f, program_name=program_name, recurse=recurse).print_help(
-            console
-        )
+        args = make_args_from_func(f, program_name=program_name, recurse=recurse)
+        args.print_help(console)
     result = capture.get()
 
     console = Console(width=120, highlight=False, force_terminal=True)

@@ -3,35 +3,6 @@ from dataclasses import dataclass
 from startle.inspect import make_args_from_class, make_args_from_func
 
 
-@dataclass
-class Cls1:
-    name: str = "john"
-    count: int = 1
-
-
-@dataclass
-class Cls2:
-    name: str = "john"
-    count: int = 1
-    c: int = 2
-
-
-@dataclass
-class Cls3:
-    """
-    A class.
-
-    Attributes:
-        name: The name of the person.
-        count: The number of times to greet.
-        c: The number of times to groot.
-    """
-
-    name: str = "john"
-    count: int = 1
-    c: int = 2
-
-
 def fun1(name: str = "john", /, *, count: int = 1) -> None: ...
 
 
@@ -50,22 +21,6 @@ def fun3(name: str = "john", /, *, count: int = 1, c: int = 2) -> None:
     ...
 
 
-@dataclass
-class Cls4:
-    """
-    A class.
-
-    Attributes:
-        name: The name of the person.
-        count [k]: The number of times to greet.
-        c: The number of times to groot.
-    """
-
-    name: str = "john"
-    count: int = 1
-    c: int = 2
-
-
 def fun4(name: str = "john", /, *, count: int = 1, c: int = 2) -> None:
     """
     A function.
@@ -76,40 +31,6 @@ def fun4(name: str = "john", /, *, count: int = 1, c: int = 2) -> None:
         c: The number of times to groot.
     """
     ...
-
-
-@dataclass
-class Cls5:
-    """
-    A class.
-
-    Attributes:
-        cake: The type of cake.
-        count: The number of cakes.
-        c: The number of times to groot.
-        frosting [c]: The amount of frosting.
-    """
-
-    cake: str = "john"
-    count: int = 1
-    c: int = 2
-    frosting: int = 3
-
-
-@dataclass
-class Cls6:
-    """
-    A class.
-
-    Attributes:
-        cake: The type of cake.
-        count: The number of cakes.
-        frosting [c]: The amount of frosting.
-    """
-
-    cake: str = "john"
-    count: int = 1
-    frosting: int = 3
 
 
 def fun5(cake: str = "john", /, *, count: int = 1) -> None: ...
@@ -161,6 +82,85 @@ def fun9(
     """
     # Here `frosting` should win the short version over `count`, and `glazing`
     ...
+
+
+@dataclass
+class Cls1:
+    name: str = "john"
+    count: int = 1
+
+
+@dataclass
+class Cls2:
+    name: str = "john"
+    count: int = 1
+    c: int = 2
+
+
+@dataclass
+class Cls3:
+    """
+    A class.
+
+    Attributes:
+        name: The name of the person.
+        count: The number of times to greet.
+        c: The number of times to groot.
+    """
+
+    name: str = "john"
+    count: int = 1
+    c: int = 2
+
+
+@dataclass
+class Cls4:
+    """
+    A class.
+
+    Attributes:
+        name: The name of the person.
+        count [k]: The number of times to greet.
+        c: The number of times to groot.
+    """
+
+    name: str = "john"
+    count: int = 1
+    c: int = 2
+
+
+@dataclass
+class Cls5:
+    """
+    A class.
+
+    Attributes:
+        cake: The type of cake.
+        count: The number of cakes.
+        c: The number of times to groot.
+        frosting [c]: The amount of frosting.
+    """
+
+    cake: str = "john"
+    count: int = 1
+    c: int = 2
+    frosting: int = 3
+
+
+@dataclass
+class Cls6:
+    """
+    A class.
+
+    Attributes:
+        cake: The type of cake.
+        count: The number of cakes.
+        frosting [c]: The amount of frosting.
+    """
+
+    cake: str = "john"
+    count: int = 1
+    frosting: int = 3
 
 
 def test_short_names():
