@@ -15,10 +15,13 @@ def remove_trailing_spaces(text: str) -> str:
     return "\n".join(line.rstrip() for line in lines)
 
 
-def check_help_from_func(f: Callable, program_name: str, expected: str):
+def check_help_from_func(
+    f: Callable, program_name: str, expected: str, recurse: bool = False
+):
     console = Console(width=120, highlight=False, force_terminal=True)
     with console.capture() as capture:
-        make_args_from_func(f, program_name=program_name).print_help(console)
+        args = make_args_from_func(f, program_name=program_name, recurse=recurse)
+        args.print_help(console)
     result = capture.get()
 
     console = Console(width=120, highlight=False, force_terminal=True)

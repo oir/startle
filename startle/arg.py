@@ -1,9 +1,12 @@
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from .error import ParserConfigError
 from .metavar import _get_metavar
 from .value_parser import parse
+
+if TYPE_CHECKING:
+    from .args import Args
 
 
 @dataclass
@@ -43,6 +46,7 @@ class Arg:
             This is _only_ used for the help string, because dataclass initializers
             already handle getting the default value out of these factories.
         required: Whether the argument is required.
+        args: Child Args object for parsing this Arg, for structured recursive parsing.
     """
 
     name: Name
@@ -59,6 +63,8 @@ class Arg:
     default: Any = None
     default_factory: Callable[[], Any] | None = None
     required: bool = False
+
+    args: "Args | None" = None
 
     _parsed: bool = False  # if this is already parsed
     _value: Any = None  # the parsed value

@@ -8,6 +8,7 @@ def check_args(
     cli_args: list[str],
     expected_args: list[Any],
     expected_kwargs: dict[str, Any],
+    recurse: bool = False,
 ):
     """
     Check if the parser can parse the CLI arguments correctly.
@@ -17,8 +18,11 @@ def check_args(
         cli_args: The CLI arguments to parse.
         expected_args: The expected positional arguments.
         expected_kwargs: The expected keyword arguments
+        recurse: Whether to recursively parse complex types.
     """
-    args, kwargs = make_args_from_func(f).parse(cli_args).make_func_args()
+    args, kwargs = (
+        make_args_from_func(f, recurse=recurse).parse(cli_args).make_func_args()
+    )
     assert args == expected_args
     assert kwargs == expected_kwargs
 

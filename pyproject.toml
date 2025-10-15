@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "startle"
-description = "Instantly start a CLI from a function"
+description = "Instantly start a CLI from functions or classes"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -71,4 +71,5 @@ omit = ["startle/_version.py"]
 exclude_lines = [
     "pragma: not covered",
     "@overload",
+    "if TYPE_CHECKING:",
 ]

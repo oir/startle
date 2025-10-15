@@ -1,10 +1,15 @@
+import re
 from typing import Any, Optional, Union
+
+from pytest import raises
 
 from startle._type_utils import (
     _normalize_type,
     _shorten_type_annotation,
     _strip_optional,
 )
+from startle.arg import Arg, Name
+from startle.error import ParserConfigError
 
 
 def test_normalize_type():
@@ -68,3 +73,68 @@ def test_shorten_type_annotation():
 
     assert _shorten_type_annotation(Literal[1]) == "Literal[1]"
     assert _shorten_type_annotation(Literal["a"]) == "Literal['a']"
+
+
+def test_arg_properties():
+    a = Arg(name=Name(long="blip"), type_=int, is_positional=False, is_named=True)
+    assert not a.is_flag
+    assert not a.is_nary
+
+    a = Arg(
+        name=Name(long="blip"),
+        type_=bool,
+        is_positional=False,
+        is_named=True,
+        default=False,
+    )
+    assert a.is_flag
+    assert not a.is_nary
+
+    a = Arg(
+        name=Name(long="blip"),
+        type_=bool,
+        is_positional=False,
+        is_named=True,
+        required=True,
+    )
+    assert not a.is_flag
+    assert not a.is_nary
+
+    a = Arg(
+        name=Name(long="blip"),
+        type_=int,
+        is_positional=False,
+        is_named=True,
+        is_nary=True,
+        container_type=list,
+    )
+    assert not a.is_flag
+    assert a.is_nary
+
+    a = Arg(
+        name=Name(long="blip"),
+        type_=int,
+        is_positional=True,
+        is_named=False,
+        is_nary=True,
+        container_type=tuple,
+    )
+    assert not a.is_flag
+    assert a.is_nary
+
+    with raises(
+        ParserConfigError,
+        match=re.escape("An argument should be either positional or named (or both)!"),
+    ):
+        a = Arg(name=Name(long="blip"), type_=int)
+
+    with raises(ParserConfigError, match=re.escape("Unsupported container type!")):
+        a = Arg(
+            name=Name(long="blip"),
+            type_=int,
+            is_positional=True,
+            is_named=False,
+            is_nary=True,
+            container_type=dict,
+        )
+        a.parse("5")

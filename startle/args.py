@@ -8,7 +8,7 @@ from .error import ParserConfigError, ParserOptionError
 
 
 @dataclass
-class ParsingState:
+class _ParsingState:
     """
     A class to hold the state of the parsing process.
     """
@@ -40,6 +40,21 @@ class Args:
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
     _var_kwargs: Arg | None = None  # remaining unk options for functions with **kwargs
+    _parent: "Args | None" = None  # parent Args instance
+
+    @property
+    def _args(self) -> list[Arg]:
+        """
+        Uniquely listed arguments. Note that an argument can be both positional and named,
+        hence be in both lists.
+        """
+        seen = set()
+        unique_args = []
+        for arg in self._positional_args + self._named_args:
+            if id(arg) not in seen:
+                unique_args.append(arg)
+                seen.add(id(arg))
+        return unique_args
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -52,9 +67,6 @@ class Args:
         """
         if value.startswith("--"):
             name = value[2:]
-            # if not name:
-            #     raise ParserOptionError("Prefix `--` is not followed by an option!")
-            # this case should not happen anymore
             return name
         if value.startswith("-"):
             name = value[1:]
@@ -115,7 +127,7 @@ class Args:
             )
         self._var_kwargs = arg
 
-    def _parse_equals_syntax(self, name: str, state: ParsingState) -> ParsingState:
+    def _parse_equals_syntax(self, name: str, state: _ParsingState) -> _ParsingState:
         """
         Parse a cli argument as a named argument using the equals syntax (e.g. `--name=value`).
         Return new index after consuming the argument.
@@ -149,8 +161,8 @@ class Args:
         return state
 
     def _parse_combined_short_names(
-        self, names: str, args: list[str], state: ParsingState
-    ) -> ParsingState:
+        self, names: str, args: list[str], state: _ParsingState
+    ) -> _ParsingState:
         """
         Parse a cli argument as a combined short names (e.g. -abc).
         Return new index after consuming the argument.
@@ -209,8 +221,8 @@ class Args:
         raise RuntimeError("Programmer error: should not reach here!")
 
     def _parse_named(
-        self, name: str, args: list[str], state: ParsingState
-    ) -> ParsingState:
+        self, name: str, args: list[str], state: _ParsingState
+    ) -> _ParsingState:
         """
         Parse a cli argument as a named argument / option.
         Return new index after consuming the argument.
@@ -263,7 +275,7 @@ class Args:
         state.idx += 2
         return state
 
-    def _parse_positional(self, args: list[str], state: ParsingState) -> ParsingState:
+    def _parse_positional(self, args: list[str], state: _ParsingState) -> _ParsingState:
         """
         Parse a cli argument as a positional argument.
         Return new indices after consuming the argument.
@@ -307,8 +319,45 @@ class Args:
         state.positional_idx += 1
         return state
 
+    def _maybe_parse_children(self, args: list[str]) -> list[str]:
+        """
+        Parse child Args, if any.
+        This method is only relevant when recurse=True is used in start() or parse().
+
+        Returns:
+            Remaining args after parsing child Args.
+        """
+        remaining_args = args.copy()
+        for arg in self._args:
+            if child_args := arg.args:
+                try:
+                    child_args.parse(remaining_args)
+                except ParserOptionError as e:
+                    estr = str(e)
+                    if estr.startswith("Required option") and estr.endswith(
+                        " is not provided!"
+                    ):
+                        # this is allowed if arg has a default value
+                        if not arg.required:
+                            arg._value = arg.default
+                            arg._parsed = True
+                            continue
+                        # note that we do not consume any args, even partially
+                    raise e
+
+                assert child_args._var_args is not None, "Programming error!"
+                remaining_args = child_args._var_args._value or []
+
+                # construct the actual object
+                init_args, init_kwargs = child_args.make_func_args()
+                arg._value = arg.type_(*init_args, **init_kwargs)
+                arg._parsed = True
+
+        return remaining_args
+
     def _parse(self, args: list[str]):
-        state = ParsingState()
+        args = self._maybe_parse_children(args)
+        state = _ParsingState()
 
         while state.idx < len(args):
             if not state.positional_only and args[state.idx] == "--":
@@ -374,7 +423,10 @@ class Args:
             if opt not in self._positional_args
         }
 
-        if self._var_args and self._var_args._value:
+        if not self._parent and self._var_args and self._var_args._value:
+            # Append variadic positional arguments to the end of positional args.
+            # This is only done for the top-level Args, not for child Args, as _var_args
+            # for child Args is only used to pass remaining args to the parent.
             positional_args += self._var_args._value
 
         return positional_args, named_args
@@ -394,6 +446,43 @@ class Args:
             self._parse(sys.argv[1:])
         return self
 
+    def _traverse_args(self) -> tuple[list[Arg], list[Arg], list[Arg]]:
+        """
+        Recursively traverse all Args and return three lists as a tuple of
+        (positional only, positional and named, named only).
+        Skips var args and var kwargs.
+        """
+        positional_only = []
+        positional_and_named = []
+        named_only = []
+
+        for arg in self._positional_args:
+            if arg.args:
+                child_pos_only, child_pos_and_named, child_named_only = (
+                    arg.args._traverse_args()
+                )
+                positional_only += child_pos_only
+                positional_and_named += child_pos_and_named
+                named_only += child_named_only
+            else:
+                if arg.is_positional and not arg.is_named:
+                    positional_only.append(arg)
+                elif arg.is_positional and arg.is_named:
+                    positional_and_named.append(arg)
+        for opt in self._named_args:
+            if opt.is_named and not opt.is_positional:
+                if opt.args:
+                    child_pos_only, child_pos_and_named, child_named_only = (
+                        opt.args._traverse_args()
+                    )
+                    positional_only += child_pos_only
+                    positional_and_named += child_pos_and_named
+                    named_only += child_named_only
+                else:
+                    named_only.append(opt)
+
+        return positional_only, positional_and_named, named_only
+
     def print_help(self, console=None, usage_only: bool = False) -> None:
         """
         Print the help message to the console.
@@ -409,19 +498,13 @@ class Args:
         from rich.table import Table
         from rich.text import Text
 
+        if self._parent:
+            # only the top-level Args can print help
+            return self._parent.print_help(console, usage_only)
+
         name = self.program_name or sys.argv[0]
 
-        positional_only = [
-            arg
-            for arg in self._positional_args
-            if arg.is_positional and not arg.is_named
-        ]
-        positional_and_named = [
-            arg for arg in self._positional_args if arg.is_positional and arg.is_named
-        ]
-        named_only = [
-            opt for opt in self._named_args if opt.is_named and not opt.is_positional
-        ]
+        positional_only, positional_and_named, named_only = self._traverse_args()
 
         # (1) print brief if it exists
         console = console or Console()
