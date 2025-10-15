@@ -273,7 +273,7 @@ def _make_args_from_params(
         normalized_annotation = (
             str
             if param.annotation is Parameter.empty
-            else _normalize_type(_strip_annotated(param.annotation))
+            else _normalize_type(param.annotation)
         )
 
         required = param.default is inspect.Parameter.empty
