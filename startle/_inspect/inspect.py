@@ -18,7 +18,6 @@ from .._docstr import (
     _parse_func_docstring,
 )
 from .._type_utils import (
-    TypeHint,
     _is_typeddict,
     _normalize_type,
     _shorten_type_annotation,
@@ -31,46 +30,8 @@ from ..error import ParserConfigError
 from ..value_parser import is_parsable
 from .classes import _get_class_initializer_params
 from .dataclasses import _get_default_factories
+from .names import _reserve_short_names
 from .parameter import _is_keyword, _is_positional, _is_variadic
-
-
-def _reserve_short_names(
-    params: Iterable[tuple[str, Parameter | TypeHint]],
-    used_names: list[str],
-    arg_helps: _DocstrParams = {},
-    used_short_names: set[str] | None = None,
-) -> set[str]:
-    def is_kw(param: Parameter | TypeHint) -> bool:
-        # is non-variadic keyword parameter
-        if isinstance(param, Parameter):
-            return param.kind in [
-                Parameter.KEYWORD_ONLY,
-                Parameter.POSITIONAL_OR_KEYWORD,
-            ]
-        else:
-            return True  # TypeHint is always keyword
-
-    used_short_names = used_short_names or set()
-
-    # Discover if there are any named options that are of length 1
-    # If so, those cannot be used as short names for other options
-    for param_name in used_names:
-        if len(param_name) == 1:
-            used_short_names.add(param_name)
-
-    # Discover if there are any docstring-specified short names,
-    # these also take precedence over the first letter of the parameter name
-    for param_name, param in params:
-        if is_kw(param):
-            if docstr_param := arg_helps.get(param_name):
-                if docstr_param.short_name:
-                    # if this name is already used, this param cannot use it
-                    if docstr_param.short_name in used_short_names:
-                        docstr_param.short_name = None
-                    else:
-                        used_short_names.add(docstr_param.short_name)
-
-    return used_short_names
 
 
 def _get_docstr_param(
