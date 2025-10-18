@@ -1,6 +1,7 @@
 import inspect
 import sys
 import types
+from inspect import Parameter
 from types import GenericAlias, UnionType
 from typing import (
     Annotated,
@@ -138,3 +139,21 @@ def _is_typeddict(type_: type) -> bool:
         and issubclass(type_, dict)
         and hasattr(type_, "__annotations__")
     )
+
+
+def _normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
+    """
+    Normalize a function parameter or type annotation.
+
+    Args:
+        param_or_annot: The function parameter or type annotation to normalize.
+            If a Parameter is provided, its annotation will be used. If the
+            annotation is empty, str will be assumed. If a TypeHint is provided,
+            it will be normalized directly.
+    """
+    if isinstance(param_or_annot, Parameter):
+        if param_or_annot.annotation is Parameter.empty:
+            return str
+        return _normalize_type(param_or_annot.annotation)
+    else:
+        return _normalize_type(param_or_annot)

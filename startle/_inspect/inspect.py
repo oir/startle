@@ -10,13 +10,15 @@ from typing import (
 )
 
 from .._docstr import (
-    _DocstrParam,
-    _DocstrParams,
+    ParamHelp,
+    ParamHelps,
     _parse_class_docstring,
     _parse_func_docstring,
 )
 from .._type_utils import (
+    TypeHint,
     _is_typeddict,
+    _normalize_annotation,
     _normalize_type,
     _shorten_type_annotation,
     _strip_optional,
@@ -37,39 +39,30 @@ from .names import (
 from .parameter import _is_keyword, _is_positional, _is_variadic
 
 
-def _get_docstr_param(
+def get_param_help(
     param_name: str,
-    param: Parameter,
-    arg_helps: _DocstrParams,
-) -> _DocstrParam:
+    param: Parameter | TypeHint,
+    arg_helps: ParamHelps,
+) -> ParamHelp:
     param_key: str | None = None
     if param_name in arg_helps:
         param_key = param_name
-    elif param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
-        # admit both "arg" and "*arg" as valid names
-        param_key = f"*{param_name}"
-    elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
-        # admit both "arg" and "**arg" as valid names
-        param_key = f"**{param_name}"
+    elif isinstance(param, Parameter):
+        if param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
+            # admit both "arg" and "*arg" as valid names
+            param_key = f"*{param_name}"
+        elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
+            # admit both "arg" and "**arg" as valid names
+            param_key = f"**{param_name}"
 
-    return arg_helps[param_key] if param_key else _DocstrParam()
-
-
-def _get_docstr_key(
-    param_name: str,
-    arg_helps: _DocstrParams,
-) -> _DocstrParam:
-    param_key: str | None = None
-    if param_name in arg_helps:
-        param_key = param_name
-    return arg_helps[param_key] if param_key else _DocstrParam()
+    return arg_helps[param_key] if param_key else ParamHelp()
 
 
 def _make_args_from_params(
     params: Iterable[tuple[str, Parameter]],
     obj_name: str,
     brief: str = "",
-    arg_helps: _DocstrParams = {},
+    arg_helps: ParamHelps = {},
     program_name: str = "",
     default_factories: dict[str, Any] = {},
     recurse: bool | Literal["child"] = False,
@@ -102,17 +95,13 @@ def _make_args_from_params(
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
-        normalized_annotation = (
-            str
-            if param.annotation is Parameter.empty
-            else _normalize_type(param.annotation)
-        )
+        normalized_annotation = _normalize_annotation(param)
 
         required = param.default is inspect.Parameter.empty
         default = param.default if not required else None
 
         default_factory = default_factories.get(param_name, None)
-        docstr_param = _get_docstr_param(param_name, param, arg_helps)
+        docstr_param = get_param_help(param_name, param, arg_helps)
 
         param_name_sub = param_name.replace("_", "-")
 
@@ -328,7 +317,7 @@ def make_args_from_typeddict(
 
         required = True  # TODO: handle NotRequired / totality
 
-        docstr_param = _get_docstr_key(param_name, arg_helps)
+        docstr_param = get_param_help(param_name, annotation, arg_helps)
 
         param_name_sub = param_name.replace("_", "-")
 

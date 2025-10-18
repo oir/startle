@@ -1,8 +1,13 @@
 from inspect import Parameter
 from typing import Any, Iterable, Literal, cast, get_args, get_origin
 
-from .._docstr import _DocstrParam, _DocstrParams
-from .._type_utils import TypeHint, _is_typeddict, _normalize_type, _strip_annotated
+from .._docstr import ParamHelp, ParamHelps
+from .._type_utils import (
+    TypeHint,
+    _is_typeddict,
+    _normalize_annotation,
+    _strip_annotated,
+)
 from ..arg import Name
 from ..error import ParserConfigError
 from ..value_parser import is_parsable
@@ -12,7 +17,7 @@ from .classes import _get_class_initializer_params
 def _reserve_short_names(
     params: Iterable[tuple[str, Parameter | TypeHint]],
     used_names: list[str],
-    arg_helps: _DocstrParams = {},
+    arg_helps: ParamHelps = {},
     used_short_names: set[str] | None = None,
 ) -> set[str]:
     def is_kw(param_or_annot: Parameter | TypeHint) -> bool:
@@ -51,7 +56,7 @@ def _reserve_short_names(
 def _make_name(
     param_name_sub: str,
     named: bool,
-    docstr_param: _DocstrParam,
+    docstr_param: ParamHelp,
     used_short_names: set[str],
 ) -> Name:
     if named:
@@ -110,15 +115,6 @@ def _get_naryness(
             return True, list, normalized_annotation
 
     return _get_annotation_naryness(normalized_annotation)
-
-
-def _normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
-    if isinstance(param_or_annot, Parameter):
-        if param_or_annot.annotation is Parameter.empty:
-            return str
-        return _normalize_type(param_or_annot.annotation)
-    else:
-        return _normalize_type(param_or_annot)
 
 
 def _get_params_or_annotations(
