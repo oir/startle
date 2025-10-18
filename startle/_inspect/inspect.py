@@ -7,8 +7,6 @@ from typing import (
     Iterable,
     Literal,
     cast,
-    get_args,
-    get_origin,
 )
 
 from .._docstr import (
@@ -21,7 +19,6 @@ from .._type_utils import (
     _is_typeddict,
     _normalize_type,
     _shorten_type_annotation,
-    _strip_annotated,
     _strip_optional,
 )
 from ..arg import Arg, Name
@@ -30,7 +27,14 @@ from ..error import ParserConfigError
 from ..value_parser import is_parsable
 from .classes import _get_class_initializer_params
 from .dataclasses import _get_default_factories
-from .names import _reserve_short_names
+from .names import (
+    _collect_keys,
+    _collect_param_names,
+    _get_annotation_naryness,
+    _get_naryness,
+    _make_name,
+    _reserve_short_names,
+)
 from .parameter import _is_keyword, _is_positional, _is_variadic
 
 
@@ -60,200 +64,6 @@ def _get_docstr_key(
     if param_name in arg_helps:
         param_key = param_name
     return arg_helps[param_key] if param_key else _DocstrParam()
-
-
-def _make_name(
-    param_name_sub: str,
-    named: bool,
-    docstr_param: _DocstrParam,
-    used_short_names: set[str],
-) -> Name:
-    if named:
-        if len(param_name_sub) == 1:
-            return Name(short=param_name_sub)
-        if docstr_param.short_name:
-            # no need to check used_short_names, this name is already in there
-            return Name(short=docstr_param.short_name, long=param_name_sub)
-        if param_name_sub[0] not in used_short_names:
-            used_short_names.add(param_name_sub[0])
-            return Name(short=param_name_sub[0], long=param_name_sub)
-    return Name(long=param_name_sub)
-
-
-def _get_annotation_naryness(
-    normalized_annotation: Any,
-) -> tuple[bool, type | None, Any]:
-    """
-    Get the n-ary status, container type, and normalized annotation for an annotation.
-    For n-ary parameters, the type (updated `normalized_annotation`) will refer
-    to the inner type.
-
-    If inner type is absent from the hint, assume str.
-
-    Returns:
-        `nary`, `container_type`, and `normalized_annotation` as a tuple.
-    """
-    orig = get_origin(normalized_annotation)
-    args_ = get_args(normalized_annotation)
-
-    if orig in [list, set]:
-        return True, orig, _strip_annotated(args_[0]) if args_ else str
-    if orig is tuple and len(args_) == 2 and args_[1] is ...:
-        return True, orig, _strip_annotated(args_[0]) if args_ else str
-    if normalized_annotation in [list, tuple, set]:
-        container_type = cast(type, normalized_annotation)
-        return True, container_type, str
-    return False, None, normalized_annotation
-
-
-def _get_naryness(
-    param: Parameter, normalized_annotation: Any
-) -> tuple[bool, type | None, Any]:
-    """
-    Get the n-ary status, container type, and normalized annotation for a parameter.
-    For n-ary parameters, the type (updated `normalized_annotation`) will refer
-    to the inner type.
-
-    If inner type is absent from the hint, assume str.
-
-    Returns:
-        `nary`, `container_type`, and `normalized_annotation` as a tuple.
-    """
-    if param.kind is Parameter.VAR_POSITIONAL:
-        return True, list, normalized_annotation
-
-    return _get_annotation_naryness(normalized_annotation)
-
-
-def _collect_param_names(
-    params: Iterable[tuple[str, Parameter]],
-    obj_name: str,
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-) -> list[str]:
-    """
-    Get all parameter names in the object hierarchy.
-    This is used to detect name collisions, and to reserve short names
-    for recursive parsing.
-    """
-    used_names_set = set()
-    used_names = list()
-    for param_name, param in params:
-        if param_name == "help":
-            raise ParserConfigError(
-                f"Cannot use `help` as parameter name in `{obj_name}`!"
-            )
-
-        normalized_annotation = (
-            str
-            if param.annotation is Parameter.empty
-            else _normalize_type(param.annotation)
-        )
-        _, _, normalized_annotation = _get_naryness(param, normalized_annotation)
-
-        if is_parsable(normalized_annotation):
-            name = param_name.replace("_", "-")
-            if (
-                param.kind in [Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY]
-                or kw_only
-            ):
-                if name in used_names:
-                    raise ParserConfigError(
-                        f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing requires unique option names among all levels."
-                    )
-                used_names_set.add(name)
-                used_names.append(name)
-        elif recurse:
-            child_names = _collect_names(
-                normalized_annotation,
-                obj_name=normalized_annotation.__name__,
-                recurse="child",
-                kw_only=True,  # children are kw-only for now
-            )
-            for child_name in child_names:
-                if child_name in used_names:
-                    raise ParserConfigError(
-                        f"Option name `{child_name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing requires unique option names among all levels."
-                    )
-                used_names_set.add(child_name)
-                used_names.append(child_name)
-    return used_names
-
-
-def _collect_keys(
-    params: Iterable[tuple[str, Any]],
-    obj_name: str,
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-) -> list[str]:
-    """
-    Get all key names in the TypedDict hierarchy.
-    This is used to detect name collisions, and to reserve short names
-    for recursive parsing.
-    """
-    used_names_set = set()
-    used_names = list()
-    for name, annotation in params:
-        if name == "help":
-            raise ParserConfigError(f"Cannot use `help` as key in `{obj_name}`!")
-
-        normalized_annotation = _normalize_type(annotation)
-        _, _, normalized_annotation = _get_annotation_naryness(normalized_annotation)
-
-        if is_parsable(normalized_annotation):
-            name = name.replace("_", "-")
-            if name in used_names:
-                raise ParserConfigError(
-                    f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                    " Recursive parsing requires unique option names among all levels."
-                )
-            used_names_set.add(name)
-            used_names.append(name)
-        elif recurse:
-            child_names = _collect_names(
-                normalized_annotation,
-                obj_name=normalized_annotation.__name__,
-                recurse="child",
-                kw_only=True,  # children are kw-only for now
-            )
-            for child_name in child_names:
-                if child_name in used_names:
-                    raise ParserConfigError(
-                        f"Option name `{child_name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing requires unique option names among all levels."
-                    )
-                used_names_set.add(child_name)
-                used_names.append(child_name)
-    return used_names
-
-
-def _collect_names(
-    annotation: type,
-    obj_name: str,
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-) -> list[str]:
-    """
-    Get all names in the hierarchy of a TypedDict or class.
-    This is used to detect name collisions, and to reserve short names
-    for recursive parsing.
-    """
-    if _is_typeddict(annotation):
-        return _collect_keys(
-            annotation.__annotations__.items(),
-            obj_name,
-            recurse,
-            kw_only,
-        )
-    else:
-        return _collect_param_names(
-            _get_class_initializer_params(annotation),
-            obj_name,
-            recurse,
-            kw_only,
-        )
 
 
 def _make_args_from_params(
