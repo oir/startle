@@ -1,5 +1,5 @@
 import inspect
-from dataclasses import MISSING, fields, is_dataclass
+from dataclasses import is_dataclass
 from inspect import Parameter
 from typing import (
     Any,
@@ -28,40 +28,9 @@ from ..arg import Arg, Name
 from ..args import Args
 from ..error import ParserConfigError
 from ..value_parser import is_parsable
+from .classes import _get_class_initializer_params
+from .dataclasses import _get_default_factories
 from .parameter import _is_keyword, _is_positional, _is_variadic
-
-
-def _get_default_factories(cls: type) -> dict[str, Any]:
-    """
-    Get the default factory functions for all fields in a dataclass.
-    """
-    if not is_dataclass(cls):
-        raise ValueError(f"{cls} is not a dataclass")
-
-    return {
-        f.name: f.default_factory
-        for f in fields(cls)
-        if f.default_factory is not MISSING
-    }
-
-
-def _get_class_initializer_params(cls: type) -> Iterable[tuple[str, Parameter]]:
-    """
-    Get the parameters of the class's `__init__` method, excluding `self`.
-    """
-    func = cls.__init__  # type: ignore
-    # (mypy thinks cls is an instance)
-
-    # Get the signature of the initializer
-    sig = inspect.signature(func)
-
-    # name of the first parameter (usually `self`)
-    self_name = next(iter(sig.parameters))
-
-    # filter out the first parameter
-    return [
-        (name, param) for name, param in sig.parameters.items() if name != self_name
-    ]
 
 
 def _reserve_short_names(
@@ -394,13 +363,13 @@ def _make_args_from_params(
 
         param_name_sub = param_name.replace("_", "-")
 
-        if recurse == "child" and _is_variadic(param.kind):
+        if recurse == "child" and _is_variadic(param):
             raise ParserConfigError(
                 f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
             )
 
-        positional = _is_positional(param.kind) and not kw_only
-        named = _is_keyword(param.kind) or kw_only
+        positional = _is_positional(param) and not kw_only
+        named = _is_keyword(param) or kw_only
 
         nary, container_type, normalized_annotation = _get_naryness(
             param, normalized_annotation
@@ -410,7 +379,7 @@ def _make_args_from_params(
         if is_parsable(normalized_annotation):
             name = _make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
-            if _is_variadic(param.kind):
+            if _is_variadic(param):
                 raise ParserConfigError(
                     f"Cannot recurse into variadic parameter `{param_name}` "
                     f"in `{obj_name}`!"
