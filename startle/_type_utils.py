@@ -1,7 +1,29 @@
 import inspect
 import sys
 import types
-from typing import Annotated, Any, Optional, Union, get_args, get_origin
+from types import GenericAlias, UnionType
+from typing import (
+    Annotated,
+    Any,
+    Literal,
+    Optional,
+    TypeAlias,
+    Union,
+    get_args,
+    get_origin,
+)
+
+# TypeHint based on https://stackoverflow.com/a/77123458
+BaseGenericAlias: TypeAlias = type(Literal[0]).__base__.__base__  # type: ignore
+SpecialForm: TypeAlias = type(Any)  # type: ignore
+TypeHint: TypeAlias = (
+    type  # type: ignore[valid-type]
+    | GenericAlias
+    | UnionType
+    | BaseGenericAlias
+    | SpecialForm
+    | type(None)  # type: ignore
+)
 
 
 def _strip_optional(type_: Any) -> Any:
