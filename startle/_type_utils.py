@@ -1,7 +1,7 @@
 import inspect
 import sys
 import types
-from typing import Annotated, Any, Optional, Union, get_args, get_origin, TypedDict
+from typing import Annotated, Any, Optional, Union, get_args, get_origin
 
 
 def _strip_optional(type_: Any) -> Any:

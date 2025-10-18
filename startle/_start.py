@@ -2,10 +2,10 @@ import sys
 from typing import Any, Callable, TypeVar
 
 from ._console import _error, _post_error, console
+from ._inspect.inspect import make_args_from_func
 from .args import Args
 from .cmds import Cmds
 from .error import ParserConfigError, ParserOptionError, ParserValueError
-from ._inspect.inspect import make_args_from_func
 
 T = TypeVar("T")
 

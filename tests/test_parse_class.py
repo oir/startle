@@ -274,7 +274,9 @@ def test_typed_dict_config(
     amount: Callable[[str], list[str]],
     label: Callable[[str], list[str]],
 ):
-    assert parse(ConfigTypedDict, args=[*count("2"), *amount("2.0"), *label("custom")]) == {
+    assert parse(
+        ConfigTypedDict, args=[*count("2"), *amount("2.0"), *label("custom")]
+    ) == {
         "count": 2,
         "amount": 2.0,
         "label": "custom",

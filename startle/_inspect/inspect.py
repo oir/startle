@@ -6,7 +6,6 @@ from typing import (
     Callable,
     Iterable,
     Literal,
-    TypedDict,
     cast,
     get_args,
     get_origin,
@@ -29,7 +28,7 @@ from ..arg import Arg, Name
 from ..args import Args
 from ..error import ParserConfigError
 from ..value_parser import is_parsable
-from .parameter import _is_positional, _is_keyword, _is_variadic
+from .parameter import _is_keyword, _is_positional, _is_variadic
 
 
 def _get_default_factories(cls: type) -> dict[str, Any]:
@@ -139,6 +138,7 @@ def _get_docstr_param(
 
     return arg_helps[param_key] if param_key else _DocstrParam()
 
+
 def _get_docstr_key(
     param_name: str,
     arg_helps: _DocstrParams,
@@ -166,7 +166,10 @@ def _make_name(
             return Name(short=param_name_sub[0], long=param_name_sub)
     return Name(long=param_name_sub)
 
-def _get_annotation_naryness(normalized_annotation: Any) -> tuple[bool, type | None, Any]:
+
+def _get_annotation_naryness(
+    normalized_annotation: Any,
+) -> tuple[bool, type | None, Any]:
     """
     Get the n-ary status, container type, and normalized annotation for an annotation.
     For n-ary parameters, the type (updated `normalized_annotation`) will refer
@@ -281,9 +284,7 @@ def _collect_keys(
     used_names = list()
     for name, annotation in params:
         if name == "help":
-            raise ParserConfigError(
-                f"Cannot use `help` as key in `{obj_name}`!"
-            )
+            raise ParserConfigError(f"Cannot use `help` as key in `{obj_name}`!")
 
         normalized_annotation = _normalize_type(annotation)
         _, _, normalized_annotation = _get_annotation_naryness(normalized_annotation)
@@ -340,6 +341,7 @@ def _collect_names(
             recurse,
             kw_only,
         )
+
 
 def _make_args_from_params(
     params: Iterable[tuple[str, Parameter]],

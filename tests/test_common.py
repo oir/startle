@@ -3,8 +3,8 @@ from typing import Annotated
 
 from pytest import mark, raises
 
-from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 from startle._inspect.inspect import make_args_from_func
+from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
 from ._utils import check_args
 

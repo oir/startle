@@ -3,8 +3,8 @@ from typing import Type, TypeVar
 from rich.console import Console
 from rich.text import Text
 
-from .error import ParserConfigError, ParserOptionError, ParserValueError
 from ._inspect.inspect import make_args_from_class
+from .error import ParserConfigError, ParserOptionError, ParserValueError
 
 T = TypeVar("T")
 
