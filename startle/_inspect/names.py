@@ -93,7 +93,7 @@ def _get_annotation_naryness(
 
 
 def _get_naryness(
-    param: Parameter, normalized_annotation: Any
+    param_or_annot: Parameter | TypeHint, normalized_annotation: Any
 ) -> tuple[bool, type | None, Any]:
     """
     Get the n-ary status, container type, and normalized annotation for a parameter.
@@ -105,14 +105,33 @@ def _get_naryness(
     Returns:
         `nary`, `container_type`, and `normalized_annotation` as a tuple.
     """
-    if param.kind is Parameter.VAR_POSITIONAL:
-        return True, list, normalized_annotation
+    if isinstance(param_or_annot, Parameter):
+        if param_or_annot.kind is Parameter.VAR_POSITIONAL:
+            return True, list, normalized_annotation
 
     return _get_annotation_naryness(normalized_annotation)
 
 
+def _normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
+    if isinstance(param_or_annot, Parameter):
+        if param_or_annot.annotation is Parameter.empty:
+            return str
+        return _normalize_type(param_or_annot.annotation)
+    else:
+        return _normalize_type(param_or_annot)
+
+
+def _get_params_or_annotations(
+    annotation: type,
+) -> Iterable[tuple[str, Parameter | TypeHint]]:
+    if _is_typeddict(annotation):
+        return annotation.__annotations__.items()
+    else:
+        return _get_class_initializer_params(annotation)
+
+
 def _collect_param_names(
-    params: Iterable[tuple[str, Parameter]],
+    params: Iterable[tuple[str, Parameter | TypeHint]],
     obj_name: str,
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
@@ -122,6 +141,17 @@ def _collect_param_names(
     This is used to detect name collisions, and to reserve short names
     for recursive parsing.
     """
+
+    def is_kw(param: Parameter | TypeHint) -> bool:
+        # is non-variadic keyword parameter
+        if isinstance(param, Parameter):
+            return kw_only or param.kind in [
+                Parameter.KEYWORD_ONLY,
+                Parameter.POSITIONAL_OR_KEYWORD,
+            ]
+        else:
+            return True  # TypeHint is always keyword
+
     used_names_set = set()
     used_names = list()
     for param_name, param in params:
@@ -130,19 +160,12 @@ def _collect_param_names(
                 f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
-        normalized_annotation = (
-            str
-            if param.annotation is Parameter.empty
-            else _normalize_type(param.annotation)
-        )
+        normalized_annotation = _normalize_annotation(param)
         _, _, normalized_annotation = _get_naryness(param, normalized_annotation)
 
         if is_parsable(normalized_annotation):
             name = param_name.replace("_", "-")
-            if (
-                param.kind in [Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY]
-                or kw_only
-            ):
+            if is_kw(param):
                 if name in used_names:
                     raise ParserConfigError(
                         f"Option name `{name}` is used multiple times in `{obj_name}`!"
@@ -151,8 +174,8 @@ def _collect_param_names(
                 used_names_set.add(name)
                 used_names.append(name)
         elif recurse:
-            child_names = _collect_names(
-                normalized_annotation,
+            child_names = _collect_param_names(
+                _get_params_or_annotations(normalized_annotation),
                 obj_name=normalized_annotation.__name__,
                 recurse="child",
                 kw_only=True,  # children are kw-only for now
@@ -166,77 +189,3 @@ def _collect_param_names(
                 used_names_set.add(child_name)
                 used_names.append(child_name)
     return used_names
-
-
-def _collect_keys(
-    params: Iterable[tuple[str, Any]],
-    obj_name: str,
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-) -> list[str]:
-    """
-    Get all key names in the TypedDict hierarchy.
-    This is used to detect name collisions, and to reserve short names
-    for recursive parsing.
-    """
-    used_names_set = set()
-    used_names = list()
-    for name, annotation in params:
-        if name == "help":
-            raise ParserConfigError(f"Cannot use `help` as key in `{obj_name}`!")
-
-        normalized_annotation = _normalize_type(annotation)
-        _, _, normalized_annotation = _get_annotation_naryness(normalized_annotation)
-
-        if is_parsable(normalized_annotation):
-            name = name.replace("_", "-")
-            if name in used_names:
-                raise ParserConfigError(
-                    f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                    " Recursive parsing requires unique option names among all levels."
-                )
-            used_names_set.add(name)
-            used_names.append(name)
-        elif recurse:
-            child_names = _collect_names(
-                normalized_annotation,
-                obj_name=normalized_annotation.__name__,
-                recurse="child",
-                kw_only=True,  # children are kw-only for now
-            )
-            for child_name in child_names:
-                if child_name in used_names:
-                    raise ParserConfigError(
-                        f"Option name `{child_name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing requires unique option names among all levels."
-                    )
-                used_names_set.add(child_name)
-                used_names.append(child_name)
-    return used_names
-
-
-def _collect_names(
-    annotation: type,
-    obj_name: str,
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-) -> list[str]:
-    """
-    Get all names in the hierarchy of a TypedDict or class.
-    This is used to detect name collisions, and to reserve short names
-    for recursive parsing.
-    """
-    if _is_typeddict(annotation):
-        return _collect_keys(
-            annotation.__annotations__.items(),
-            obj_name,
-            recurse,
-            kw_only,
-        )
-    else:
-        return _collect_param_names(
-            _get_class_initializer_params(annotation),
-            obj_name,
-            recurse,
-            kw_only,
-        )

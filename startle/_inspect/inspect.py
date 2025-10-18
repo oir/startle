@@ -28,7 +28,6 @@ from ..value_parser import is_parsable
 from .classes import _get_class_initializer_params
 from .dataclasses import _get_default_factories
 from .names import (
-    _collect_keys,
     _collect_param_names,
     _get_annotation_naryness,
     _get_naryness,
@@ -317,7 +316,7 @@ def make_args_from_typeddict(
 
     args = Args(brief=brief, program_name=program_name)
 
-    used_names = _collect_keys(params, obj_name, recurse, kw_only=True)
+    used_names = _collect_param_names(params, obj_name, recurse, kw_only=True)
     used_short_names = _used_short_names if _used_short_names is not None else set()
     used_short_names |= _reserve_short_names(
         params, used_names, arg_helps, used_short_names
