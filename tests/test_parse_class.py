@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Annotated, Callable
+from typing import Annotated, Callable, TypedDict
 
 from pytest import mark, raises
 
@@ -229,3 +229,53 @@ def test_dataclass_with_unsupported_attr_type(capsys):
         [],
         "Error: Unsupported type `list[list[int]]` for parameter `label` in `Config`!\n",
     )
+
+
+class ConfigTypedDict(TypedDict):
+    """
+    A configuration dict for the program.
+    """
+
+    count: int
+    amount: float
+    label: str
+
+
+@mark.parametrize(
+    "count",
+    [
+        lambda c: ["--count", f"{c}"],
+        lambda c: [f"--count={c}"],
+        lambda c: ["-c", f"{c}"],
+        lambda c: [f"-c={c}"],
+    ],
+)
+@mark.parametrize(
+    "amount",
+    [
+        lambda a: ["--amount", f"{a}"],
+        lambda a: [f"--amount={a}"],
+        lambda a: ["-a", f"{a}"],
+        lambda a: [f"-a={a}"],
+    ],
+)
+@mark.parametrize(
+    "label",
+    [
+        lambda l: ["--label", f"{l}"],
+        lambda l: [f"--label={l}"],
+        lambda l: ["-l", f"{l}"],
+        lambda l: [f"-l={l}"],
+    ],
+)
+def test_typed_dict_config(
+    capsys,
+    count: Callable[[str], list[str]],
+    amount: Callable[[str], list[str]],
+    label: Callable[[str], list[str]],
+):
+    assert parse(ConfigTypedDict, args=[*count("2"), *amount("2.0"), *label("custom")]) == {
+        "count": 2,
+        "amount": 2.0,
+        "label": "custom",
+    }

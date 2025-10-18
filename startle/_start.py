@@ -5,7 +5,7 @@ from ._console import _error, _post_error, console
 from .args import Args
 from .cmds import Cmds
 from .error import ParserConfigError, ParserOptionError, ParserValueError
-from .inspect import make_args_from_func
+from ._inspect.inspect import make_args_from_func
 
 T = TypeVar("T")
 

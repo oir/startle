@@ -1,7 +1,7 @@
 import inspect
 import sys
 import types
-from typing import Annotated, Any, Optional, Union, get_args, get_origin
+from typing import Annotated, Any, Optional, Union, get_args, get_origin, TypedDict
 
 
 def _strip_optional(type_: Any) -> Any:
@@ -102,3 +102,17 @@ def _shorten_type_annotation(annotation: Any) -> str:
         return f"{origin.__name__}[{args_str}]"
 
     return repr(annotation)
+
+
+def _is_typeddict(type_: type) -> bool:
+    """
+    Return True if the given type is a TypedDict class.
+    """
+
+    # we only use __annotations__, so merely checking for that
+    # and dict subclassing
+    return (
+        isinstance(type_, type)
+        and issubclass(type_, dict)
+        and hasattr(type_, "__annotations__")
+    )

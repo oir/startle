@@ -4,7 +4,7 @@ from collections import abc
 from typing import Any, Callable, TextIO, Union, get_args, get_origin
 
 from startle import parse, register, start
-from startle.inspect import _parse_func_docstring
+from startle._inspect.inspect import _parse_func_docstring
 
 
 def _shorten_type_annotation(annotation: Any) -> str:

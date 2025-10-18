@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from startle.inspect import make_args_from_class, make_args_from_func
+from startle._inspect.inspect import make_args_from_class, make_args_from_func
 
 
 def fun1(name: str = "john", /, *, count: int = 1) -> None: ...
