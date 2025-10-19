@@ -7,31 +7,32 @@ from typing import (
     Iterable,
     Literal,
     cast,
+    ParamSpec,
 )
 
 from .._docstr import ParamHelp, ParamHelps, parse_docstring
 from .._type_utils import (
     TypeHint,
-    _is_typeddict,
-    _normalize_annotation,
-    _normalize_type,
-    _shorten_type_annotation,
-    _strip_optional,
+    is_typeddict,
+    normalize_annotation,
+    normalize_type,
+    shorten_type_annotation,
+    strip_optional,
 )
 from ..arg import Arg, Name
 from ..args import Args
 from ..error import ParserConfigError
 from ..value_parser import is_parsable
-from .classes import _get_class_initializer_params
-from .dataclasses import _get_default_factories
+from .classes import get_class_initializer_params
+from .dataclasses import get_default_factories
 from .names import (
-    _collect_param_names,
-    _get_annotation_naryness,
-    _get_naryness,
-    _make_name,
-    _reserve_short_names,
+    collect_param_names,
+    get_annotation_naryness,
+    get_naryness,
+    make_name,
+    reserve_short_names,
 )
-from .parameter import _is_keyword, _is_positional, _is_variadic
+from .parameter import is_keyword, is_positional, is_variadic
 
 
 def get_param_help(
@@ -63,7 +64,7 @@ def check_recursable(
     """
     Raise if the given parameter cannot be recursed into, no-op otherwise.
     """
-    if _is_variadic(param):
+    if is_variadic(param):
         raise ParserConfigError(
             f"Cannot recurse into variadic parameter `{param_name}` in `{obj_name}`!"
         )
@@ -71,11 +72,11 @@ def check_recursable(
         raise ParserConfigError(
             f"Cannot recurse into n-ary parameter `{param_name}` in `{obj_name}`!"
         )
-    normalized_annotation = _strip_optional(normalized_annotation)
+    normalized_annotation = strip_optional(normalized_annotation)
     if not isinstance(normalized_annotation, type):
         raise ParserConfigError(
             f"Cannot recurse into parameter `{param_name}` of non-class type "
-            f"`{_shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
+            f"`{shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
         )
 
 
@@ -108,15 +109,15 @@ def _make_args_from_params(
     """
     args = Args(brief=brief, program_name=program_name)
 
-    used_names = _collect_param_names(params, obj_name, recurse, kw_only)
-    used_short_names = _used_short_names if _used_short_names is not None else set()
-    used_short_names |= _reserve_short_names(
+    used_names = collect_param_names(params, obj_name, recurse, kw_only)
+    used_short_names = _used_short_names if _used_short_names is not None else set[str]()
+    used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
-        normalized_annotation = _normalize_annotation(param)
+        normalized_annotation = normalize_annotation(param)
 
         required = param.default is inspect.Parameter.empty
         default = param.default if not required else None
@@ -126,24 +127,24 @@ def _make_args_from_params(
 
         param_name_sub = param_name.replace("_", "-")
 
-        if recurse == "child" and _is_variadic(param):
+        if recurse == "child" and is_variadic(param):
             raise ParserConfigError(
                 f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
             )
 
-        positional = _is_positional(param) and not kw_only
-        named = _is_keyword(param) or kw_only
+        positional = is_positional(param) and not kw_only
+        named = is_keyword(param) or kw_only
 
-        nary, container_type, normalized_annotation = _get_naryness(
+        nary, container_type, normalized_annotation = get_naryness(
             param, normalized_annotation
         )
 
         child_args: Args | None = None
         if is_parsable(normalized_annotation):
-            name = _make_name(param_name_sub, named, docstr_param, used_short_names)
+            name = make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
             check_recursable(param_name, param, normalized_annotation, obj_name, nary)
-            normalized_annotation = _strip_optional(normalized_annotation)
+            normalized_annotation = strip_optional(normalized_annotation)
             child_args = make_args_from_class(
                 normalized_annotation,
                 recurse="child" if recurse else False,
@@ -154,7 +155,7 @@ def _make_args_from_params(
             name = Name(long=param_name_sub)
         else:
             raise ParserConfigError(
-                f"Unsupported type `{_shorten_type_annotation(param.annotation)}` "
+                f"Unsupported type `{shorten_type_annotation(param.annotation)}` "
                 f"for parameter `{param_name}` in `{obj_name}`!"
             )
 
@@ -200,9 +201,10 @@ def _make_args_from_params(
         )
     return args
 
+P = ParamSpec("P")
 
 def make_args_from_func(
-    func: Callable,
+    func: Callable[P, Any],
     *,
     program_name: str = "",
     recurse: bool | Literal["child"] = False,
@@ -260,7 +262,7 @@ def make_args_from_class(
     """
     # TODO: check if cls is a class?
 
-    if _is_typeddict(cls):
+    if is_typeddict(cls):
         return make_args_from_typeddict(
             cls,
             program_name=program_name,
@@ -269,9 +271,9 @@ def make_args_from_class(
             _used_short_names=_used_short_names,
         )
 
-    params = _get_class_initializer_params(cls)
+    params = get_class_initializer_params(cls)
     _, arg_helps = parse_docstring(cls)
-    default_factories = _get_default_factories(cls) if is_dataclass(cls) else {}
+    default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
 
     return _make_args_from_params(
         params,
@@ -312,15 +314,15 @@ def make_args_from_typeddict(
 
     args = Args(brief=brief, program_name=program_name)
 
-    used_names = _collect_param_names(params, obj_name, recurse, kw_only=True)
-    used_short_names = _used_short_names if _used_short_names is not None else set()
-    used_short_names |= _reserve_short_names(
+    used_names = collect_param_names(params, obj_name, recurse, kw_only=True)
+    used_short_names = _used_short_names if _used_short_names is not None else set[str]()
+    used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, annotation in params:
-        normalized_annotation = _normalize_type(annotation)
+        normalized_annotation = normalize_type(annotation)
 
         required = True  # TODO: handle NotRequired / totality
 
@@ -331,24 +333,24 @@ def make_args_from_typeddict(
         positional = False
         named = True
 
-        nary, container_type, normalized_annotation = _get_annotation_naryness(
+        nary, container_type, normalized_annotation = get_annotation_naryness(
             normalized_annotation
         )
 
         child_args: Args | None = None
         if is_parsable(normalized_annotation):
-            name = _make_name(param_name_sub, named, docstr_param, used_short_names)
+            name = make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
             if nary:
                 raise ParserConfigError(
                     f"Cannot recurse into n-ary parameter `{param_name}` "
                     f"in `{obj_name}`!"
                 )
-            normalized_annotation = _strip_optional(normalized_annotation)
+            normalized_annotation = strip_optional(normalized_annotation)
             if not isinstance(normalized_annotation, type):
                 raise ParserConfigError(
                     f"Cannot recurse into parameter `{param_name}` of non-class type "
-                    f"`{_shorten_type_annotation(annotation.annotation)}` in `{obj_name}`!"
+                    f"`{shorten_type_annotation(annotation.annotation)}` in `{obj_name}`!"
                 )
             child_args = make_args_from_class(
                 normalized_annotation,
@@ -360,7 +362,7 @@ def make_args_from_typeddict(
             name = Name(long=param_name_sub)
         else:
             raise ParserConfigError(
-                f"Unsupported type `{_shorten_type_annotation(annotation.annotation)}` "
+                f"Unsupported type `{shorten_type_annotation(annotation.annotation)}` "
                 f"for parameter `{param_name}` in `{obj_name}`!"
             )
 

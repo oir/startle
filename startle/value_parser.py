@@ -8,7 +8,7 @@ from inspect import isclass
 from pathlib import Path
 from typing import Any, Callable, Literal, cast
 
-from ._type_utils import _strip_optional
+from ._type_utils import strip_optional
 from .error import ParserValueError
 
 
@@ -77,7 +77,7 @@ def _get_parser(type_: Any) -> Callable[[str], Any] | None:
     """
 
     # if type is Optional[T], convert to T
-    type_ = _strip_optional(type_)
+    type_ = strip_optional(type_)
 
     if typing.get_origin(type_) is Literal:
         type_args = typing.get_args(type_)

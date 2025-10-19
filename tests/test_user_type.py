@@ -5,7 +5,7 @@ from pytest import raises
 
 from startle import register
 from startle.error import ParserConfigError
-from startle.metavar import _METAVARS
+from startle._metavar import _METAVARS
 from startle.value_parser import _PARSERS
 
 from ._utils import check_args

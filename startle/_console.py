@@ -25,14 +25,14 @@ def _print(*parts: str | Text | tuple[str, StyleType]) -> None:
 
 
 @overload
-def _error(msg: str, *, exit: Literal[True] = True, endl: bool = True) -> NoReturn: ...
+def error(msg: str, *, exit: Literal[True] = True, endl: bool = True) -> NoReturn: ...
 
 
 @overload
-def _error(msg: str, *, exit: Literal[False], endl: bool) -> None: ...
+def error(msg: str, *, exit: Literal[False], endl: bool) -> None: ...
 
 
-def _error(
+def error(
     msg: str, *, exit: Literal[True, False] = True, endl: bool = True
 ) -> None | NoReturn:
     """
@@ -56,14 +56,14 @@ def _error(
 
 
 @overload
-def _post_error(*, exit: Literal[True] = True) -> NoReturn: ...
+def post_error(*, exit: Literal[True] = True) -> NoReturn: ...
 
 
 @overload
-def _post_error(*, exit: Literal[False]) -> None: ...
+def post_error(*, exit: Literal[False]) -> None: ...
 
 
-def _post_error(*, exit: Literal[True, False] = True) -> None | NoReturn:
+def post_error(*, exit: Literal[True, False] = True) -> None | NoReturn:
     """
     Print a post-error message to the console.
     """

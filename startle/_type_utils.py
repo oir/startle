@@ -2,32 +2,22 @@ import inspect
 import sys
 import types
 from inspect import Parameter
-from types import GenericAlias, UnionType
 from typing import (
     Annotated,
     Any,
-    Literal,
     Optional,
     TypeAlias,
     Union,
     get_args,
     get_origin,
 )
-
-# TypeHint based on https://stackoverflow.com/a/77123458
-BaseGenericAlias: TypeAlias = type(Literal[0]).__base__.__base__  # type: ignore
-SpecialForm: TypeAlias = type(Any)  # type: ignore
-TypeHint: TypeAlias = (
-    type  # type: ignore[valid-type]
-    | GenericAlias
-    | UnionType
-    | BaseGenericAlias
-    | SpecialForm
-    | type(None)  # type: ignore
-)
+from typing_extensions import TypeForm
 
 
-def _strip_optional(type_: Any) -> Any:
+TypeHint: TypeAlias = TypeForm[object]
+
+
+def strip_optional(type_: Any) -> Any:
     """
     Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
     return T1 | ... | Tn.
@@ -44,7 +34,7 @@ def _strip_optional(type_: Any) -> Any:
     return type_
 
 
-def _strip_annotated(type_: Any) -> Any:
+def strip_annotated(type_: Any) -> Any:
     """
     Strip the Annotated type from a type hint. Given Annotated[T, ...], return T.
     """
@@ -55,7 +45,7 @@ def _strip_annotated(type_: Any) -> Any:
     return type_
 
 
-def _resolve_type_alias(type_: Any) -> Any:
+def resolve_type_alias(type_: Any) -> Any:
     """
     Resolve type aliases to their underlying types.
     """
@@ -67,7 +57,7 @@ def _resolve_type_alias(type_: Any) -> Any:
     return type_
 
 
-def _normalize_union_type(annotation: Any) -> Any:
+def normalize_union_type(annotation: Any) -> Any:
     """
     Normalize a type annotation by unifying Union and Optional types.
     """
@@ -85,7 +75,7 @@ def _normalize_union_type(annotation: Any) -> Any:
     return annotation
 
 
-def _normalize_type(annotation: Any) -> Any:
+def normalize_type(annotation: Any) -> Any:
     """
     Normalize a type annotation by stripping Annotated, resolving type aliases,
     and unifying Union and Optional types.
@@ -94,13 +84,13 @@ def _normalize_type(annotation: Any) -> Any:
     curr: Any = annotation
     while prev != curr:
         prev = curr
-        curr = _strip_annotated(curr)
-        curr = _resolve_type_alias(curr)
-        curr = _normalize_union_type(curr)
+        curr = strip_annotated(curr)
+        curr = resolve_type_alias(curr)
+        curr = normalize_union_type(curr)
     return curr
 
 
-def _shorten_type_annotation(annotation: Any) -> str:
+def shorten_type_annotation(annotation: Any) -> str:
     origin = get_origin(annotation)
     if origin is None:
         # It's a simple type, return its name
@@ -113,21 +103,21 @@ def _shorten_type_annotation(annotation: Any) -> str:
         if type(None) in args:
             args = tuple([arg for arg in args if arg is not type(None)])
             if len(args) == 1:
-                return f"{_shorten_type_annotation(args[0])} | None"
-            return " | ".join(_shorten_type_annotation(arg) for arg in args) + " | None"
+                return f"{shorten_type_annotation(args[0])} | None"
+            return " | ".join(shorten_type_annotation(arg) for arg in args) + " | None"
         else:
-            return " | ".join(_shorten_type_annotation(arg) for arg in args)
+            return " | ".join(shorten_type_annotation(arg) for arg in args)
 
     # It's a generic type, process its arguments
     args = get_args(annotation)
     if args:
-        args_str = ", ".join(_shorten_type_annotation(arg) for arg in args)
+        args_str = ", ".join(shorten_type_annotation(arg) for arg in args)
         return f"{origin.__name__}[{args_str}]"
 
     return repr(annotation)
 
 
-def _is_typeddict(type_: type) -> bool:
+def is_typeddict(type_: type) -> bool:
     """
     Return True if the given type is a TypedDict class.
     """
@@ -141,7 +131,7 @@ def _is_typeddict(type_: type) -> bool:
     )
 
 
-def _normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
+def normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
     """
     Normalize a function parameter or type annotation.
 
@@ -154,6 +144,6 @@ def _normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
     if isinstance(param_or_annot, Parameter):
         if param_or_annot.annotation is Parameter.empty:
             return str
-        return _normalize_type(param_or_annot.annotation)
+        return normalize_type(param_or_annot.annotation)
     else:
-        return _normalize_type(param_or_annot)
+        return normalize_type(param_or_annot)

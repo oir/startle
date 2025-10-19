@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
 from .error import ParserConfigError
-from .metavar import _get_metavar
+from ._metavar import get_metavar
 from .value_parser import parse
 
 if TYPE_CHECKING:
@@ -72,6 +72,14 @@ class Arg:
     @property
     def is_flag(self) -> bool:
         return self.type_ is bool and self.default is False and not self.is_positional
+    
+    @property
+    def is_parsed(self) -> bool:
+        return self._parsed
+    
+    @property
+    def value(self) -> Any:
+        return self._value
 
     def __post_init__(self):
         if not self.is_positional and not self.is_named:
@@ -79,7 +87,7 @@ class Arg:
                 "An argument should be either positional or named (or both)!"
             )
         if not self.metavar:
-            self.metavar = _get_metavar(self.type_)
+            self.metavar = get_metavar(self.type_)
 
     def _append(self, container: Any, value: Any) -> Any:
         assert self.is_nary, "Programming error!"

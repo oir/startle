@@ -4,17 +4,17 @@ from typing import Any, Iterable, Literal, cast, get_args, get_origin
 from .._docstr import ParamHelp, ParamHelps
 from .._type_utils import (
     TypeHint,
-    _is_typeddict,
-    _normalize_annotation,
-    _strip_annotated,
+    is_typeddict,
+    normalize_annotation,
+    strip_annotated,
 )
 from ..arg import Name
 from ..error import ParserConfigError
 from ..value_parser import is_parsable
-from .classes import _get_class_initializer_params
+from .classes import get_class_initializer_params
 
 
-def _reserve_short_names(
+def reserve_short_names(
     params: Iterable[tuple[str, Parameter | TypeHint]],
     used_names: list[str],
     arg_helps: ParamHelps = {},
@@ -53,7 +53,7 @@ def _reserve_short_names(
     return used_short_names
 
 
-def _make_name(
+def make_name(
     param_name_sub: str,
     named: bool,
     docstr_param: ParamHelp,
@@ -71,7 +71,7 @@ def _make_name(
     return Name(long=param_name_sub)
 
 
-def _get_annotation_naryness(
+def get_annotation_naryness(
     normalized_annotation: Any,
 ) -> tuple[bool, type | None, Any]:
     """
@@ -88,16 +88,16 @@ def _get_annotation_naryness(
     args_ = get_args(normalized_annotation)
 
     if orig in [list, set]:
-        return True, orig, _strip_annotated(args_[0]) if args_ else str
+        return True, orig, strip_annotated(args_[0]) if args_ else str
     if orig is tuple and len(args_) == 2 and args_[1] is ...:
-        return True, orig, _strip_annotated(args_[0]) if args_ else str
+        return True, orig, strip_annotated(args_[0]) if args_ else str
     if normalized_annotation in [list, tuple, set]:
         container_type = cast(type, normalized_annotation)
         return True, container_type, str
     return False, None, normalized_annotation
 
 
-def _get_naryness(
+def get_naryness(
     param_or_annot: Parameter | TypeHint, normalized_annotation: Any
 ) -> tuple[bool, type | None, Any]:
     """
@@ -114,19 +114,19 @@ def _get_naryness(
         if param_or_annot.kind is Parameter.VAR_POSITIONAL:
             return True, list, normalized_annotation
 
-    return _get_annotation_naryness(normalized_annotation)
+    return get_annotation_naryness(normalized_annotation)
 
 
 def _get_params_or_annotations(
     annotation: type,
 ) -> Iterable[tuple[str, Parameter | TypeHint]]:
-    if _is_typeddict(annotation):
+    if is_typeddict(annotation):
         return annotation.__annotations__.items()
     else:
-        return _get_class_initializer_params(annotation)
+        return get_class_initializer_params(annotation)
 
 
-def _collect_param_names(
+def collect_param_names(
     params: Iterable[tuple[str, Parameter | TypeHint]],
     obj_name: str,
     recurse: bool | Literal["child"] = False,
@@ -148,16 +148,16 @@ def _collect_param_names(
         else:
             return True  # TypeHint is always keyword
 
-    used_names_set = set()
-    used_names = list()
+    used_names_set = set[str]()
+    used_names = list[str]()
     for param_name, param in params:
         if param_name == "help":
             raise ParserConfigError(
                 f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
-        normalized_annotation = _normalize_annotation(param)
-        _, _, normalized_annotation = _get_naryness(param, normalized_annotation)
+        normalized_annotation = normalize_annotation(param)
+        _, _, normalized_annotation = get_naryness(param, normalized_annotation)
 
         if is_parsable(normalized_annotation):
             name = param_name.replace("_", "-")
@@ -170,7 +170,7 @@ def _collect_param_names(
                 used_names_set.add(name)
                 used_names.append(name)
         elif recurse:
-            child_names = _collect_param_names(
+            child_names = collect_param_names(
                 _get_params_or_annotations(normalized_annotation),
                 obj_name=normalized_annotation.__name__,
                 recurse="child",

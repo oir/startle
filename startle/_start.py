@@ -1,7 +1,7 @@
 import sys
 from typing import Any, Callable, TypeVar
 
-from ._console import _error, _post_error, console
+from ._console import error, post_error, console
 from ._inspect.make_args import make_args_from_func
 from .args import Args
 from .cmds import Cmds
@@ -47,7 +47,7 @@ def start(
         if default is not None:
             msg = "Default subcommand is not supported for a single function."
             if catch:
-                _error(msg)
+                error(msg)
             else:
                 raise ParserConfigError(msg)
         return _start_func(obj, name, args, catch, recurse)
@@ -77,7 +77,7 @@ def _start_func(
         args_ = make_args_from_func(func, program_name=name or "", recurse=recurse)
     except ParserConfigError as e:
         if catch:
-            _error(str(e))
+            error(str(e))
         else:
             raise e
 
@@ -92,9 +92,9 @@ def _start_func(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
-            _error(str(e), exit=False, endl=False)
+            error(str(e), exit=False, endl=False)
             args_.print_help(console(), usage_only=True)
-            _post_error()
+            post_error()
         else:
             raise e
 
@@ -146,7 +146,7 @@ def _start_cmds(
         )
     except ParserConfigError as e:
         if catch:
-            _error(str(e))
+            error(str(e))
         else:
             raise e
 
@@ -164,10 +164,10 @@ def _start_cmds(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
-            _error(str(e), exit=False, endl=False)
+            error(str(e), exit=False, endl=False)
             if args:  # error happened after parsing the command
                 args.print_help(console(), usage_only=True)
-                _post_error(exit=False)
+                post_error(exit=False)
             else:  # error happened before parsing the command
                 cmds.print_help(console())
             raise SystemExit(1)

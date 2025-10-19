@@ -1,10 +1,15 @@
 import sys
 from dataclasses import dataclass, field
 from typing import Any, Literal
+from typing import TYPE_CHECKING
 
 from ._help import _Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
+
+
+if TYPE_CHECKING:
+    from rich.console import Console
 
 
 @dataclass
@@ -33,9 +38,9 @@ class Args:
     brief: str = ""
     program_name: str = ""
 
-    _positional_args: list[Arg] = field(default_factory=list)
-    _named_args: list[Arg] = field(default_factory=list)
-    _name2idx: dict[str, int] = field(default_factory=dict)
+    _positional_args: list[Arg] = field(default_factory=list[Arg])
+    _named_args: list[Arg] = field(default_factory=list[Arg])
+    _name2idx: dict[str, int] = field(default_factory=dict[str, int])
     # note that _name2idx is many to one, because a name can be both short and long
 
     _var_args: Arg | None = None  # remaining unk args for functions with *args
@@ -48,8 +53,8 @@ class Args:
         Uniquely listed arguments. Note that an argument can be both positional and named,
         hence be in both lists.
         """
-        seen = set()
-        unique_args = []
+        seen = set[int]()
+        unique_args: list[Arg] = []
         for arg in self._positional_args + self._named_args:
             if id(arg) not in seen:
                 unique_args.append(arg)
@@ -150,7 +155,7 @@ class Args:
             else:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[normal_name]]
-        if opt._parsed and not opt.is_nary:
+        if opt.is_parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
         if opt.is_flag:
             raise ParserOptionError(
@@ -174,7 +179,7 @@ class Args:
             if name not in self._name2idx:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
             opt = self._named_args[self._name2idx[name]]
-            if opt._parsed and not opt.is_nary:
+            if opt.is_parsed and not opt.is_nary:
                 raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 
             if i < len(names) - 1:
@@ -196,7 +201,7 @@ class Args:
                     return state
                 if opt.is_nary:
                     # n-ary option
-                    values = []
+                    values: list[str] = []
                     state.idx += 1
                     while (
                         state.idx < len(args)
@@ -248,7 +253,7 @@ class Args:
             else:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
         opt = self._named_args[self._name2idx[normal_name]]
-        if opt._parsed and not opt.is_nary:
+        if opt.is_parsed and not opt.is_nary:
             raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 
         if opt.is_flag:
@@ -257,7 +262,7 @@ class Args:
             return state
         if opt.is_nary:
             # n-ary option
-            values = []
+            values: list[str] = []
             state.idx += 1
             while state.idx < len(args) and self._is_name(args[state.idx]) is False:
                 values.append(args[state.idx])
@@ -285,7 +290,7 @@ class Args:
         # (because they could have also been named)
         while (
             state.positional_idx < len(self._positional_args)
-            and self._positional_args[state.positional_idx]._parsed
+            and self._positional_args[state.positional_idx].is_parsed
         ):
             state.positional_idx += 1
 
@@ -300,13 +305,13 @@ class Args:
                 )
 
         arg = self._positional_args[state.positional_idx]
-        if arg._parsed:
+        if arg.is_parsed:
             raise ParserOptionError(
                 f"Positional argument `{args[state.idx]}` is multiply given!"
             )
         if arg.is_nary:
             # n-ary positional arg
-            values = []
+            values: list[str] = []
             while state.idx < len(args) and self._is_name(args[state.idx]) is False:
                 values.append(args[state.idx])
                 state.idx += 1
@@ -339,19 +344,19 @@ class Args:
                     ):
                         # this is allowed if arg has a default value
                         if not arg.required:
-                            arg._value = arg.default
-                            arg._parsed = True
+                            arg._value = arg.default  # type: ignore
+                            arg._parsed = True  # type: ignore
                             continue
                         # note that we do not consume any args, even partially
                     raise e
 
                 assert child_args._var_args is not None, "Programming error!"
-                remaining_args = child_args._var_args._value or []
+                remaining_args: list[str] = child_args._var_args.value or []
 
                 # construct the actual object
                 init_args, init_kwargs = child_args.make_func_args()
-                arg._value = arg.type_(*init_args, **init_kwargs)
-                arg._parsed = True
+                arg._value = arg.type_(*init_args, **init_kwargs)  # type: ignore
+                arg._parsed = True  # type: ignore
 
         return remaining_args
 
@@ -385,7 +390,7 @@ class Args:
 
         # check if all required arguments are given, assign defaults otherwise
         for arg in self._positional_args + self._named_args:
-            if not arg._parsed:
+            if not arg.is_parsed:
                 if arg.required:
                     if arg.is_named:
                         # if a positional arg is also named, prefer this type of error message
@@ -397,8 +402,8 @@ class Args:
                             f"Required positional argument <{arg.name.long}> is not provided!"
                         )
                 else:
-                    arg._value = arg.default
-                    arg._parsed = True
+                    arg._value = arg.default  # type: ignore
+                    arg._parsed = True  # type: ignore
 
     def make_func_args(self) -> tuple[list[Any], dict[str, Any]]:
         """
@@ -416,18 +421,18 @@ class Args:
                 return opt.replace("-", "_")
             return opt.name.long_or_short.replace("-", "_")
 
-        positional_args = [arg._value for arg in self._positional_args]
+        positional_args = [arg.value for arg in self._positional_args]
         named_args = {
-            var(opt): opt._value
+            var(opt): opt.value
             for opt in self._named_args
             if opt not in self._positional_args
         }
 
-        if not self._parent and self._var_args and self._var_args._value:
+        if not self._parent and self._var_args and self._var_args.value:
             # Append variadic positional arguments to the end of positional args.
             # This is only done for the top-level Args, not for child Args, as _var_args
             # for child Args is only used to pass remaining args to the parent.
-            positional_args += self._var_args._value
+            positional_args += self._var_args.value
 
         return positional_args, named_args
 
@@ -452,9 +457,9 @@ class Args:
         (positional only, positional and named, named only).
         Skips var args and var kwargs.
         """
-        positional_only = []
-        positional_and_named = []
-        named_only = []
+        positional_only: list[Arg] = []
+        positional_and_named: list[Arg] = []
+        named_only: list[Arg] = []
 
         for arg in self._positional_args:
             if arg.args:
@@ -483,7 +488,7 @@ class Args:
 
         return positional_only, positional_and_named, named_only
 
-    def print_help(self, console=None, usage_only: bool = False) -> None:
+    def print_help(self, console: "Console | None"=None, usage_only: bool = False) -> None:
         """
         Print the help message to the console.
 

@@ -2,7 +2,7 @@ from dataclasses import MISSING, fields, is_dataclass
 from typing import Any
 
 
-def _get_default_factories(cls: type) -> dict[str, Any]:
+def get_default_factories(cls: type) -> dict[str, Any]:
     """
     Get the default factory functions for all fields in a dataclass.
     """

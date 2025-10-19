@@ -1,6 +1,6 @@
 from typing import Any, Callable
 
-from ._type_utils import _normalize_type
+from ._type_utils import normalize_type
 
 
 def register(
@@ -22,10 +22,10 @@ def register(
     """
     # TODO: should overwrite be disallowed?
 
-    from .metavar import _METAVARS
+    from ._metavar import _METAVARS
     from .value_parser import _PARSERS
 
-    type_ = _normalize_type(type_)
+    type_ = normalize_type(type_)
 
     if parser:
         _PARSERS[type_] = parser
