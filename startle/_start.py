@@ -1,7 +1,7 @@
 import sys
 from typing import Any, Callable, TypeVar
 
-from ._console import error, post_error, console
+from ._console import console, error, post_error
 from ._inspect.make_args import make_args_from_func
 from .args import Args
 from .cmds import Cmds

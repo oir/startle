@@ -63,9 +63,7 @@ def test_shorten_type_annotation():
     assert shorten_type_annotation(list[int]) == "list[int]"
     assert shorten_type_annotation(List[int]) == "list[int]"
     assert shorten_type_annotation(List[int | None]) == "list[int | None]"
-    assert (
-        shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
-    )
+    assert shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
     assert shorten_type_annotation(list) == "list"
     assert shorten_type_annotation(List) == "typing.List"  # TODO:
     assert shorten_type_annotation(Any) in ["Any", "typing.Any"]  # TODO:

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
-from .error import ParserConfigError
 from ._metavar import get_metavar
+from .error import ParserConfigError
 from .value_parser import parse
 
 if TYPE_CHECKING:
@@ -72,11 +72,11 @@ class Arg:
     @property
     def is_flag(self) -> bool:
         return self.type_ is bool and self.default is False and not self.is_positional
-    
+
     @property
     def is_parsed(self) -> bool:
         return self._parsed
-    
+
     @property
     def value(self) -> Any:
         return self._value

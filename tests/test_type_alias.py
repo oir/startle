@@ -13,8 +13,8 @@ from typing import Annotated, Callable
 from pytest import mark, raises
 
 from startle import parse, register
-from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 from startle._metavar import _METAVARS
+from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 from startle.value_parser import _PARSERS
 
 from ._utils import check_args

@@ -1,12 +1,10 @@
 import sys
 from dataclasses import dataclass, field
-from typing import Any, Literal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 from ._help import _Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
-
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -488,7 +486,9 @@ class Args:
 
         return positional_only, positional_and_named, named_only
 
-    def print_help(self, console: "Console | None"=None, usage_only: bool = False) -> None:
+    def print_help(
+        self, console: "Console | None" = None, usage_only: bool = False
+    ) -> None:
         """
         Print the help message to the console.
 

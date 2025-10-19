@@ -58,7 +58,9 @@ class Cmds:
 
         return self.default, self.cmd_parsers[self.default], cli_args
 
-    def print_help(self, console: "Console | None" = None, usage_only: bool = False) -> None:
+    def print_help(
+        self, console: "Console | None" = None, usage_only: bool = False
+    ) -> None:
         """
         Print the help message to the console.
 

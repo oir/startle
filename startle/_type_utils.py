@@ -11,8 +11,8 @@ from typing import (
     get_args,
     get_origin,
 )
-from typing_extensions import TypeForm
 
+from typing_extensions import TypeForm
 
 TypeHint: TypeAlias = TypeForm[object]
 

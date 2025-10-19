@@ -6,8 +6,8 @@ from typing import (
     Callable,
     Iterable,
     Literal,
-    cast,
     ParamSpec,
+    cast,
 )
 
 from .._docstr import ParamHelp, ParamHelps, parse_docstring
@@ -110,7 +110,9 @@ def _make_args_from_params(
     args = Args(brief=brief, program_name=program_name)
 
     used_names = collect_param_names(params, obj_name, recurse, kw_only)
-    used_short_names = _used_short_names if _used_short_names is not None else set[str]()
+    used_short_names = (
+        _used_short_names if _used_short_names is not None else set[str]()
+    )
     used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
@@ -201,7 +203,9 @@ def _make_args_from_params(
         )
     return args
 
+
 P = ParamSpec("P")
+
 
 def make_args_from_func(
     func: Callable[P, Any],
@@ -315,7 +319,9 @@ def make_args_from_typeddict(
     args = Args(brief=brief, program_name=program_name)
 
     used_names = collect_param_names(params, obj_name, recurse, kw_only=True)
-    used_short_names = _used_short_names if _used_short_names is not None else set[str]()
+    used_short_names = (
+        _used_short_names if _used_short_names is not None else set[str]()
+    )
     used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
