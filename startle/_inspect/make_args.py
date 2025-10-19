@@ -12,8 +12,7 @@ from typing import (
 from .._docstr import (
     ParamHelp,
     ParamHelps,
-    _parse_class_docstring,
-    _parse_func_docstring,
+    parse_docstring,
 )
 from .._type_utils import (
     TypeHint,
@@ -56,6 +55,32 @@ def get_param_help(
             param_key = f"**{param_name}"
 
     return arg_helps[param_key] if param_key else ParamHelp()
+
+
+def check_recursable(
+    param_name: str,
+    param: Parameter,
+    normalized_annotation: Any,
+    obj_name: str,
+    nary: bool,
+) -> None:
+    """
+    Raise if the given parameter cannot be recursed into, no-op otherwise.
+    """
+    if _is_variadic(param):
+        raise ParserConfigError(
+            f"Cannot recurse into variadic parameter `{param_name}` in `{obj_name}`!"
+        )
+    if nary:
+        raise ParserConfigError(
+            f"Cannot recurse into n-ary parameter `{param_name}` in `{obj_name}`!"
+        )
+    normalized_annotation = _strip_optional(normalized_annotation)
+    if not isinstance(normalized_annotation, type):
+        raise ParserConfigError(
+            f"Cannot recurse into parameter `{param_name}` of non-class type "
+            f"`{_shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
+        )
 
 
 def _make_args_from_params(
@@ -121,22 +146,8 @@ def _make_args_from_params(
         if is_parsable(normalized_annotation):
             name = _make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
-            if _is_variadic(param):
-                raise ParserConfigError(
-                    f"Cannot recurse into variadic parameter `{param_name}` "
-                    f"in `{obj_name}`!"
-                )
-            if nary:
-                raise ParserConfigError(
-                    f"Cannot recurse into n-ary parameter `{param_name}` "
-                    f"in `{obj_name}`!"
-                )
+            check_recursable(param_name, param, normalized_annotation, obj_name, nary)
             normalized_annotation = _strip_optional(normalized_annotation)
-            if not isinstance(normalized_annotation, type):
-                raise ParserConfigError(
-                    f"Cannot recurse into parameter `{param_name}` of non-class type "
-                    f"`{_shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
-                )
             child_args = make_args_from_class(
                 normalized_annotation,
                 recurse="child" if recurse else False,
@@ -216,7 +227,7 @@ def make_args_from_func(
     params = sig.parameters.items()
 
     # Attempt to parse brief and arg descriptions from docstring
-    brief, arg_helps = _parse_func_docstring(func)
+    brief, arg_helps = parse_docstring(func)
 
     return _make_args_from_params(
         params,
@@ -263,7 +274,7 @@ def make_args_from_class(
         )
 
     params = _get_class_initializer_params(cls)
-    arg_helps = _parse_class_docstring(cls)
+    _, arg_helps = parse_docstring(cls)
     default_factories = _get_default_factories(cls) if is_dataclass(cls) else {}
 
     return _make_args_from_params(
@@ -300,7 +311,7 @@ def make_args_from_typeddict(
             Modified in-place if not None.
     """
     params = td.__annotations__.items()
-    arg_helps = _parse_class_docstring(td)
+    _, arg_helps = parse_docstring(td)
     obj_name = td.__name__
 
     args = Args(brief=brief, program_name=program_name)

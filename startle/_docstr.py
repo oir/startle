@@ -1,8 +1,10 @@
 import inspect
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from functools import singledispatch
 from textwrap import dedent
-from typing import Callable, Literal
+from typing import Literal
 
 
 @dataclass
@@ -102,7 +104,16 @@ def _parse_docstring(
     return brief, arg_helps
 
 
-def _parse_func_docstring(func: Callable) -> tuple[str, ParamHelps]:
+@singledispatch
+def parse_docstring(obj: Callable | type) -> tuple[str, ParamHelps]:
+    """
+    Parse the docstring of a function or class and return the brief and the arg descriptions.
+    """
+    raise NotImplementedError(f"parse_docstring not implemented for type {type(obj)}")
+
+
+@parse_docstring.register
+def _(func: Callable) -> tuple[str, ParamHelps]:
     """
     Parse the docstring of a function and return the brief and the arg descriptions.
     """
@@ -111,12 +122,11 @@ def _parse_func_docstring(func: Callable) -> tuple[str, ParamHelps]:
     return _parse_docstring(docstring, "function")
 
 
-def _parse_class_docstring(cls: type) -> ParamHelps:
+@parse_docstring.register
+def _(cls: type) -> tuple[str, ParamHelps]:
     """
     Parse the docstring of a class and return the arg descriptions.
     """
     docstring = inspect.getdoc(cls) or ""
 
-    _, arg_helps = _parse_docstring(docstring, "class")
-
-    return arg_helps
+    return _parse_docstring(docstring, "class")
