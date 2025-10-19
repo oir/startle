@@ -9,11 +9,7 @@ from typing import (
     cast,
 )
 
-from .._docstr import (
-    ParamHelp,
-    ParamHelps,
-    parse_docstring,
-)
+from .._docstr import ParamHelp, ParamHelps, parse_docstring
 from .._type_utils import (
     TypeHint,
     _is_typeddict,
