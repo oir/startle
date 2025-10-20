@@ -2,7 +2,6 @@ import re
 from typing import Any, Optional, Union
 
 from pytest import raises
-
 from startle._type_utils import (
     normalize_type,
     shorten_type_annotation,

@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import Annotated, Callable
 
 from pytest import mark, raises
-
 from startle import parse, register
 from startle._metavar import METAVARS
 from startle._value_parser import PARSERS

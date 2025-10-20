@@ -2,7 +2,6 @@ import re
 from typing import Annotated
 
 from pytest import mark, raises
-
 from startle._inspect.make_args import make_args_from_func
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 

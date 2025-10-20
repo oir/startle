@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Callable, Literal
 
 from pytest import mark, raises
-
 from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import check_args

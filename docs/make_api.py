@@ -1,7 +1,8 @@
 import inspect
 import types
 from collections import abc
-from typing import Any, Callable, TextIO, Union, get_args, get_origin
+from collections.abc import Callable
+from typing import Any, TextIO, Union, get_args, get_origin
 
 from startle import parse, register, start
 from startle._inspect.make_args import parse_docstring

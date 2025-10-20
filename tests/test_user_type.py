@@ -2,7 +2,6 @@ import re
 from dataclasses import dataclass
 
 from pytest import raises
-
 from startle import register
 from startle._metavar import METAVARS
 from startle._value_parser import PARSERS

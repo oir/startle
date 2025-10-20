@@ -3,7 +3,6 @@ from enum import Enum, IntEnum
 from typing import Callable
 
 from pytest import mark, raises
-
 from startle.error import ParserOptionError, ParserValueError
 
 from ._utils import Opt, Opts, check_args

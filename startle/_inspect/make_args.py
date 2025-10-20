@@ -1,10 +1,9 @@
 import inspect
+from collections.abc import Callable, Iterable
 from dataclasses import is_dataclass
 from inspect import Parameter
 from typing import (
     Any,
-    Callable,
-    Iterable,
     Literal,
     ParamSpec,
     cast,

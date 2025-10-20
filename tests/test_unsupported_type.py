@@ -2,7 +2,6 @@ import re
 from typing import Callable
 
 from pytest import mark, raises
-
 from startle.error import ParserConfigError
 
 from ._utils import check_args

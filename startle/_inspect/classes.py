@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from inspect import Parameter, signature
-from typing import Iterable
 
 
 def get_class_initializer_params(cls: type) -> Iterable[tuple[str, Parameter]]:

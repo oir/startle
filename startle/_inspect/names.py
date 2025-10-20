@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from inspect import Parameter
-from typing import Any, Iterable, Literal, cast, get_args, get_origin
+from typing import Any, Literal, cast, get_args, get_origin
 
 from .._docstr import ParamHelp, ParamHelps
 from .._type_utils import (

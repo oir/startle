@@ -1,4 +1,4 @@
-from typing import Type, TypeVar
+from typing import TypeVar
 
 from rich.console import Console
 from rich.text import Text
@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 
 def parse(
-    cls: Type[T],
+    cls: type[T],
     *,
     name: str | None = None,
     args: list[str] | None = None,

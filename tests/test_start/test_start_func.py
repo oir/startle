@@ -1,7 +1,6 @@
 from typing import Callable
 
 from pytest import mark, raises
-
 from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import (

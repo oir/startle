@@ -1,5 +1,6 @@
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Sequence
+from typing import TYPE_CHECKING, Any
 
 from ._metavar import get_metavar
 from ._value_parser import parse

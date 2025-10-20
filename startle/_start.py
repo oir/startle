@@ -1,5 +1,6 @@
 import sys
-from typing import Any, Callable, TypeVar, cast
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 from ._console import console, error, post_error
 from ._inspect.make_args import make_args_from_func

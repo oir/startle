@@ -3,10 +3,11 @@ String-to-type conversion functions.
 """
 
 import typing
+from collections.abc import Callable
 from enum import Enum
 from inspect import isclass
 from pathlib import Path
-from typing import Any, Callable, Literal, cast
+from typing import Any, Literal, cast
 
 from ._type_utils import strip_optional
 from .error import ParserValueError

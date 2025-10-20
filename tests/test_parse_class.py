@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Annotated, Callable, TypedDict
 
 from pytest import mark, raises
-
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
