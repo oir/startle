@@ -5,7 +5,6 @@ from inspect import Parameter
 from typing import (
     Any,
     Literal,
-    ParamSpec,
     cast,
 )
 
@@ -207,11 +206,8 @@ def _make_args_from_params(
     return args
 
 
-P = ParamSpec("P")
-
-
 def make_args_from_func(
-    func: Callable[P, Any],
+    func: Callable[..., Any],
     *,
     program_name: str = "",
     recurse: bool | Literal["child"] = False,
