@@ -17,7 +17,7 @@ from typing_extensions import TypeForm
 TypeHint: TypeAlias = TypeForm[object]
 
 
-def strip_optional(type_: Any) -> Any:
+def strip_optional(type_: TypeHint) -> TypeHint:
     """
     Strip the Optional type from a type hint. Given T1 | ... | Tn | None,
     return T1 | ... | Tn.
@@ -29,7 +29,7 @@ def strip_optional(type_: Any) -> Any:
             if len(args) == 1:
                 return args[0]
             else:
-                return Union[args]
+                return Union[args]  # type: ignore
 
     return type_
 

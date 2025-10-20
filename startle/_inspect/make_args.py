@@ -147,6 +147,10 @@ def _make_args_from_params(
         elif recurse:
             check_recursable(param_name, param, normalized_annotation, obj_name, nary)
             normalized_annotation = strip_optional(normalized_annotation)
+            assert isinstance(normalized_annotation, type), (
+                "Unexpected type form that is not a type!"
+            )
+
             child_args = make_args_from_class(
                 normalized_annotation,
                 recurse="child" if recurse else False,
