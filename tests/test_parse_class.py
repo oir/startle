@@ -240,6 +240,16 @@ class ConfigTypedDict(TypedDict):
     label: str
 
 
+class ConfigTypedDictAnnotated(TypedDict):
+    """
+    A configuration dict for the program.
+    """
+
+    count: Annotated[int, "some metadata"]
+    amount: Annotated[float, "some metadata"]
+    label: Annotated[str, "some metadata"]
+
+
 @mark.parametrize(
     "count",
     [
@@ -267,15 +277,15 @@ class ConfigTypedDict(TypedDict):
         lambda l: [f"-l={l}"],
     ],
 )
+@mark.parametrize("cls", [ConfigTypedDict, ConfigTypedDictAnnotated])
 def test_typed_dict_config(
     capsys,
     count: Callable[[str], list[str]],
     amount: Callable[[str], list[str]],
     label: Callable[[str], list[str]],
+    cls: type,
 ):
-    assert parse(
-        ConfigTypedDict, args=[*count("2"), *amount("2.0"), *label("custom")]
-    ) == {
+    assert parse(cls, args=[*count("2"), *amount("2.0"), *label("custom")]) == {
         "count": 2,
         "amount": 2.0,
         "label": "custom",
