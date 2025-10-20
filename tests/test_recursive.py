@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from typing import Callable, Literal
+from typing import Callable, Literal, TypedDict
 
 from pytest import mark, raises
 from startle.error import ParserConfigError, ParserOptionError
@@ -113,12 +113,37 @@ def throw_dice2(cfg: DieConfig2, count: int) -> None:
     pass
 
 
+class DieConfig2TD(TypedDict):
+    """
+    Configuration for the dice program.
+
+    Attributes:
+        sides: The number of sides on the dice.
+        kind: Whether to throw a single die or a pair of dice.
+    """
+
+    sides: int
+    kind: Literal["single", "pair"]
+
+
+def throw_dice2_td(cfg: DieConfig2TD, count: int) -> None:
+    """
+    Throw dice according to the configuration.
+
+    Args:
+        cfg: The configuration for the dice.
+        count: The number of dice to throw.
+    """
+    pass
+
+
 @mark.parametrize("sides_opt", ["--sides", "-s"])
 @mark.parametrize("kind_opt", ["--kind", "-k"])
 @mark.parametrize("count_opt", ["--count", "-c"])
 @mark.parametrize("sides", [4, 6, None])
 @mark.parametrize("kind", ["single", "pair", None])
 @mark.parametrize("count", [1, 2, None])
+@mark.parametrize("cls", [DieConfig2, DieConfig2TD])
 def test_recursive_w_required(
     sides_opt: str,
     kind_opt: str,
@@ -126,7 +151,12 @@ def test_recursive_w_required(
     sides: int | None,
     kind: Literal["single", "pair"] | None,
     count: int | None,
+    cls: type,
 ) -> None:
+    if cls is DieConfig2:
+        func = throw_dice2
+    else:
+        func = throw_dice2_td
     cli_args = []
     config_kwargs = {}
     if sides is not None:
@@ -142,21 +172,21 @@ def test_recursive_w_required(
         with raises(
             ParserOptionError, match="Required option `sides` is not provided!"
         ):
-            check_args(throw_dice2, cli_args, [], {}, recurse=True)
+            check_args(func, cli_args, [], {}, recurse=True)
     elif kind is None:
         with raises(ParserOptionError, match="Required option `kind` is not provided!"):
-            check_args(throw_dice2, cli_args, [], {}, recurse=True)
+            check_args(func, cli_args, [], {}, recurse=True)
     elif count is None:
         with raises(
             ParserOptionError, match="Required option `count` is not provided!"
         ):
-            check_args(throw_dice2, cli_args, [], {}, recurse=True)
+            check_args(func, cli_args, [], {}, recurse=True)
     else:
-        expected_cfg = DieConfig2(**config_kwargs)
-        expected_count = count if count is not None else 1
-        check_args(
-            throw_dice2, cli_args, [expected_cfg, expected_count], {}, recurse=True
+        expected_cfg = (
+            DieConfig2(**config_kwargs) if cls is DieConfig2 else {**config_kwargs}
         )
+        expected_count = count if count is not None else 1
+        check_args(func, cli_args, [expected_cfg, expected_count], {}, recurse=True)
 
 
 def throw_dice3(
