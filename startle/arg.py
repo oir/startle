@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Sequence
 
 from ._metavar import get_metavar
+from ._value_parser import parse
 from .error import ParserConfigError
-from .value_parser import parse
 
 if TYPE_CHECKING:
     from .args import Args

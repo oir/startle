@@ -8,9 +8,9 @@ from .._type_utils import (
     normalize_annotation,
     strip_annotated,
 )
+from .._value_parser import is_parsable
 from ..arg import Name
 from ..error import ParserConfigError
-from ..value_parser import is_parsable
 from .classes import get_class_initializer_params
 
 

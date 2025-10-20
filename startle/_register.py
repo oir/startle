@@ -23,7 +23,7 @@ def register(
     # TODO: should overwrite be disallowed?
 
     from ._metavar import METAVARS
-    from .value_parser import PARSERS
+    from ._value_parser import PARSERS
 
     type_ = normalize_type(type_)
 

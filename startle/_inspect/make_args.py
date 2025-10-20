@@ -19,10 +19,10 @@ from .._type_utils import (
     shorten_type_annotation,
     strip_optional,
 )
+from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
 from ..error import ParserConfigError
-from ..value_parser import is_parsable
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
 from .names import (

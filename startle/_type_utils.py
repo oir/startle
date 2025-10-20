@@ -47,7 +47,7 @@ def strip_annotated(type_: TypeHint) -> TypeHint:
     return type_
 
 
-def resolve_type_alias(type_: Any) -> Any:
+def resolve_type_alias(type_: TypeHint) -> TypeHint:
     """
     Resolve type aliases to their underlying types.
     """
@@ -59,7 +59,7 @@ def resolve_type_alias(type_: Any) -> Any:
     return type_
 
 
-def normalize_union_type(annotation: Any) -> Any:
+def normalize_union_type(annotation: TypeHint) -> TypeHint:
     """
     Normalize a type annotation by unifying Union and Optional types.
     """
@@ -69,15 +69,15 @@ def normalize_union_type(annotation: Any) -> Any:
         if type(None) in args:
             args = tuple([arg for arg in args if arg is not type(None)])
             if len(args) == 1:
-                return Optional[args[0]]
+                return Optional[args[0]]  # type: ignore
             else:
-                return Union[args + tuple([type(None)])]
+                return Union[args + tuple([type(None)])]  # type: ignore
         else:
-            return Union[tuple(args)]
+            return Union[tuple(args)]  # type: ignore
     return annotation
 
 
-def normalize_type(annotation: Any) -> Any:
+def normalize_type(annotation: TypeHint) -> TypeHint:
     """
     Normalize a type annotation by stripping Annotated, resolving type aliases,
     and unifying Union and Optional types.
@@ -92,7 +92,7 @@ def normalize_type(annotation: Any) -> Any:
     return curr
 
 
-def shorten_type_annotation(annotation: Any) -> str:
+def shorten_type_annotation(annotation: TypeHint) -> str:
     origin = get_origin(annotation)
     if origin is None:
         # It's a simple type, return its name

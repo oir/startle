@@ -14,8 +14,8 @@ from pytest import mark, raises
 
 from startle import parse, register
 from startle._metavar import METAVARS
+from startle._value_parser import PARSERS
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
-from startle.value_parser import PARSERS
 
 from ._utils import check_args
 from .test_parse_class import check_parse_exits
