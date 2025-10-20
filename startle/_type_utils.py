@@ -3,6 +3,7 @@ import sys
 import types
 from inspect import Parameter
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     Optional,
@@ -12,9 +13,10 @@ from typing import (
     get_origin,
 )
 
-from typing_extensions import TypeForm
+if TYPE_CHECKING:
+    from typing_extensions import TypeForm
 
-TypeHint: TypeAlias = TypeForm[object]
+TypeHint: TypeAlias = "TypeForm[object]"
 
 
 def strip_optional(type_: TypeHint) -> TypeHint:
@@ -34,7 +36,7 @@ def strip_optional(type_: TypeHint) -> TypeHint:
     return type_
 
 
-def strip_annotated(type_: Any) -> Any:
+def strip_annotated(type_: TypeHint) -> TypeHint:
     """
     Strip the Annotated type from a type hint. Given Annotated[T, ...], return T.
     """
@@ -131,7 +133,7 @@ def is_typeddict(type_: type) -> bool:
     )
 
 
-def normalize_annotation(param_or_annot: Parameter | TypeHint) -> Any:
+def normalize_annotation(param_or_annot: "Parameter | TypeHint") -> Any:
     """
     Normalize a function parameter or type annotation.
 

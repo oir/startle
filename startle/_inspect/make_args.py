@@ -37,7 +37,7 @@ from .parameter import is_keyword, is_positional, is_variadic
 
 def get_param_help(
     param_name: str,
-    param: Parameter | TypeHint,
+    param: "Parameter | TypeHint",
     arg_helps: ParamHelps,
 ) -> ParamHelp:
     param_key: str | None = None

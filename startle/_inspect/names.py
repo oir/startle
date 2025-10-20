@@ -15,12 +15,12 @@ from .classes import get_class_initializer_params
 
 
 def reserve_short_names(
-    params: Iterable[tuple[str, Parameter | TypeHint]],
+    params: Iterable[tuple[str, "Parameter | TypeHint"]],
     used_names: list[str],
     arg_helps: ParamHelps = {},
     used_short_names: set[str] | None = None,
 ) -> set[str]:
-    def is_kw(param_or_annot: Parameter | TypeHint) -> bool:
+    def is_kw(param_or_annot: "Parameter | TypeHint") -> bool:
         # is non-variadic keyword parameter
         if isinstance(param_or_annot, Parameter):
             return param_or_annot.kind in [
@@ -98,7 +98,7 @@ def get_annotation_naryness(
 
 
 def get_naryness(
-    param_or_annot: Parameter | TypeHint, normalized_annotation: Any
+    param_or_annot: "Parameter | TypeHint", normalized_annotation: Any
 ) -> tuple[bool, type | None, Any]:
     """
     Get the n-ary status, container type, and normalized annotation for a parameter.
@@ -119,7 +119,7 @@ def get_naryness(
 
 def _get_params_or_annotations(
     annotation: type,
-) -> Iterable[tuple[str, Parameter | TypeHint]]:
+) -> Iterable[tuple[str, "Parameter | TypeHint"]]:
     if is_typeddict(annotation):
         return annotation.__annotations__.items()
     else:
@@ -127,7 +127,7 @@ def _get_params_or_annotations(
 
 
 def collect_param_names(
-    params: Iterable[tuple[str, Parameter | TypeHint]],
+    params: Iterable[tuple[str, "Parameter | TypeHint"]],
     obj_name: str,
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
@@ -138,7 +138,7 @@ def collect_param_names(
     for recursive parsing.
     """
 
-    def is_kw(param: Parameter | TypeHint) -> bool:
+    def is_kw(param: "Parameter | TypeHint") -> bool:
         # is non-variadic keyword parameter
         if isinstance(param, Parameter):
             return kw_only or param.kind in [
