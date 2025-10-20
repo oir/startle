@@ -20,11 +20,11 @@ jobs:
             3.12
             3.13
       - name: Install
-        run: pip install hatch mypy .[test]
+        run: pip install hatch pyright .[test]
       - name: Run tests
         run: hatch test --all
       - name: Run static checks
-        run: hatch run test:mypy startle/
+        run: hatch run test:pyright
       - name: Upload coverage reports to Coveralls
         uses: coverallsapp/github-action@v2
         with:
