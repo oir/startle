@@ -22,12 +22,12 @@ def register(
     """
     # TODO: should overwrite be disallowed?
 
-    from ._metavar import _METAVARS
-    from .value_parser import _PARSERS
+    from ._metavar import METAVARS
+    from .value_parser import PARSERS
 
     type_ = normalize_type(type_)
 
     if parser:
-        _PARSERS[type_] = parser
+        PARSERS[type_] = parser
     if metavar:
-        _METAVARS[type_] = metavar
+        METAVARS[type_] = metavar

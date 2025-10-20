@@ -13,9 +13,9 @@ from typing import Annotated, Callable
 from pytest import mark, raises
 
 from startle import parse, register
-from startle._metavar import _METAVARS
+from startle._metavar import METAVARS
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
-from startle.value_parser import _PARSERS
+from startle.value_parser import PARSERS
 
 from ._utils import check_args
 from .test_parse_class import check_parse_exits
@@ -331,5 +331,5 @@ def test_unsupported_type(mul_f, register_t):
     check_args(mul_f, ["-b", "3/4", "1/2"], [Rational(1, 2), Rational(3, 4)], {})
     check_args(mul_f, ["-b", "3/4", "--", "1/2"], [Rational(1, 2), Rational(3, 4)], {})
 
-    del _PARSERS[Rational]
-    del _METAVARS[Rational]
+    del PARSERS[Rational]
+    del METAVARS[Rational]

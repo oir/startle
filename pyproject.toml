@@ -68,6 +68,7 @@ python_files = ["tests/*.py", "tests/**/*.py"]
 typeCheckingMode = "strict"
 include = ["startle"]
 pythonVersion = "3.10"
+reportUnnecessaryIsInstance = false
 
 [tool.coverage.run]
 omit = ["startle/_version.py"]

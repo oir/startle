@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar, cast
 
 from ._console import console, error, post_error
 from ._inspect.make_args import make_args_from_func
@@ -11,7 +11,7 @@ T = TypeVar("T")
 
 
 def start(
-    obj: Callable | list[Callable] | dict[str, Callable],
+    obj: Callable[..., Any] | list[Callable[..., Any]] | dict[str, Callable[..., Any]],
     *,
     name: str | None = None,
     args: list[str] | None = None,
@@ -42,6 +42,7 @@ def start(
         a list or dict.
     """
     if isinstance(obj, list) or isinstance(obj, dict):
+        obj = cast(list[Callable[..., Any]] | dict[str, Callable[..., Any]], obj)
         return _start_cmds(obj, name, args, catch, default)
     else:
         if default is not None:
@@ -100,7 +101,7 @@ def _start_func(
 
 
 def _start_cmds(
-    funcs: list[Callable] | dict[str, Callable],
+    funcs: list[Callable[..., Any]] | dict[str, Callable[..., Any]],
     name: str | None = None,
     cli_args: list[str] | None = None,
     catch: bool = True,
@@ -118,12 +119,12 @@ def _start_cmds(
             after the program name.
     """
 
-    cmd2func: dict[str, Callable]
+    cmd2func: dict[str, Callable[..., Any]]
     if isinstance(funcs, dict):
         cmd2func = funcs
     else:
 
-        def _cmd_name(func: Callable) -> str:
+        def _cmd_name(func: Callable[..., Any]) -> str:
             return func.__name__.replace("_", "-")
 
         cmd2func = {_cmd_name(func): func for func in funcs}

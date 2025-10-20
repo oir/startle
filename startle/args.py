@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
-from ._help import _Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
+from ._help import Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import ParserConfigError, ParserOptionError
 
@@ -523,7 +523,7 @@ class Args:
                 console.print(self.brief + "\n")
 
         # (2) then print usage line
-        console.print(Text("Usage:", style=_Sty.title))
+        console.print(Text("Usage:", style=Sty.title))
         usage_components = [Text(f"  {name}")]
         pos_only_str = Text(" ").join(
             [usage(arg, "usage line") for arg in positional_only]
@@ -546,7 +546,7 @@ class Args:
             return
 
         # (3) then print help message for each argument
-        console.print(Text("\nwhere", style=_Sty.title))
+        console.print(Text("\nwhere", style=Sty.title))
 
         table = Table(show_header=False, box=None, padding=(0, 0, 0, 2))
 
@@ -572,9 +572,9 @@ class Args:
         table.add_row(
             "[dim](option)[/dim]",
             Text.assemble(
-                ("-?", f"{_Sty.name} {_Sty.opt} dim"),
-                ("|", f"{_Sty.opt} dim"),
-                ("--help", f"{_Sty.name} {_Sty.opt} dim"),
+                ("-?", f"{Sty.name} {Sty.opt} dim"),
+                ("|", f"{Sty.opt} dim"),
+                ("--help", f"{Sty.name} {Sty.opt} dim"),
             ),
             "[i dim]Show this help message and exit.[/]",
         )

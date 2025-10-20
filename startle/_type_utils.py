@@ -123,11 +123,11 @@ def is_typeddict(type_: type) -> bool:
     """
 
     # we only use __annotations__, so merely checking for that
-    # and dict subclassing
+    # and dict subclassing. TODO: maybe narrow this down further?
     return (
         isinstance(type_, type)
         and issubclass(type_, dict)
-        and hasattr(type_, "__annotations__")
+        and hasattr(type_, "__annotations__")  # type: ignore
     )
 
 

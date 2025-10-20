@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Sequence
 
 from ._metavar import get_metavar
 from .error import ParserConfigError
@@ -89,15 +89,19 @@ class Arg:
         if not self.metavar:
             self.metavar = get_metavar(self.type_)
 
-    def _append(self, container: Any, value: Any) -> Any:
+    def _append(
+        self, container: Sequence[Any] | set[Any], value: Any
+    ) -> Sequence[Any] | set[Any]:
         assert self.is_nary, "Programming error!"
         assert value is not None, "N-ary options should have values!"
         assert self.container_type is not None, "Programming error!"
         if isinstance(container, list):
             return container + [value]
         elif self.container_type is tuple:
+            assert isinstance(container, tuple), "Programming error!"
             return container + (value,)
         elif self.container_type is set:
+            assert isinstance(container, set), "Programming error!"
             return container | {value}
         else:
             raise ParserConfigError("Unsupported container type!")

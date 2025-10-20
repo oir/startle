@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import singledispatch
 from textwrap import dedent
-from typing import Literal
+from typing import Any, Literal
 
 
 @dataclass
@@ -105,15 +105,15 @@ def _parse_docstring(
 
 
 @singledispatch
-def parse_docstring(obj: Callable | type) -> tuple[str, ParamHelps]:
+def parse_docstring(obj: Callable[..., Any] | type) -> tuple[str, ParamHelps]:
     """
     Parse the docstring of a function or class and return the brief and the arg descriptions.
     """
     raise NotImplementedError(f"parse_docstring not implemented for type {type(obj)}")
 
 
-@parse_docstring.register
-def _(func: Callable) -> tuple[str, ParamHelps]:
+@parse_docstring.register(Callable)  # type: ignore
+def _(func: Callable[..., Any]) -> tuple[str, ParamHelps]:
     """
     Parse the docstring of a function and return the brief and the arg descriptions.
     """

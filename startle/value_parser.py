@@ -62,7 +62,7 @@ def _to_enum(value: str, enum_type: type) -> Enum:
         ) from err
 
 
-_PARSERS: dict[type, Callable[[str], Any]] = {
+PARSERS: dict[type, Callable[[str], Any]] = {
     str: _to_str,
     int: _to_int,
     float: _to_float,
@@ -96,7 +96,7 @@ def _get_parser(type_: Any) -> Callable[[str], Any] | None:
     if isclass(type_) and issubclass(type_, Enum):
         return lambda value: _to_enum(value, type_)
 
-    if fp := _PARSERS.get(type_):
+    if fp := PARSERS.get(type_):
         return fp
 
     return None

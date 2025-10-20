@@ -10,7 +10,7 @@ from rich.text import Text
 from .arg import Arg, Name
 
 
-class _Sty:
+class Sty:
     name = "bold"
     pos_name = "bold"
     opt = "green"
@@ -31,23 +31,23 @@ def name_usage(name: Name, kind: Literal["listing", "usage line"]) -> Text:
             # TODO: maybe this should be done elsewhere / differently?
             name_ = name.strip("<>")
             return Text.assemble(
-                ("--", f"{_Sty.name} {_Sty.opt} not dim"),
+                ("--", f"{Sty.name} {Sty.opt} not dim"),
                 ("<", "cyan not dim"),
-                (name_, f"{_Sty.name} cyan not dim"),
+                (name_, f"{Sty.name} cyan not dim"),
                 (">", "cyan not dim"),
             )
         return Text(
             f"-{name}" if short else f"--{name}",
-            style=f"{_Sty.name} {_Sty.opt} not dim",
+            style=f"{Sty.name} {Sty.opt} not dim",
         )
 
     if kind == "listing":
-        name_list = []
+        name_list: list[Text] = []
         if name.short:
             name_list.append(fmt(name.short, True))
         if name.long:
             name_list.append(fmt(name.long, False))
-        return Text("|", style=f"{_Sty.opt} dim").join(name_list)
+        return Text("|", style=f"{Sty.opt} dim").join(name_list)
     else:
         if name.long:
             return fmt(name.long, False)
@@ -60,7 +60,7 @@ def _meta(metavar: list[str] | str) -> Text:
         Text(metavar)
         if isinstance(metavar, str)
         else Text("|", style="dim").join(
-            [Text(m, style=f"{_Sty.literal_var} not dim") for m in metavar]
+            [Text(m, style=f"{Sty.literal_var} not dim") for m in metavar]
         )
     )
 
@@ -72,8 +72,8 @@ def _repeated(text: Text) -> Text:
 
 
 def _pos_usage(arg: Arg) -> Text:
-    text = Text.assemble("<", (f"{arg.name}:", _Sty.pos_name), _meta(arg.metavar), ">")
-    text.stylize(_Sty.var)
+    text = Text.assemble("<", (f"{arg.name}:", Sty.pos_name), _meta(arg.metavar), ">")
+    text.stylize(Sty.var)
     if arg.is_nary:
         text = _repeated(text)
     return text
@@ -82,9 +82,9 @@ def _pos_usage(arg: Arg) -> Text:
 def _opt_usage(arg: Arg, kind: Literal["listing", "usage line"]) -> Text:
     if isinstance(arg.metavar, list):
         option = _meta(arg.metavar)
-        option.stylize(_Sty.var)
+        option.stylize(Sty.var)
     else:
-        option = Text(f"<{arg.metavar}>", style=_Sty.var)
+        option = Text(f"<{arg.metavar}>", style=Sty.var)
     if arg.is_nary:
         option = _repeated(option)
     return Text.assemble(name_usage(arg.name, kind), " ", option)
@@ -112,12 +112,12 @@ def usage(arg: Arg, kind: Literal["listing", "usage line"] = "listing") -> Text:
 
 def default_value(val: Any) -> Text:
     if isinstance(val, str) and isinstance(val, Enum):
-        return Text(val.value, style=_Sty.opt)
+        return Text(val.value, style=Sty.opt)
     if isinstance(val, Enum):
-        return Text(val.name.lower().replace("_", "-"), style=_Sty.opt)
+        return Text(val.name.lower().replace("_", "-"), style=Sty.opt)
     if isinstance(val, str) and val == "":
-        return Text('""', style=f"{_Sty.opt} dim")
-    return Text(str(val), style=_Sty.opt)
+        return Text('""', style=f"{Sty.opt} dim")
+    return Text(str(val), style=Sty.opt)
 
 
 def help(arg: Arg) -> Text:
@@ -130,7 +130,7 @@ def help(arg: Arg) -> Text:
     elif arg.name.long == "<key>":
         helptext = Text.assemble(helptext, delim, ("(unknown options)", "cyan"))
     elif arg.is_flag:
-        helptext = Text.assemble(helptext, delim, ("(flag)", _Sty.opt))
+        helptext = Text.assemble(helptext, delim, ("(flag)", Sty.opt))
     elif arg.required:
         helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
     else:
@@ -142,9 +142,9 @@ def help(arg: Arg) -> Text:
         helptext = Text.assemble(
             helptext,
             delim,
-            ("(default: ", _Sty.opt),
+            ("(default: ", Sty.opt),
             def_val,
-            (")", _Sty.opt),
+            (")", Sty.opt),
         )
     return helptext
 

@@ -153,7 +153,7 @@ def _make_args_from_params(
                 kw_only=True,  # children are kw-only for now
                 _used_short_names=used_short_names,
             )
-            child_args._parent = args
+            child_args._parent = args  # type: ignore
             name = Name(long=param_name_sub)
         else:
             raise ParserConfigError(
@@ -281,7 +281,7 @@ def make_args_from_class(
 
     return _make_args_from_params(
         params,
-        cls.__name__,
+        cls.__name__,  # type: ignore
         brief,
         arg_helps,
         program_name,
@@ -364,7 +364,7 @@ def make_args_from_typeddict(
                 kw_only=True,  # children are kw-only for now
                 _used_short_names=used_short_names,
             )
-            child_args._parent = args
+            child_args._parent = args  # type: ignore
             name = Name(long=param_name_sub)
         else:
             raise ParserConfigError(
