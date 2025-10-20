@@ -30,7 +30,9 @@ class ConfigClass:
         self.amount = amount
         self.label = label
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ConfigClass):
+            raise NotImplementedError()
         return (
             self.count == other.count
             and self.amount == other.amount
@@ -290,3 +292,22 @@ def test_typed_dict_config(
         "amount": 2.0,
         "label": "custom",
     }
+
+
+def test_typeddict_with_help_attr(capsys):
+    class Config(TypedDict):
+        """
+        A configuration dict for the program.
+        """
+
+        count: int
+        amount: float
+        help: str
+
+    with raises(
+        ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
+    ):
+        parse(Config, args=[], catch=False)
+    check_parse_exits(
+        capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
+    )

@@ -70,6 +70,7 @@ python_files = ["tests/*.py", "tests/**/*.py"]
 [tool.pyright]
 typeCheckingMode = "strict"
 include = ["startle"]
+ignore = ["tests"]
 pythonVersion = "3.10"
 reportUnnecessaryIsInstance = false
 
