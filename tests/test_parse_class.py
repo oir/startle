@@ -293,6 +293,44 @@ def test_typed_dict_config(
         "label": "custom",
     }
 
+    with raises(ParserOptionError, match="Unexpected option `unknown`!"):
+        parse(cls, args=["--unknown"], catch=False)
+    with raises(ParserValueError, match="Cannot parse integer from `a`!"):
+        parse(cls, args=["--count", "a"], catch=False)
+    with raises(ParserValueError, match="Cannot parse float from `a`!"):
+        parse(cls, args=["--amount", "a"], catch=False)
+    with raises(ParserOptionError, match="Option `count` is missing argument!"):
+        parse(cls, args=["--count"], catch=False)
+    with raises(ParserOptionError, match="Option `count` is missing argument!"):
+        parse(cls, args=["--amount", "1.0", "--count"], catch=False)
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        parse(cls, args=["--count", "2", "--count", "3"], catch=False)
+
+    check_parse_exits(
+        capsys, cls, ["--unknown"], "Error: Unexpected option `unknown`!\n"
+    )
+    check_parse_exits(
+        capsys, cls, ["--count", "a"], "Error: Cannot parse integer from `a`!\n"
+    )
+    check_parse_exits(
+        capsys, cls, ["--amount", "a"], "Error: Cannot parse float from `a`!\n"
+    )
+    check_parse_exits(
+        capsys, cls, ["--count"], "Error: Option `count` is missing argument!\n"
+    )
+    check_parse_exits(
+        capsys,
+        cls,
+        ["--amount", "1.0", "--count"],
+        "Error: Option `count` is missing argument!\n",
+    )
+    check_parse_exits(
+        capsys,
+        cls,
+        ["--count", "2", "--count", "3"],
+        "Error: Option `count` is multiply given!\n",
+    )
+
 
 def test_typeddict_with_help_attr(capsys):
     class Config(TypedDict):
