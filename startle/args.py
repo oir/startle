@@ -414,9 +414,7 @@ class Args:
         is preferred, to handle variadic args correctly.
         """
 
-        def var(opt: Arg | str) -> str:
-            if isinstance(opt, str):
-                return opt.replace("-", "_")
+        def var(opt: Arg) -> str:
             return opt.name.long_or_short.replace("-", "_")
 
         positional_args = [arg.value for arg in self._positional_args]
