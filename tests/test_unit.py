@@ -9,6 +9,7 @@ from startle._type_utils import (
     strip_optional,
 )
 from startle.arg import Arg, Name
+from startle.args import Args
 from startle.error import ParserConfigError
 
 
@@ -136,6 +137,26 @@ def test_arg_properties():
             container_type=dict,
         )
         a.parse("5")
+
+    a = Arg(name=Name(long=""), type_=int, is_positional=False, is_named=True)
+    args = Args()
+    with raises(
+        ParserConfigError,
+        match=re.escape("Named arguments should have at least one name!"),
+    ):
+        args.add(a)
+
+    a = Arg(name=Name(long="name"), type_=int, is_named=True, is_nary=True)
+    with raises(
+        ParserConfigError,
+        match=re.escape("Container type must be specified for n-ary options!"),
+    ):
+        args.enable_unknown_args(a)
+    with raises(
+        ParserConfigError,
+        match=re.escape("Container type must be specified for n-ary options!"),
+    ):
+        args.enable_unknown_opts(a)
 
 
 def test_get_default_factories():
