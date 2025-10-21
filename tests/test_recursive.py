@@ -338,29 +338,43 @@ def test_recursive_unsupported() -> None:
     ):
         check_args(f6, [], [], {}, recurse=True)
 
-    def f7(cfg: DieConfig, sides: int) -> None:
+    def f7a(cfg: DieConfig, sides: int) -> None:
         pass
 
-    def f8(cfg: DieConfig, cfg2: DieConfig) -> None:
+    def f7b(cfg: DieConfig2TD, sides: int) -> None:
         pass
 
-    with raises(
-        ParserConfigError,
-        match=re.escape(
-            "Option name `sides` is used multiple times in `f7()`!"
-            " Recursive parsing requires unique option names among all levels."
-        ),
-    ):
-        check_args(f7, [], [], {}, recurse=True)
+    def f8a(cfg: DieConfig, cfg2: DieConfig) -> None:
+        pass
 
-    with raises(
-        ParserConfigError,
-        match=re.escape(
-            "Option name `sides` is used multiple times in `f8()`!"
-            " Recursive parsing requires unique option names among all levels."
-        ),
-    ):
-        check_args(f8, [], [], {}, recurse=True)
+    def f8b(cfg: DieConfig, cfg2: DieConfig2TD) -> None:
+        pass
+
+    def f8c(cfg: DieConfig2TD, cfg2: DieConfig) -> None:
+        pass
+
+    def f8d(cfg: DieConfig2TD, cfg2: DieConfig2TD) -> None:
+        pass
+
+    for f in [f7a, f7b]:
+        with raises(
+            ParserConfigError,
+            match=re.escape(
+                f"Option name `sides` is used multiple times in `{f.__name__}()`!"
+                " Recursive parsing requires unique option names among all levels."
+            ),
+        ):
+            check_args(f, [], [], {}, recurse=True)
+
+    for f in [f8a, f8b, f8c, f8d]:
+        with raises(
+            ParserConfigError,
+            match=re.escape(
+                f"Option name `sides` is used multiple times in `{f.__name__}()`!"
+                " Recursive parsing requires unique option names among all levels."
+            ),
+        ):
+            check_args(f, [], [], {}, recurse=True)
 
 
 @dataclass
