@@ -2,6 +2,7 @@ import re
 from typing import Any, Optional, Union
 
 from pytest import raises
+from startle._inspect.dataclasses import get_default_factories
 from startle._type_utils import (
     normalize_type,
     shorten_type_annotation,
@@ -135,3 +136,26 @@ def test_arg_properties():
             container_type=dict,
         )
         a.parse("5")
+
+
+def test_get_default_factories():
+    from dataclasses import dataclass, field
+    from typing import List, Optional
+
+    @dataclass
+    class Example:
+        a: int = 5
+        b: List[int] = field(default_factory=lambda: [1, 2, 3])
+        c: Optional[str] = None
+
+    factories = get_default_factories(Example)
+    assert "a" not in factories
+    assert "c" not in factories
+    assert callable(factories["b"])
+    assert factories["b"]() == [1, 2, 3]
+
+    class NotADataclass:
+        pass
+
+    with raises(ValueError, match=re.escape(f"{NotADataclass} is not a dataclass")):
+        get_default_factories(NotADataclass)
