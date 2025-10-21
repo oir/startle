@@ -441,6 +441,21 @@ class FusionConfig2:
     alpha: float = 0.5
 
 
+class FusionConfig2TD(TypedDict):
+    """
+    Fusion config with separate input and output paths.
+
+    Attributes:
+        io_paths: Input and output paths for the fusion.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    io_paths: IOPaths
+    components: list[str]
+    alpha: float
+
+
 def fuse1(cfg: FusionConfig) -> None:
     """
     Fuse two monsters with polymerization.
@@ -461,7 +476,17 @@ def fuse2(cfg: FusionConfig2) -> None:
     pass
 
 
-@mark.parametrize("fuse", [fuse1, fuse2])
+def fuse2td(cfg: FusionConfig2TD) -> None:
+    """
+    Fuse two monsters with polymerization.
+
+    Args:
+        cfg: The fusion configuration.
+    """
+    pass
+
+
+@mark.parametrize("fuse", [fuse1, fuse2, fuse2td])
 def test_recursive_dataclass_help(fuse: Callable) -> None:
     if fuse is fuse1:
         expected = FusionConfig(
@@ -471,7 +496,7 @@ def test_recursive_dataclass_help(fuse: Callable) -> None:
             components=["wing", "tail"],
             alpha=0.7,
         )
-    else:
+    elif fuse is fuse2:
         expected = FusionConfig2(
             io_paths=IOPaths(
                 input_paths=InputPaths(
@@ -482,6 +507,17 @@ def test_recursive_dataclass_help(fuse: Callable) -> None:
             components=["wing", "tail"],
             alpha=0.7,
         )
+    else:
+        expected = {
+            "io_paths": IOPaths(
+                input_paths=InputPaths(
+                    left_path="monster1.dat", right_path="monster2.dat"
+                ),
+                output_path="fused_monster.dat",
+            ),
+            "components": ["wing", "tail"],
+            "alpha": 0.7,
+        }
     check_args(
         fuse,
         [
@@ -517,7 +553,9 @@ Fuse two monsters with polymerization.
   [dim](option)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
   [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
-    check_help_from_func(fuse, "fuse.py", expected, recurse=True)
+    if fuse is not fuse2td:
+        # TypedDict does not have default values for now, every option is required.
+        check_help_from_func(fuse, "fuse.py", expected, recurse=True)
 
 
 @dataclass

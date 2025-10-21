@@ -71,6 +71,7 @@ python_files = ["tests/*.py", "tests/**/*.py"]
 typeCheckingMode = "strict"
 include = ["startle"]
 pythonVersion = "3.10"
+enableExperimentalFeatures = true
 reportUnnecessaryIsInstance = false
 
 [tool.coverage.run]

@@ -16,7 +16,7 @@ from typing import (
 if TYPE_CHECKING:
     from typing_extensions import TypeForm
 
-TypeHint: TypeAlias = "TypeForm[object]"
+TypeHint: TypeAlias = "TypeForm[Any]"
 
 
 def strip_optional(type_: TypeHint) -> TypeHint:
