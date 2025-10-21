@@ -275,6 +275,10 @@ class NestedConfigWithVarArgs:
     config: ConfigWithVarArgs
 
 
+class NestedTypedDictWithVarArgs(TypedDict):
+    config: ConfigWithVarArgs
+
+
 def test_recursive_unsupported() -> None:
     def f1(cfg: ConfigWithVarArgs) -> None:
         pass
@@ -283,6 +287,9 @@ def test_recursive_unsupported() -> None:
         pass
 
     def f3(cfg: NestedConfigWithVarArgs) -> None:
+        pass
+
+    def f3b(cfg: NestedTypedDictWithVarArgs) -> None:
         pass
 
     with raises(
@@ -300,6 +307,11 @@ def test_recursive_unsupported() -> None:
         match="Cannot have variadic parameter `values` in child Args of `ConfigWithVarArgs`!",
     ):
         check_args(f3, [], [], {}, recurse=True)
+    with raises(
+        ParserConfigError,
+        match="Cannot have variadic parameter `values` in child Args of `ConfigWithVarArgs`!",
+    ):
+        check_args(f3b, [], [], {}, recurse=True)
 
     def f4(cfgs: list[DieConfig]) -> None:
         pass
