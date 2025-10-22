@@ -2,11 +2,10 @@ import re
 from dataclasses import dataclass
 
 from pytest import raises
-
 from startle import register
+from startle._metavar import METAVARS
+from startle._value_parser import PARSERS
 from startle.error import ParserConfigError
-from startle.metavar import _METAVARS
-from startle.value_parser import _PARSERS
 
 from ._utils import check_args
 
@@ -71,8 +70,8 @@ def test_unsupported_type():
     check_args(mul2, ["1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
     check_args(mul2, ["--ns", "1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
 
-    del _PARSERS[Rational]
-    del _METAVARS[Rational]
+    del PARSERS[Rational]
+    del METAVARS[Rational]
 
 
 def test_unsupported_type_wo_meta():
@@ -98,8 +97,8 @@ def test_unsupported_type_wo_meta():
     check_args(mul, ["1/2", "3/4"], [Rational(1, 2), Rational(3, 4)], {})
     check_args(mul2, ["1/2", "3/4"], [[Rational(1, 2), Rational(3, 4)]], {})
 
-    assert Rational not in _METAVARS
-    del _PARSERS[Rational]
+    assert Rational not in METAVARS
+    del PARSERS[Rational]
 
 
 def test_supported_type_new_meta():
@@ -113,12 +112,12 @@ def test_supported_type_new_meta():
 
     check_args(mul3, ["1.0", "2.0"], [1.0, 2.0], {})
 
-    old_meta = _METAVARS[float]
+    old_meta = METAVARS[float]
     register(float, metavar="x.y")
     # TODO: check help string for new metavar
 
     check_args(mul3, ["1.0", "2.0"], [1.0, 2.0], {})
-    assert _METAVARS[float] == "x.y"
+    assert METAVARS[float] == "x.y"
 
     # restore old metavar
-    _METAVARS[float] = old_meta
+    METAVARS[float] = old_meta

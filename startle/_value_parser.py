@@ -3,12 +3,13 @@ String-to-type conversion functions.
 """
 
 import typing
+from collections.abc import Callable
 from enum import Enum
 from inspect import isclass
 from pathlib import Path
-from typing import Any, Callable, Literal, cast
+from typing import Any, Literal, cast
 
-from ._type_utils import _strip_optional
+from ._type_utils import strip_optional
 from .error import ParserValueError
 
 
@@ -62,7 +63,7 @@ def _to_enum(value: str, enum_type: type) -> Enum:
         ) from err
 
 
-_PARSERS: dict[type, Callable[[str], Any]] = {
+PARSERS: dict[type, Callable[[str], Any]] = {
     str: _to_str,
     int: _to_int,
     float: _to_float,
@@ -77,7 +78,7 @@ def _get_parser(type_: Any) -> Callable[[str], Any] | None:
     """
 
     # if type is Optional[T], convert to T
-    type_ = _strip_optional(type_)
+    type_ = strip_optional(type_)
 
     if typing.get_origin(type_) is Literal:
         type_args = typing.get_args(type_)
@@ -96,7 +97,7 @@ def _get_parser(type_: Any) -> Callable[[str], Any] | None:
     if isclass(type_) and issubclass(type_, Enum):
         return lambda value: _to_enum(value, type_)
 
-    if fp := _PARSERS.get(type_):
+    if fp := PARSERS.get(type_):
         return fp
 
     return None

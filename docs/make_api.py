@@ -1,10 +1,11 @@
 import inspect
 import types
 from collections import abc
-from typing import Any, Callable, TextIO, Union, get_args, get_origin
+from collections.abc import Callable
+from typing import Any, TextIO, Union, get_args, get_origin
 
 from startle import parse, register, start
-from startle.inspect import _parse_func_docstring
+from startle._inspect.make_args import parse_docstring
 
 
 def _shorten_type_annotation(annotation: Any) -> str:
@@ -91,7 +92,7 @@ def func_api(func: Callable, file: TextIO):
     print(f") -> {_shorten_type_annotation(sig.return_annotation)}", file=file)
     print("```\n", file=file)
 
-    brief, arg_helps = _parse_func_docstring(func)
+    brief, arg_helps = parse_docstring(func)
 
     print(f"{brief}\n", file=file)
 

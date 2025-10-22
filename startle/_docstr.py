@@ -1,17 +1,19 @@
 import inspect
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
+from functools import singledispatch
 from textwrap import dedent
-from typing import Callable, Literal
+from typing import Any, Literal
 
 
 @dataclass
-class _DocstrParam:
+class ParamHelp:
     desc: str = ""
     short_name: str | None = None
 
 
-_DocstrParams = dict[str, _DocstrParam]
+ParamHelps = dict[str, ParamHelp]
 
 
 class _DocstrParts:
@@ -35,7 +37,7 @@ class _DocstrParts:
 
 def _parse_docstring(
     docstring: str, kind: Literal["function", "class"]
-) -> tuple[str, _DocstrParams]:
+) -> tuple[str, ParamHelps]:
     params_headers = (
         _DocstrParts.function_params_headers
         if kind == "function"
@@ -43,7 +45,7 @@ def _parse_docstring(
     )
 
     brief = ""
-    arg_helps: _DocstrParams = {}
+    arg_helps: ParamHelps = {}
 
     if docstring:
         lines = docstring.split("\n")
@@ -97,12 +99,21 @@ def _parse_docstring(
                         annot
                     ):
                         short_name = short_name_match.group(1)
-                    arg_helps[param] = _DocstrParam(desc=desc, short_name=short_name)
+                    arg_helps[param] = ParamHelp(desc=desc, short_name=short_name)
 
     return brief, arg_helps
 
 
-def _parse_func_docstring(func: Callable) -> tuple[str, _DocstrParams]:
+@singledispatch
+def parse_docstring(obj: Callable[..., Any] | type) -> tuple[str, ParamHelps]:
+    """
+    Parse the docstring of a function or class and return the brief and the arg descriptions.
+    """
+    raise NotImplementedError(f"parse_docstring not implemented for type {type(obj)}")
+
+
+@parse_docstring.register(Callable)  # type: ignore
+def _(func: Callable[..., Any]) -> tuple[str, ParamHelps]:
     """
     Parse the docstring of a function and return the brief and the arg descriptions.
     """
@@ -111,12 +122,11 @@ def _parse_func_docstring(func: Callable) -> tuple[str, _DocstrParams]:
     return _parse_docstring(docstring, "function")
 
 
-def _parse_class_docstring(cls: type) -> _DocstrParams:
+@parse_docstring.register
+def _(cls: type) -> tuple[str, ParamHelps]:
     """
     Parse the docstring of a class and return the arg descriptions.
     """
     docstring = inspect.getdoc(cls) or ""
 
-    _, arg_helps = _parse_docstring(docstring, "class")
-
-    return arg_helps
+    return _parse_docstring(docstring, "class")

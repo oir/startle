@@ -2,10 +2,9 @@
 
 import re
 from dataclasses import dataclass
-from typing import Annotated, Callable
+from typing import Annotated, Callable, TypedDict
 
 from pytest import mark, raises
-
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
@@ -31,7 +30,9 @@ class ConfigClass:
         self.amount = amount
         self.label = label
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ConfigClass):
+            raise NotImplementedError()
         return (
             self.count == other.count
             and self.amount == other.amount
@@ -228,4 +229,123 @@ def test_dataclass_with_unsupported_attr_type(capsys):
         Config,
         [],
         "Error: Unsupported type `list[list[int]]` for parameter `label` in `Config`!\n",
+    )
+
+
+class ConfigTypedDict(TypedDict):
+    """
+    A configuration dict for the program.
+    """
+
+    count: int
+    amount: float
+    label: str
+
+
+class ConfigTypedDictAnnotated(TypedDict):
+    """
+    A configuration dict for the program.
+    """
+
+    count: Annotated[int, "some metadata"]
+    amount: Annotated[float, "some metadata"]
+    label: Annotated[str, "some metadata"]
+
+
+@mark.parametrize(
+    "count",
+    [
+        lambda c: ["--count", f"{c}"],
+        lambda c: [f"--count={c}"],
+        lambda c: ["-c", f"{c}"],
+        lambda c: [f"-c={c}"],
+    ],
+)
+@mark.parametrize(
+    "amount",
+    [
+        lambda a: ["--amount", f"{a}"],
+        lambda a: [f"--amount={a}"],
+        lambda a: ["-a", f"{a}"],
+        lambda a: [f"-a={a}"],
+    ],
+)
+@mark.parametrize(
+    "label",
+    [
+        lambda l: ["--label", f"{l}"],
+        lambda l: [f"--label={l}"],
+        lambda l: ["-l", f"{l}"],
+        lambda l: [f"-l={l}"],
+    ],
+)
+@mark.parametrize("cls", [ConfigTypedDict, ConfigTypedDictAnnotated])
+def test_typed_dict_config(
+    capsys,
+    count: Callable[[str], list[str]],
+    amount: Callable[[str], list[str]],
+    label: Callable[[str], list[str]],
+    cls: type,
+):
+    assert parse(cls, args=[*count("2"), *amount("2.0"), *label("custom")]) == {
+        "count": 2,
+        "amount": 2.0,
+        "label": "custom",
+    }
+
+    with raises(ParserOptionError, match="Unexpected option `unknown`!"):
+        parse(cls, args=["--unknown"], catch=False)
+    with raises(ParserValueError, match="Cannot parse integer from `a`!"):
+        parse(cls, args=["--count", "a"], catch=False)
+    with raises(ParserValueError, match="Cannot parse float from `a`!"):
+        parse(cls, args=["--amount", "a"], catch=False)
+    with raises(ParserOptionError, match="Option `count` is missing argument!"):
+        parse(cls, args=["--count"], catch=False)
+    with raises(ParserOptionError, match="Option `count` is missing argument!"):
+        parse(cls, args=["--amount", "1.0", "--count"], catch=False)
+    with raises(ParserOptionError, match="Option `count` is multiply given!"):
+        parse(cls, args=["--count", "2", "--count", "3"], catch=False)
+
+    check_parse_exits(
+        capsys, cls, ["--unknown"], "Error: Unexpected option `unknown`!\n"
+    )
+    check_parse_exits(
+        capsys, cls, ["--count", "a"], "Error: Cannot parse integer from `a`!\n"
+    )
+    check_parse_exits(
+        capsys, cls, ["--amount", "a"], "Error: Cannot parse float from `a`!\n"
+    )
+    check_parse_exits(
+        capsys, cls, ["--count"], "Error: Option `count` is missing argument!\n"
+    )
+    check_parse_exits(
+        capsys,
+        cls,
+        ["--amount", "1.0", "--count"],
+        "Error: Option `count` is missing argument!\n",
+    )
+    check_parse_exits(
+        capsys,
+        cls,
+        ["--count", "2", "--count", "3"],
+        "Error: Option `count` is multiply given!\n",
+    )
+
+
+def test_typeddict_with_help_attr(capsys):
+    class Config(TypedDict):
+        """
+        A configuration dict for the program.
+        """
+
+        count: int
+        amount: float
+        help: str
+
+    with raises(
+        ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
+    ):
+        parse(Config, args=[], catch=False)
+    check_parse_exits(
+        capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
     )

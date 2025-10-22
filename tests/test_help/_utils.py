@@ -1,8 +1,7 @@
 from typing import Callable
 
 from rich.console import Console
-
-from startle.inspect import make_args_from_class, make_args_from_func
+from startle._inspect.make_args import make_args_from_class, make_args_from_func
 
 VS = "blue"
 NS = "bold"

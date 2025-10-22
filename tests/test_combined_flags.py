@@ -1,7 +1,6 @@
 import re
 
 from pytest import mark, raises
-
 from startle.error import ParserOptionError
 
 from ._utils import check_args

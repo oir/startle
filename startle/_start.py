@@ -1,17 +1,18 @@
 import sys
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
-from ._console import _error, _post_error, console
+from ._console import console, error, post_error
+from ._inspect.make_args import make_args_from_func
 from .args import Args
 from .cmds import Cmds
 from .error import ParserConfigError, ParserOptionError, ParserValueError
-from .inspect import make_args_from_func
 
 T = TypeVar("T")
 
 
 def start(
-    obj: Callable | list[Callable] | dict[str, Callable],
+    obj: Callable[..., Any] | list[Callable[..., Any]] | dict[str, Callable[..., Any]],
     *,
     name: str | None = None,
     args: list[str] | None = None,
@@ -42,12 +43,13 @@ def start(
         a list or dict.
     """
     if isinstance(obj, list) or isinstance(obj, dict):
+        obj = cast(list[Callable[..., Any]] | dict[str, Callable[..., Any]], obj)
         return _start_cmds(obj, name, args, catch, default)
     else:
         if default is not None:
             msg = "Default subcommand is not supported for a single function."
             if catch:
-                _error(msg)
+                error(msg)
             else:
                 raise ParserConfigError(msg)
         return _start_func(obj, name, args, catch, recurse)
@@ -77,7 +79,7 @@ def _start_func(
         args_ = make_args_from_func(func, program_name=name or "", recurse=recurse)
     except ParserConfigError as e:
         if catch:
-            _error(str(e))
+            error(str(e))
         else:
             raise e
 
@@ -92,15 +94,15 @@ def _start_func(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
-            _error(str(e), exit=False, endl=False)
+            error(str(e), exit=False, endl=False)
             args_.print_help(console(), usage_only=True)
-            _post_error()
+            post_error()
         else:
             raise e
 
 
 def _start_cmds(
-    funcs: list[Callable] | dict[str, Callable],
+    funcs: list[Callable[..., Any]] | dict[str, Callable[..., Any]],
     name: str | None = None,
     cli_args: list[str] | None = None,
     catch: bool = True,
@@ -118,12 +120,12 @@ def _start_cmds(
             after the program name.
     """
 
-    cmd2func: dict[str, Callable]
+    cmd2func: dict[str, Callable[..., Any]]
     if isinstance(funcs, dict):
         cmd2func = funcs
     else:
 
-        def _cmd_name(func: Callable) -> str:
+        def _cmd_name(func: Callable[..., Any]) -> str:
             return func.__name__.replace("_", "-")
 
         cmd2func = {_cmd_name(func): func for func in funcs}
@@ -146,7 +148,7 @@ def _start_cmds(
         )
     except ParserConfigError as e:
         if catch:
-            _error(str(e))
+            error(str(e))
         else:
             raise e
 
@@ -164,10 +166,10 @@ def _start_cmds(
         return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
-            _error(str(e), exit=False, endl=False)
+            error(str(e), exit=False, endl=False)
             if args:  # error happened after parsing the command
                 args.print_help(console(), usage_only=True)
-                _post_error(exit=False)
+                post_error(exit=False)
             else:  # error happened before parsing the command
                 cmds.print_help(console())
             raise SystemExit(1)

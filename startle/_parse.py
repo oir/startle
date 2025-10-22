@@ -1,16 +1,16 @@
-from typing import Type, TypeVar
+from typing import TypeVar
 
 from rich.console import Console
 from rich.text import Text
 
+from ._inspect.make_args import make_args_from_class
 from .error import ParserConfigError, ParserOptionError, ParserValueError
-from .inspect import make_args_from_class
 
 T = TypeVar("T")
 
 
 def parse(
-    cls: Type[T],
+    cls: type[T],
     *,
     name: str | None = None,
     args: list[str] | None = None,

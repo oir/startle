@@ -1,8 +1,12 @@
 import sys
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from .args import Args
 from .error import ParserConfigError, ParserOptionError
+
+if TYPE_CHECKING:
+    from rich.console import Console
 
 
 @dataclass
@@ -15,7 +19,7 @@ class Cmds:
     command.
     """
 
-    cmd_parsers: dict[str, Args] = field(default_factory=dict)
+    cmd_parsers: dict[str, Args] = field(default_factory=dict[str, Args])
     brief: str = ""
     program_name: str = ""
     default: str = ""
@@ -54,7 +58,9 @@ class Cmds:
 
         return self.default, self.cmd_parsers[self.default], cli_args
 
-    def print_help(self, console=None, usage_only: bool = False) -> None:
+    def print_help(
+        self, console: "Console | None" = None, usage_only: bool = False
+    ) -> None:
         """
         Print the help message to the console.
 

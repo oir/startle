@@ -1,9 +1,10 @@
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
+from ._metavar import get_metavar
+from ._value_parser import parse
 from .error import ParserConfigError
-from .metavar import _get_metavar
-from .value_parser import parse
 
 if TYPE_CHECKING:
     from .args import Args
@@ -73,23 +74,35 @@ class Arg:
     def is_flag(self) -> bool:
         return self.type_ is bool and self.default is False and not self.is_positional
 
+    @property
+    def is_parsed(self) -> bool:
+        return self._parsed
+
+    @property
+    def value(self) -> Any:
+        return self._value
+
     def __post_init__(self):
         if not self.is_positional and not self.is_named:
             raise ParserConfigError(
                 "An argument should be either positional or named (or both)!"
             )
         if not self.metavar:
-            self.metavar = _get_metavar(self.type_)
+            self.metavar = get_metavar(self.type_)
 
-    def _append(self, container: Any, value: Any) -> Any:
+    def _append(
+        self, container: Sequence[Any] | set[Any], value: Any
+    ) -> Sequence[Any] | set[Any]:
         assert self.is_nary, "Programming error!"
         assert value is not None, "N-ary options should have values!"
         assert self.container_type is not None, "Programming error!"
         if isinstance(container, list):
             return container + [value]
         elif self.container_type is tuple:
+            assert isinstance(container, tuple), "Programming error!"
             return container + (value,)
         elif self.container_type is set:
+            assert isinstance(container, set), "Programming error!"
             return container | {value}
         else:
             raise ParserConfigError("Unsupported container type!")
