@@ -313,30 +313,50 @@ def test_recursive_unsupported() -> None:
     ):
         check_args(f3b, [], [], {}, recurse=True)
 
-    def f4(cfgs: list[DieConfig]) -> None:
+    def f4a(cfgs: list[DieConfig]) -> None:
         pass
 
-    def f5(*cfgs: DieConfig) -> None:
+    def f4b(cfgs: list[DieConfig2TD]) -> None:
         pass
 
-    def f6(**cfgs: DieConfig) -> None:
+    def f5a(*cfgs: DieConfig) -> None:
         pass
 
-    with raises(
-        ParserConfigError,
-        match=re.escape("Cannot recurse into n-ary parameter `cfgs` in `f4()`!"),
-    ):
-        check_args(f4, [], [], {}, recurse=True)
-    with raises(
-        ParserConfigError,
-        match=re.escape("Cannot recurse into variadic parameter `cfgs` in `f5()`!"),
-    ):
-        check_args(f5, [], [], {}, recurse=True)
-    with raises(
-        ParserConfigError,
-        match=re.escape("Cannot recurse into variadic parameter `cfgs` in `f6()`!"),
-    ):
-        check_args(f6, [], [], {}, recurse=True)
+    def f5b(*cfgs: DieConfig2TD) -> None:
+        pass
+
+    def f6a(**cfgs: DieConfig) -> None:
+        pass
+
+    def f6b(**cfgs: DieConfig2TD) -> None:
+        pass
+
+    for f in [f4a, f4b]:
+        with raises(
+            ParserConfigError,
+            match=re.escape(
+                f"Cannot recurse into n-ary parameter `cfgs` in `{f.__name__}()`!"
+            ),
+        ):
+            check_args(f, [], [], {}, recurse=True)
+
+    for f in [f5a, f5b]:
+        with raises(
+            ParserConfigError,
+            match=re.escape(
+                f"Cannot recurse into variadic parameter `cfgs` in `{f.__name__}()`!"
+            ),
+        ):
+            check_args(f, [], [], {}, recurse=True)
+
+    for f in [f6a, f6b]:
+        with raises(
+            ParserConfigError,
+            match=re.escape(
+                f"Cannot recurse into variadic parameter `cfgs` in `{f.__name__}()`!"
+            ),
+        ):
+            check_args(f, [], [], {}, recurse=True)
 
     def f7a(cfg: DieConfig, sides: int) -> None:
         pass
