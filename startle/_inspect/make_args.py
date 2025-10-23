@@ -15,11 +15,12 @@ from .._type_utils import (
     normalize_annotation,
     normalize_type,
     shorten_type_annotation,
+    strip_not_required,
     strip_optional,
 )
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
-from ..args import Args
+from ..args import Args, Missing
 from ..error import ParserConfigError
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
@@ -327,9 +328,10 @@ def make_args_from_typeddict(
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, annotation in params:
-        normalized_annotation = normalize_type(annotation)
+        is_not_required, normalized_annotation = strip_not_required(annotation)
+        normalized_annotation = normalize_type(normalized_annotation)
 
-        required = True  # TODO: handle NotRequired / totality
+        required = not is_not_required  # TODO: handle totality
 
         docstr_param = get_param_help(param_name, annotation, arg_helps)
 
@@ -381,7 +383,7 @@ def make_args_from_typeddict(
             container_type=container_type,
             help=docstr_param.desc,
             required=required,
-            default=None,
+            default=Missing if not required else None,
             default_factory=None,
             is_positional=positional,
             is_named=named,

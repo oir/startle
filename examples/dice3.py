@@ -6,7 +6,7 @@ Example invocations:
 """
 
 import random
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from startle import parse
 
@@ -21,7 +21,7 @@ class Config(TypedDict):
         kind: Whether to throw a single die or a pair of dice.
     """
 
-    sides: int
+    sides: NotRequired[int]
     count: int
     kind: Literal["single", "pair"]
 
@@ -32,10 +32,13 @@ def throw_dice(cfg: Config) -> None:
     """
     if cfg["kind"] == "single":
         for _ in range(cfg["count"]):
-            print(random.randint(1, cfg["sides"]))
+            print(random.randint(1, cfg.get("sides", 6)))
     else:
         for _ in range(cfg["count"]):
-            print(random.randint(1, cfg["sides"]), random.randint(1, cfg["sides"]))
+            print(
+                random.randint(1, cfg.get("sides", 6)),
+                random.randint(1, cfg.get("sides", 6)),
+            )
 
 
 if __name__ == "__main__":
