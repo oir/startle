@@ -17,6 +17,7 @@ from .._type_utils import (
     shorten_type_annotation,
     strip_not_required,
     strip_optional,
+    strip_required,
 )
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
@@ -313,6 +314,8 @@ def make_args_from_typeddict(
             Modified in-place if not None.
     """
     params = td.__annotations__.items()
+    optional_keys: frozenset[str] = td.__optional_keys__  # type: ignore
+    required_keys: frozenset[str] = td.__required_keys__  # type: ignore
     _, arg_helps = parse_docstring(td)
     obj_name = td.__name__
 
@@ -328,10 +331,14 @@ def make_args_from_typeddict(
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, annotation in params:
-        is_not_required, normalized_annotation = strip_not_required(annotation)
+        is_required, normalized_annotation = strip_required(annotation)
+        is_not_required, normalized_annotation = strip_not_required(
+            normalized_annotation
+        )
         normalized_annotation = normalize_type(normalized_annotation)
 
-        required = not is_not_required  # TODO: handle totality
+        optional = is_not_required or param_name in optional_keys
+        required = is_required or param_name in required_keys or not optional
 
         docstr_param = get_param_help(param_name, annotation, arg_helps)
 
@@ -357,7 +364,7 @@ def make_args_from_typeddict(
             if not isinstance(normalized_annotation, type):
                 raise ParserConfigError(
                     f"Cannot recurse into parameter `{param_name}` of non-class type "
-                    f"`{shorten_type_annotation(annotation.annotation)}` in `{obj_name}`!"
+                    f"`{shorten_type_annotation(annotation)}` in `{obj_name}`!"
                 )
             child_args = make_args_from_class(
                 normalized_annotation,
@@ -369,7 +376,7 @@ def make_args_from_typeddict(
             name = Name(long=param_name_sub)
         else:
             raise ParserConfigError(
-                f"Unsupported type `{shorten_type_annotation(annotation.annotation)}` "
+                f"Unsupported type `{shorten_type_annotation(annotation)}` "
                 f"for parameter `{param_name}` in `{obj_name}`!"
             )
 
