@@ -79,10 +79,10 @@ def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None
 @mark.parametrize(
     "label",
     [
-        lambda l: ["--label", f"{l}"],
-        lambda l: [f"--label={l}"],
-        lambda l: ["-l", f"{l}"],
-        lambda l: [f"-l={l}"],
+        lambda label: ["--label", f"{label}"],
+        lambda label: [f"--label={label}"],
+        lambda label: ["-l", f"{label}"],
+        lambda label: [f"-l={label}"],
     ],
 )
 @mark.parametrize("Config", [ConfigDataClass, ConfigClass, ConfigDataClassAnnotated])
@@ -272,10 +272,10 @@ class ConfigTypedDictAnnotated(TypedDict):
 @mark.parametrize(
     "label",
     [
-        lambda l: ["--label", f"{l}"],
-        lambda l: [f"--label={l}"],
-        lambda l: ["-l", f"{l}"],
-        lambda l: [f"-l={l}"],
+        lambda label: ["--label", f"{label}"],
+        lambda label: [f"--label={label}"],
+        lambda label: ["-l", f"{label}"],
+        lambda label: [f"-l={label}"],
     ],
 )
 @mark.parametrize("cls", [ConfigTypedDict, ConfigTypedDictAnnotated])
