@@ -59,6 +59,15 @@ def strip_not_required(type_: TypeHint) -> tuple[bool, TypeHint]:
             args = get_args(type_)
             if args:
                 return True, args[0]
+    try:
+        from typing_extensions import NotRequired as TE_NotRequired
+
+        if get_origin(type_) is TE_NotRequired:
+            args = get_args(type_)
+            if args:
+                return True, args[0]
+    except ImportError:
+        pass
     return False, type_
 
 
@@ -74,6 +83,15 @@ def strip_required(type_: TypeHint) -> tuple[bool, TypeHint]:
             args = get_args(type_)
             if args:
                 return True, args[0]
+    try:
+        from typing_extensions import Required as TE_Required
+
+        if get_origin(type_) is TE_Required:
+            args = get_args(type_)
+            if args:
+                return True, args[0]
+    except ImportError:
+        pass
     return False, type_
 
 
