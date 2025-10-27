@@ -36,15 +36,44 @@ def strip_optional(type_: TypeHint) -> TypeHint:
     return type_
 
 
-def strip_annotated(type_: TypeHint) -> TypeHint:
+def _strip_unary_outer(type_: TypeHint, outer: Any) -> tuple[bool, TypeHint]:
     """
-    Strip the Annotated type from a type hint. Given Annotated[T, ...], return T.
+    Strip a unary outer type from a type hint. If given outer[T], return (True, T).
+    Otherwise, return (False, type_).
     """
-    if get_origin(type_) is Annotated:
+    if outer is None:
+        return False, type_
+    if get_origin(type_) is outer:
         args = get_args(type_)
         if args:
-            return args[0]
-    return type_
+            return True, args[0]
+    return False, type_
+
+
+def _required_t() -> Any:
+    if sys.version_info >= (3, 11):
+        from typing import Required as TypingRequired
+
+        return TypingRequired
+    try:
+        from typing_extensions import Required as TE_Required
+
+        return TE_Required
+    except ImportError:
+        return None
+
+
+def _not_required_t() -> Any:
+    if sys.version_info >= (3, 11):
+        from typing import NotRequired as TypingNotRequired
+
+        return TypingNotRequired
+    try:
+        from typing_extensions import NotRequired as TE_NotRequired
+
+        return TE_NotRequired
+    except ImportError:
+        return None
 
 
 def strip_not_required(type_: TypeHint) -> tuple[bool, TypeHint]:
@@ -52,22 +81,9 @@ def strip_not_required(type_: TypeHint) -> tuple[bool, TypeHint]:
     Strip NotRequired from a type hint. If given a NotRequired[T], return (True, T).
     Otherwise, return (False, type_).
     """
-    if sys.version_info >= (3, 11):
-        from typing import NotRequired as TypingNotRequired
-
-        if get_origin(type_) is TypingNotRequired:
-            args = get_args(type_)
-            if args:
-                return True, args[0]
-    try:
-        from typing_extensions import NotRequired as TE_NotRequired
-
-        if get_origin(type_) is TE_NotRequired:
-            args = get_args(type_)
-            if args:
-                return True, args[0]
-    except ImportError:
-        pass
+    match, type_ = _strip_unary_outer(type_, outer=_not_required_t())
+    if match:
+        return True, type_
     return False, type_
 
 
@@ -76,23 +92,18 @@ def strip_required(type_: TypeHint) -> tuple[bool, TypeHint]:
     Strip Required from a type hint. If given a Required[T], return (True, T).
     Otherwise, return (False, type_).
     """
-    if sys.version_info >= (3, 11):
-        from typing import Required as TypingRequired
-
-        if get_origin(type_) is TypingRequired:
-            args = get_args(type_)
-            if args:
-                return True, args[0]
-    try:
-        from typing_extensions import Required as TE_Required
-
-        if get_origin(type_) is TE_Required:
-            args = get_args(type_)
-            if args:
-                return True, args[0]
-    except ImportError:
-        pass
+    match, type_ = _strip_unary_outer(type_, outer=_required_t())
+    if match:
+        return True, type_
     return False, type_
+
+
+def strip_annotated(type_: TypeHint) -> TypeHint:
+    """
+    Strip the Annotated type from a type hint. Given Annotated[T, ...], return T.
+    """
+    _, type_ = _strip_unary_outer(type_, outer=Annotated)
+    return type_
 
 
 def resolve_type_alias(type_: TypeHint) -> TypeHint:
