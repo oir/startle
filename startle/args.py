@@ -25,6 +25,17 @@ class _ParsingState:
     positional_only: bool = False
 
 
+class Missing:
+    """
+    A sentinel class to represent a missing value.
+    Used to differentiate between None as a value and no value provided.
+    This is used for TypedDict optional keys, where instead of using None as
+    a value for the key, the key is simply not present.
+    """
+
+    pass
+
+
 @dataclass
 class Args:
     """
@@ -421,7 +432,7 @@ class Args:
         named_args = {
             var(opt): opt.value
             for opt in self._named_args
-            if opt not in self._positional_args
+            if opt not in self._positional_args and opt.value is not Missing
         }
 
         if not self._parent and self._var_args and self._var_args.value:

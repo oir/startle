@@ -1,12 +1,15 @@
 import re
+import sys
 from typing import Any, Optional, Union
 
-from pytest import raises
+from pytest import mark, raises
 from startle._inspect.dataclasses import get_default_factories
 from startle._type_utils import (
     normalize_type,
     shorten_type_annotation,
+    strip_not_required,
     strip_optional,
+    strip_required,
 )
 from startle.arg import Arg, Name
 from startle.args import Args
@@ -180,3 +183,28 @@ def test_get_default_factories():
 
     with raises(ValueError, match=re.escape(f"{NotADataclass} is not a dataclass")):
         get_default_factories(NotADataclass)
+
+
+@mark.skipif(
+    sys.version_info < (3, 11),
+    reason="Requires Python 3.11+ for NotRequired and Required",
+)
+def test_strip_not_required_and_required():
+    from typing import NotRequired, Required, TypedDict
+
+    class ExampleDict(TypedDict):
+        a: NotRequired[int]
+        b: Required[str]
+        c: float
+
+    is_not_required, type_a = strip_not_required(ExampleDict.__annotations__["a"])
+    assert is_not_required is True
+    assert type_a is int
+
+    is_required, type_b = strip_required(ExampleDict.__annotations__["b"])
+    assert is_required is True
+    assert type_b is str
+
+    is_required, type_c = strip_required(ExampleDict.__annotations__["c"])
+    assert is_required is False
+    assert type_c is float

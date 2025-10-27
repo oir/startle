@@ -1,10 +1,9 @@
-# ruff: noqa: E741
-
 import re
+import sys
 from dataclasses import dataclass
 from typing import Annotated, Callable, TypedDict
 
-from pytest import mark, raises
+from pytest import CaptureFixture, mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
@@ -80,15 +79,15 @@ def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None
 @mark.parametrize(
     "label",
     [
-        lambda l: ["--label", f"{l}"],
-        lambda l: [f"--label={l}"],
-        lambda l: ["-l", f"{l}"],
-        lambda l: [f"-l={l}"],
+        lambda label: ["--label", f"{label}"],
+        lambda label: [f"--label={label}"],
+        lambda label: ["-l", f"{label}"],
+        lambda label: [f"-l={label}"],
     ],
 )
 @mark.parametrize("Config", [ConfigDataClass, ConfigClass, ConfigDataClassAnnotated])
 def test_class_with_all_defaults(
-    capsys,
+    capsys: CaptureFixture[str],
     count: Callable[[str], list[str]],
     amount: Callable[[str], list[str]],
     label: Callable[[str], list[str]],
@@ -186,7 +185,7 @@ def test_class_with_all_defaults(
     )
 
 
-def test_dataclass_with_help_attr(capsys):
+def test_dataclass_with_help_attr(capsys: CaptureFixture[str]):
     @dataclass
     class Config:
         """
@@ -206,7 +205,7 @@ def test_dataclass_with_help_attr(capsys):
     )
 
 
-def test_dataclass_with_unsupported_attr_type(capsys):
+def test_dataclass_with_unsupported_attr_type(capsys: CaptureFixture[str]):
     @dataclass
     class Config:
         """
@@ -273,15 +272,15 @@ class ConfigTypedDictAnnotated(TypedDict):
 @mark.parametrize(
     "label",
     [
-        lambda l: ["--label", f"{l}"],
-        lambda l: [f"--label={l}"],
-        lambda l: ["-l", f"{l}"],
-        lambda l: [f"-l={l}"],
+        lambda label: ["--label", f"{label}"],
+        lambda label: [f"--label={label}"],
+        lambda label: ["-l", f"{label}"],
+        lambda label: [f"-l={label}"],
     ],
 )
 @mark.parametrize("cls", [ConfigTypedDict, ConfigTypedDictAnnotated])
 def test_typed_dict_config(
-    capsys,
+    capsys: CaptureFixture[str],
     count: Callable[[str], list[str]],
     amount: Callable[[str], list[str]],
     label: Callable[[str], list[str]],
@@ -332,7 +331,67 @@ def test_typed_dict_config(
     )
 
 
-def test_typeddict_with_help_attr(capsys):
+@mark.skipif(
+    sys.version_info < (3, 11), reason="Requires Python 3.11 or higher for NotRequired"
+)
+def test_typeddict_with_not_required(capsys: CaptureFixture[str]):
+    from typing import NotRequired, Required
+
+    class Config(TypedDict):
+        """
+        A configuration dict for the program.
+        """
+
+        count: NotRequired[int]
+        amount: Required[float]
+        label: str
+
+    assert parse(Config, args=["--amount", "2.0", "--label", "custom"]) == {
+        "amount": 2.0,
+        "label": "custom",
+    }
+    assert parse(
+        Config, args=["--count", "5", "--amount", "2.0", "--label", "custom"]
+    ) == {
+        "count": 5,
+        "amount": 2.0,
+        "label": "custom",
+    }
+
+    with raises(ParserOptionError, match="Required option `amount` is not provided!"):
+        parse(Config, args=["--label", "custom"], catch=False)
+    with raises(ParserOptionError, match="Required option `label` is not provided!"):
+        parse(Config, args=["--amount", "2.0"], catch=False)
+
+    class Config2(TypedDict, total=False):
+        """
+        A configuration dict for the program.
+        """
+
+        count: NotRequired[int]
+        amount: Required[float]
+        label: str
+
+    assert parse(Config2, args=["--amount", "2.0"]) == {
+        "amount": 2.0,
+    }
+    assert parse(Config2, args=["--amount", "2.0", "--label", "custom"]) == {
+        "amount": 2.0,
+        "label": "custom",
+    }
+    assert parse(
+        Config2, args=["--count", "5", "--amount", "2.0", "--label", "custom"]
+    ) == {
+        "count": 5,
+        "amount": 2.0,
+        "label": "custom",
+    }
+
+    with raises(ParserOptionError, match="Required option `amount` is not provided!"):
+        parse(Config2, args=[], catch=False)
+
+
+def test_typeddict_with_help_attr(capsys: CaptureFixture[str]):
     class Config(TypedDict):
         """
         A configuration dict for the program.

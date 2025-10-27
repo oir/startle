@@ -47,6 +47,36 @@ def strip_annotated(type_: TypeHint) -> TypeHint:
     return type_
 
 
+def strip_not_required(type_: TypeHint) -> tuple[bool, TypeHint]:
+    """
+    Strip NotRequired from a type hint. If given a NotRequired[T], return (True, T).
+    Otherwise, return (False, type_).
+    """
+    if sys.version_info >= (3, 11):
+        from typing import NotRequired as TypingNotRequired
+
+        if get_origin(type_) is TypingNotRequired:
+            args = get_args(type_)
+            if args:
+                return True, args[0]
+    return False, type_
+
+
+def strip_required(type_: TypeHint) -> tuple[bool, TypeHint]:
+    """
+    Strip Required from a type hint. If given a Required[T], return (True, T).
+    Otherwise, return (False, type_).
+    """
+    if sys.version_info >= (3, 11):
+        from typing import Required as TypingRequired
+
+        if get_origin(type_) is TypingRequired:
+            args = get_args(type_)
+            if args:
+                return True, args[0]
+    return False, type_
+
+
 def resolve_type_alias(type_: TypeHint) -> TypeHint:
     """
     Resolve type aliases to their underlying types.
