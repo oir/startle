@@ -31,6 +31,7 @@ dependencies = [ "rich" ]
 [project.urls]
 "Homepage" = "https://github.com/oir/startle"
 
+
 [tool.hatch.version]
 source = "vcs"
 
@@ -41,18 +42,28 @@ local_scheme = "no-local-version"
 [tool.hatch.build.hooks.vcs]
 version-file = "startle/_version.py"
 
+[tool.hatch.envs.test]
+dependencies = [ "pytest", "pytest-cov", "pyright", "typing-extensions" ]
+
 [tool.hatch.envs.hatch-test]
 dependencies = [ "pytest", "pytest-cov", "pyright", "typing-extensions" ]
 args = ["-ra", "-q"]
 
-[tool.hatch.envs.test]
-dependencies = [ "pytest", "pytest-cov", "pyright", "typing-extensions" ]
-
 [[tool.hatch.envs.hatch-test.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13"]
+python = ["3.13", "3.12", "3.11", "3.10"]
 
 [tool.hatch.envs.hatch-test.overrides]
 matrix.python.extra-args = { value = ["--ignore=tests/test_type_alias.py"], if = ["3.10", "3.11"] }
+
+[tool.hatch.envs.hatch-test.scripts]
+run = 'pytest{env:HATCH_TEST_ARGS:} {args}'
+run-cov = 'coverage run -m pytest{env:HATCH_TEST_ARGS:} {args}'
+cov-combine = 'coverage combine'
+cov-report = [
+  'coverage report',
+  'coverage xml',
+]
+
 
 [tool.ruff]
 target-version = "py310"
@@ -63,9 +74,10 @@ select = ["E4", "E7", "E9", "F", "I", "UP"]
 [tool.ruff.lint.per-file-ignores]
 "startle/_type_utils.py" = ["UP007", "UP045"]
 
+
 [tool.pytest.ini_options]
-addopts = "--cov=startle --cov-branch --cov-report=xml"
 python_files = ["tests/*.py", "tests/**/*.py"]
+
 
 [tool.pyright]
 typeCheckingMode = "strict"
@@ -74,8 +86,11 @@ pythonVersion = "3.10"
 enableExperimentalFeatures = true
 reportUnnecessaryIsInstance = false
 
+
 [tool.coverage.run]
+source = ["startle"]
 omit = ["startle/_version.py"]
+branch = true
 
 [tool.coverage.report]
 exclude_lines = [
