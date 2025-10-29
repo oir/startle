@@ -69,8 +69,12 @@ def make_args_from_typeddict(
         )
         normalized_annotation = normalize_type(normalized_annotation)
 
-        optional = is_not_required or param_name in optional_keys
-        required = is_required or param_name in required_keys or not optional
+        required = param_name in required_keys or param_name not in optional_keys
+        # NotRequired[] and Required[] are stronger than total=False/True
+        if is_required:
+            required = True
+        elif is_not_required:
+            required = False
 
         docstr_param = get_param_help(param_name, annotation, arg_helps)
 

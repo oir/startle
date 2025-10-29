@@ -6,6 +6,8 @@ from typing import Annotated, Callable, TypedDict
 from pytest import CaptureFixture, mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
+from typing_extensions import NotRequired as TE_NotRequired
+from typing_extensions import Required as TE_Required
 
 
 @dataclass
@@ -331,21 +333,33 @@ def test_typed_dict_config(
     )
 
 
-@mark.skipif(
-    sys.version_info < (3, 11), reason="Requires Python 3.11 or higher for NotRequired"
-)
-def test_typeddict_with_not_required(capsys: CaptureFixture[str]):
+class TotalConfig2(TypedDict):
+    count: TE_NotRequired[int]
+    amount: TE_Required[float]
+    label: str
+
+
+class TotalConfig3(TypedDict):
+    count: TE_NotRequired[int]
+    amount: TE_Required[float]
+    label: str
+
+
+total_configs = [TotalConfig2, TotalConfig3]
+
+if sys.version_info >= (3, 11):
     from typing import NotRequired, Required
 
-    class Config(TypedDict):
-        """
-        A configuration dict for the program.
-        """
-
+    class TotalConfig1(TypedDict):
         count: NotRequired[int]
         amount: Required[float]
         label: str
 
+    total_configs.insert(0, TotalConfig1)
+
+
+@mark.parametrize("Config", total_configs)
+def test_typeddict_with_total(capsys: CaptureFixture[str], Config: type):
     assert parse(Config, args=["--amount", "2.0", "--label", "custom"]) == {
         "amount": 2.0,
         "label": "custom",
@@ -363,24 +377,43 @@ def test_typeddict_with_not_required(capsys: CaptureFixture[str]):
     with raises(ParserOptionError, match="Required option `label` is not provided!"):
         parse(Config, args=["--amount", "2.0"], catch=False)
 
-    class Config2(TypedDict, total=False):
-        """
-        A configuration dict for the program.
-        """
 
+class PartialConfig2(TypedDict, total=False):
+    count: TE_NotRequired[int]
+    amount: TE_Required[float]
+    label: str
+
+
+class PartialConfig3(TypedDict, total=False):
+    count: TE_NotRequired[int]
+    amount: TE_Required[float]
+    label: str
+
+
+partial_configs = [PartialConfig2, PartialConfig3]
+
+if sys.version_info >= (3, 11):
+    from typing import NotRequired, Required
+
+    class PartialConfig1(TypedDict, total=False):
         count: NotRequired[int]
         amount: Required[float]
         label: str
 
-    assert parse(Config2, args=["--amount", "2.0"]) == {
+    partial_configs.insert(0, PartialConfig1)
+
+
+@mark.parametrize("Config", partial_configs)
+def test_typeddict_with_partial(capsys: CaptureFixture[str], Config: type):
+    assert parse(Config, args=["--amount", "2.0"]) == {
         "amount": 2.0,
     }
-    assert parse(Config2, args=["--amount", "2.0", "--label", "custom"]) == {
+    assert parse(Config, args=["--amount", "2.0", "--label", "custom"]) == {
         "amount": 2.0,
         "label": "custom",
     }
     assert parse(
-        Config2, args=["--count", "5", "--amount", "2.0", "--label", "custom"]
+        Config, args=["--count", "5", "--amount", "2.0", "--label", "custom"]
     ) == {
         "count": 5,
         "amount": 2.0,
@@ -388,7 +421,7 @@ def test_typeddict_with_not_required(capsys: CaptureFixture[str]):
     }
 
     with raises(ParserOptionError, match="Required option `amount` is not provided!"):
-        parse(Config2, args=[], catch=False)
+        parse(Config, args=[], catch=False)
 
 
 def test_typeddict_with_help_attr(capsys: CaptureFixture[str]):
