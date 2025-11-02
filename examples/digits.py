@@ -1,5 +1,6 @@
 """
 A program to fit a RandomForestClassifier on the digits dataset.
+Requires scikit-learn (`pip install scikit-learn`).
 
 Example invocations:
     python examples/digits.py
