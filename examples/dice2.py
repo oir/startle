@@ -2,7 +2,7 @@
 A program to throw dice.
 
 Example invocations:
-    python examples/dice3.py --sides 20 --count 2 --kind pair
+    python examples/dice2.py --sides 20 --count 2 --kind pair
 """
 
 import random
