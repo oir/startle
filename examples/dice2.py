@@ -2,46 +2,45 @@
 A program to throw dice.
 
 Example invocations:
-    python examples/dice2.py
     python examples/dice2.py --sides 20 --count 2 --kind pair
 """
 
 import random
-from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, NotRequired, TypedDict
 
-from startle import start
+from startle import parse
 
 
-@dataclass
-class Config:
+class Config(TypedDict):
     """
     Configuration for the dice program.
 
     Attributes:
         sides: The number of sides on the dice.
+        count: The number of dice to throw.
         kind: Whether to throw a single die or a pair of dice.
     """
 
-    sides: int = 6
-    kind: Literal["single", "pair"] = "single"
+    sides: NotRequired[int]
+    count: int
+    kind: Literal["single", "pair"]
 
 
-def throw_dice(cfg: Config, count: int = 1) -> None:
+def throw_dice(cfg: Config) -> None:
     """
-    Throw dice according to the configuration.
-
-    Args:
-        cfg: The configuration for the dice.
-        count: The number of dice to throw.
+    Throw the dice according to the configuration.
     """
-    if cfg.kind == "single":
-        for _ in range(count):
-            print(random.randint(1, cfg.sides))
+    if cfg["kind"] == "single":
+        for _ in range(cfg["count"]):
+            print(random.randint(1, cfg.get("sides", 6)))
     else:
-        for _ in range(count):
-            print(random.randint(1, cfg.sides), random.randint(1, cfg.sides))
+        for _ in range(cfg["count"]):
+            print(
+                random.randint(1, cfg.get("sides", 6)),
+                random.randint(1, cfg.get("sides", 6)),
+            )
 
 
 if __name__ == "__main__":
-    start(throw_dice, recurse=True)
+    cfg = parse(Config, brief="A program to throw dice.")
+    throw_dice(cfg)

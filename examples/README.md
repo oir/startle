@@ -15,3 +15,5 @@ you can inspect with `python <example> --help`.
 | `ls.py` | How to use `*args`-style arguments to parse arbitrary (unknown) positional arguments. |
 | `search_gh.py` | How to use `**kwargs`-style arguments to parse arbirary key-value pairs. |
 | `dice.py` | How to use `parse()` to parse args into a class. |
+| `dice2.py` | How to use `parse()` to parse args into a dict using a `TypedDict` definition. |
+| `digits.py` | A recursive parsing example composing dataclasses and a main function signature. |
