@@ -1,5 +1,5 @@
 import re
-from typing import Annotated, Callable, Any
+from typing import Annotated, Any, Callable
 
 from pytest import mark, raises
 from startle._inspect.make_args import make_args_from_func
@@ -39,9 +39,15 @@ def hi_int_str_annotated(
 
 
 @mark.parametrize(
-    "hi, count_t", [(hi_int, int), (hi_float, float), (hi_float_annotated, float), (hi_int_str_annotated, int)]
+    "hi, count_t",
+    [
+        (hi_int, int),
+        (hi_float, float),
+        (hi_float_annotated, float),
+        (hi_int_str_annotated, int),
+    ],
 )
-def test_args_with_defaults(hi: Callable[... , Any], count_t: type):
+def test_args_with_defaults(hi: Callable[..., Any], count_t: type):
     typestr = "integer" if count_t is int else "float"
 
     check_args(hi, [], ["john"], {"count": count_t(1)})
