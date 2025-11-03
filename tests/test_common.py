@@ -1,4 +1,5 @@
 import re
+from functools import wraps
 from typing import Annotated, Any, Callable
 
 from pytest import mark, raises
@@ -28,7 +29,7 @@ def hi_float_annotated(
         print(f"hello, {name}!")
 
 
-def hi_int_str_annotated(
+def hi_int_stringified(
     name: "str" = "john",
     /,
     *,
@@ -38,13 +39,28 @@ def hi_int_str_annotated(
         print(f"hello, {name}!")
 
 
+def dummy_decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@dummy_decorator
+def hi_float_decorated(name: str = "john", /, *, count: float = 1.0) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
+
+
 @mark.parametrize(
     "hi, count_t",
     [
         (hi_int, int),
         (hi_float, float),
         (hi_float_annotated, float),
-        (hi_int_str_annotated, int),
+        (hi_int_stringified, int),
+        (hi_float_decorated, float),
     ],
 )
 def test_args_with_defaults(hi: Callable[..., Any], count_t: type):
