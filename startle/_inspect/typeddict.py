@@ -1,6 +1,7 @@
 from typing import (
     Literal,
     cast,
+    get_type_hints,
 )
 
 from .._docstr import parse_docstring
@@ -45,7 +46,7 @@ def make_args_from_typeddict(
     """
     from .make_args import get_param_help, make_args_from_class
 
-    params = td.__annotations__.items()
+    params = get_type_hints(td, include_extras=True).items()
     optional_keys: frozenset[str] = td.__optional_keys__  # type: ignore
     required_keys: frozenset[str] = td.__required_keys__  # type: ignore
     _, arg_helps = parse_docstring(td)

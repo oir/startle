@@ -1,11 +1,12 @@
 import inspect
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import is_dataclass
 from inspect import Parameter
 from typing import (
     Any,
     Literal,
     cast,
+    get_type_hints,
 )
 
 from .._docstr import ParamHelp, ParamHelps, parse_docstring
@@ -79,6 +80,7 @@ def check_recursable(
 
 def _make_args_from_params(
     params: Iterable[tuple[str, Parameter]],
+    hints: Mapping[str, TypeHint],
     obj_name: str,
     brief: str = "",
     arg_helps: ParamHelps = {},
@@ -116,7 +118,7 @@ def _make_args_from_params(
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
-        normalized_annotation = normalize_annotation(param)
+        normalized_annotation = normalize_annotation(hints.get(param_name, str))
 
         required = param.default is inspect.Parameter.empty
         default = param.default if not required else None
@@ -225,12 +227,14 @@ def make_args_from_func(
     # Get the signature of the function
     sig = inspect.signature(func)
     params = sig.parameters.items()
+    hints = get_type_hints(func, include_extras=True)
 
     # Attempt to parse brief and arg descriptions from docstring
     brief, arg_helps = parse_docstring(func)
 
     return _make_args_from_params(
         params,
+        hints,
         f"{func.__name__}()",
         brief,
         arg_helps,
@@ -274,11 +278,13 @@ def make_args_from_class(
         )
 
     params = get_class_initializer_params(cls)
+    hints = get_type_hints(cls.__init__, include_extras=True)
     _, arg_helps = parse_docstring(cls)
     default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
 
     return _make_args_from_params(
         params,
+        hints,
         cls.__name__,  # type: ignore
         brief,
         arg_helps,
