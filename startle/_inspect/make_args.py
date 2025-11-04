@@ -108,7 +108,9 @@ def _make_args_from_params(
     """
     args = Args(brief=brief, program_name=program_name)
 
-    used_names = collect_param_names(params, obj_name, recurse, kw_only)
+    used_names = collect_param_names(
+        params=params, hints=hints, obj_name=obj_name, recurse=recurse, kw_only=kw_only
+    )
     used_short_names = (
         _used_short_names if _used_short_names is not None else set[str]()
     )

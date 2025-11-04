@@ -5,7 +5,7 @@ from typing import Any, Optional, Union
 from pytest import mark, raises
 from startle._inspect.dataclasses import get_default_factories
 from startle._type_utils import (
-    normalize_type,
+    normalize_annotation,
     shorten_type_annotation,
     strip_not_required,
     strip_optional,
@@ -16,19 +16,19 @@ from startle.args import Args
 from startle.error import ParserConfigError
 
 
-def test_normalize_type():
-    assert normalize_type(int) is int
-    assert normalize_type(Union[int, None]) is Optional[int]
-    assert normalize_type(int | None) is Optional[int]
-    assert normalize_type(Optional[int]) is Optional[int]
+def test_normalize_annotation():
+    assert normalize_annotation(int) is int
+    assert normalize_annotation(Union[int, None]) is Optional[int]
+    assert normalize_annotation(int | None) is Optional[int]
+    assert normalize_annotation(Optional[int]) is Optional[int]
 
-    assert normalize_type(Union[str, float]) is Union[str, float]
-    assert normalize_type(str | float) is Union[str, float]
+    assert normalize_annotation(Union[str, float]) is Union[str, float]
+    assert normalize_annotation(str | float) is Union[str, float]
 
 
 def test_strip_optional():
     def normalize_strip_optional(type_: Any) -> Any:
-        return strip_optional(normalize_type(type_))
+        return strip_optional(normalize_annotation(type_))
 
     assert normalize_strip_optional(int) is int
     assert normalize_strip_optional(Union[int, None]) is int
@@ -68,10 +68,10 @@ def test_shorten_type_annotation():
     assert shorten_type_annotation(List[int]) == "list[int]"
     assert shorten_type_annotation(List[int | None]) == "list[int | None]"
     assert shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
-    assert shorten_type_annotation(list) == "list"
+    assert shorten_type_annotation(list) == "list"  # type: ignore
     assert shorten_type_annotation(List) == "typing.List"  # TODO:
     assert shorten_type_annotation(Any) in ["Any", "typing.Any"]  # TODO:
-    assert shorten_type_annotation(list[list]) == "list[list]"
+    assert shorten_type_annotation(list[list]) == "list[list]"  # type: ignore
 
     assert shorten_type_annotation(Literal[1]) == "Literal[1]"
     assert shorten_type_annotation(Literal["a"]) == "Literal['a']"

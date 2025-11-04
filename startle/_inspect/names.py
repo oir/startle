@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from inspect import Parameter
 from typing import Any, Literal, cast, get_args, get_origin
 
@@ -127,8 +127,21 @@ def _get_params_or_annotations(
         return get_class_initializer_params(annotation)
 
 
+def _get_hints(
+    annotation: type,
+) -> Mapping[str, TypeHint]:
+    if is_typeddict(annotation):
+        return annotation.__annotations__
+    else:
+        from typing import get_type_hints
+
+        return get_type_hints(annotation.__init__, include_extras=True)
+
+
 def collect_param_names(
+    *,
     params: Iterable[tuple[str, "Parameter | TypeHint"]],
+    hints: Mapping[str, TypeHint],
     obj_name: str,
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
@@ -157,7 +170,7 @@ def collect_param_names(
                 f"Cannot use `help` as parameter name in `{obj_name}`!"
             )
 
-        normalized_annotation = normalize_annotation(param)
+        normalized_annotation = normalize_annotation(hints.get(param_name, str))
         _, _, normalized_annotation = get_naryness(param, normalized_annotation)
 
         if is_parsable(normalized_annotation):
@@ -172,7 +185,8 @@ def collect_param_names(
                 used_names.append(name)
         elif recurse:
             child_names = collect_param_names(
-                _get_params_or_annotations(normalized_annotation),
+                params=_get_params_or_annotations(normalized_annotation),
+                hints=_get_hints(normalized_annotation),
                 obj_name=normalized_annotation.__name__,
                 recurse="child",
                 kw_only=True,  # children are kw-only for now
