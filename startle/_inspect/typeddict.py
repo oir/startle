@@ -1,8 +1,4 @@
-from typing import (
-    Literal,
-    cast,
-    get_type_hints,
-)
+from typing import Literal, cast, get_type_hints
 
 from .._docstr import parse_docstring
 from .._type_utils import (

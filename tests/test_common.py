@@ -131,7 +131,7 @@ def test_args_with_defaults(hi: Callable[..., Any], count_t: type):
 
 
 @mark.parametrize("opt", ["-c", "--count"])
-def test_args_without_defaults(opt):
+def test_args_without_defaults(opt: str):
     def hi(name: str, /, *, count: int) -> None:
         for _ in range(count):
             print(f"hello, {name}!")
@@ -198,7 +198,7 @@ def test_args_without_defaults(opt):
         ["-h=3"],
     ],
 )
-def test_args_both_positional_and_keyword(person_name_opt, hello_count_opt):
+def test_args_both_positional_and_keyword(person_name_opt: str, hello_count_opt: str):
     def hi(person_name: str, hello_count: int) -> None:
         for _ in range(hello_count):
             print(f"hello, {person_name}!")
@@ -251,7 +251,7 @@ def test_args_both_positional_and_keyword_with_defaults():
 
 
 @mark.parametrize("opt", ["-v", "--verbose"])
-def test_flag(opt):
+def test_flag(opt: str):
     def hi(name: str, /, *, verbose: bool = False) -> None:
         print(f"hello, {name}!")
         if verbose:
