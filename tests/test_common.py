@@ -1,5 +1,6 @@
 import re
-from typing import Annotated
+from functools import wraps
+from typing import Annotated, Any, Callable
 
 from pytest import mark, raises
 from startle._inspect.make_args import make_args_from_func
@@ -28,10 +29,41 @@ def hi_float_annotated(
         print(f"hello, {name}!")
 
 
+def hi_int_stringified(
+    name: "str" = "john",
+    /,
+    *,
+    count: "int" = 1,
+) -> None:
+    for _ in range(count):
+        print(f"hello, {name}!")
+
+
+def dummy_decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+@dummy_decorator
+def hi_float_decorated(name: str = "john", /, *, count: float = 1.0) -> None:
+    for _ in range(int(count)):
+        print(f"hello, {name}!")
+
+
 @mark.parametrize(
-    "hi, count_t", [(hi_int, int), (hi_float, float), (hi_float_annotated, float)]
+    "hi, count_t",
+    [
+        (hi_int, int),
+        (hi_float, float),
+        (hi_float_annotated, float),
+        (hi_int_stringified, int),
+        (hi_float_decorated, float),
+    ],
 )
-def test_args_with_defaults(hi, count_t):
+def test_args_with_defaults(hi: Callable[..., Any], count_t: type):
     typestr = "integer" if count_t is int else "float"
 
     check_args(hi, [], ["john"], {"count": count_t(1)})
@@ -99,7 +131,7 @@ def test_args_with_defaults(hi, count_t):
 
 
 @mark.parametrize("opt", ["-c", "--count"])
-def test_args_without_defaults(opt):
+def test_args_without_defaults(opt: str):
     def hi(name: str, /, *, count: int) -> None:
         for _ in range(count):
             print(f"hello, {name}!")
@@ -166,7 +198,7 @@ def test_args_without_defaults(opt):
         ["-h=3"],
     ],
 )
-def test_args_both_positional_and_keyword(person_name_opt, hello_count_opt):
+def test_args_both_positional_and_keyword(person_name_opt: str, hello_count_opt: str):
     def hi(person_name: str, hello_count: int) -> None:
         for _ in range(hello_count):
             print(f"hello, {person_name}!")
@@ -219,7 +251,7 @@ def test_args_both_positional_and_keyword_with_defaults():
 
 
 @mark.parametrize("opt", ["-v", "--verbose"])
-def test_flag(opt):
+def test_flag(opt: str):
     def hi(name: str, /, *, verbose: bool = False) -> None:
         print(f"hello, {name}!")
         if verbose:

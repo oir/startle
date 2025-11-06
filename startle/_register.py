@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from ._type_utils import normalize_type
+from ._type_utils import normalize_annotation
 
 
 def register(
@@ -26,7 +26,7 @@ def register(
     from ._metavar import METAVARS
     from ._value_parser import PARSERS
 
-    type_ = normalize_type(type_)
+    type_ = normalize_annotation(type_)
 
     if parser:
         PARSERS[type_] = parser

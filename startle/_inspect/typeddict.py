@@ -1,11 +1,8 @@
-from typing import (
-    Literal,
-    cast,
-)
+from typing import Literal, cast, get_type_hints
 
 from .._docstr import parse_docstring
 from .._type_utils import (
-    normalize_type,
+    normalize_annotation,
     shorten_type_annotation,
     strip_not_required,
     strip_optional,
@@ -45,7 +42,8 @@ def make_args_from_typeddict(
     """
     from .make_args import get_param_help, make_args_from_class
 
-    params = td.__annotations__.items()
+    params = get_type_hints(td, include_extras=True).items()
+    hints = get_type_hints(td, include_extras=True)
     optional_keys: frozenset[str] = td.__optional_keys__  # type: ignore
     required_keys: frozenset[str] = td.__required_keys__  # type: ignore
     _, arg_helps = parse_docstring(td)
@@ -53,7 +51,9 @@ def make_args_from_typeddict(
 
     args = Args(brief=brief, program_name=program_name)
 
-    used_names = collect_param_names(params, obj_name, recurse, kw_only=True)
+    used_names = collect_param_names(
+        params=params, hints=hints, obj_name=obj_name, recurse=recurse, kw_only=True
+    )
     used_short_names = (
         _used_short_names if _used_short_names is not None else set[str]()
     )
@@ -67,7 +67,7 @@ def make_args_from_typeddict(
         is_not_required, normalized_annotation = strip_not_required(
             normalized_annotation
         )
-        normalized_annotation = normalize_type(normalized_annotation)
+        normalized_annotation = normalize_annotation(normalized_annotation)
 
         required = param_name in required_keys or param_name not in optional_keys
         # NotRequired[] and Required[] are stronger than total=False/True

@@ -1,7 +1,6 @@
 import inspect
 import sys
 import types
-from inspect import Parameter
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -136,7 +135,7 @@ def normalize_union_type(annotation: TypeHint) -> TypeHint:
     return annotation
 
 
-def normalize_type(annotation: TypeHint) -> TypeHint:
+def normalize_annotation(annotation: TypeHint) -> TypeHint:
     """
     Normalize a type annotation by stripping Annotated, resolving type aliases,
     and unifying Union and Optional types.
@@ -190,21 +189,3 @@ def is_typeddict(type_: type) -> bool:
         and issubclass(type_, dict)
         and hasattr(type_, "__annotations__")  # type: ignore
     )
-
-
-def normalize_annotation(param_or_annot: "Parameter | TypeHint") -> Any:
-    """
-    Normalize a function parameter or type annotation.
-
-    Args:
-        param_or_annot: The function parameter or type annotation to normalize.
-            If a Parameter is provided, its annotation will be used. If the
-            annotation is empty, str will be assumed. If a TypeHint is provided,
-            it will be normalized directly.
-    """
-    if isinstance(param_or_annot, Parameter):
-        if param_or_annot.annotation is Parameter.empty:
-            return str
-        return normalize_type(param_or_annot.annotation)
-    else:
-        return normalize_type(param_or_annot)
