@@ -172,6 +172,6 @@ def _start_cmds(
                 post_error(exit=False)
             else:  # error happened before parsing the command
                 cmds.print_help(console())
-            raise SystemExit(1)
+            raise SystemExit(1) from e
         else:
             raise e

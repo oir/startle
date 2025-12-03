@@ -53,10 +53,10 @@ def _to_enum(value: str, enum_type: type) -> Enum:
         try:
             enum_type_ = cast(type[Enum], enum_type)
             return enum_type_[value.upper().replace("-", "_")]
-        except KeyError:
+        except KeyError as err:
             raise ParserValueError(
                 f"Cannot parse enum {enum_type.__name__} from `{value}`!"
-            )
+            ) from err
     except ValueError as err:
         raise ParserValueError(
             f"Cannot parse enum {enum_type.__name__} from `{value}`!"

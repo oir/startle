@@ -49,7 +49,7 @@ def parse(
                     "\n",
                 )
             )
-            raise SystemExit(1)
+            raise SystemExit(1) from e
         else:
             raise e
 
@@ -84,6 +84,6 @@ def parse(
                 )
             )
 
-            raise SystemExit(1)
+            raise SystemExit(1) from e
         else:
             raise e

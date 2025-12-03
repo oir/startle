@@ -59,9 +59,9 @@ def _meta(metavar: list[str] | str) -> Text:
     return (
         Text(metavar)
         if isinstance(metavar, str)
-        else Text("|", style="dim").join(
-            [Text(m, style=f"{Sty.literal_var} not dim") for m in metavar]
-        )
+        else Text("|", style="dim").join([
+            Text(m, style=f"{Sty.literal_var} not dim") for m in metavar
+        ])
     )
 
 
