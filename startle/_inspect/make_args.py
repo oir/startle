@@ -83,9 +83,9 @@ def _make_args_from_params(
     hints: Mapping[str, TypeHint],
     obj_name: str,
     brief: str = "",
-    arg_helps: ParamHelps = {},
+    arg_helps: ParamHelps | None = None,
     program_name: str = "",
-    default_factories: dict[str, Any] = {},
+    default_factories: dict[str, Any] | None = None,
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     _used_short_names: set[str] | None = None,
@@ -107,6 +107,9 @@ def _make_args_from_params(
             Modified in-place if not None.
     """
     args = Args(brief=brief, program_name=program_name)
+
+    arg_helps = arg_helps or {}
+    default_factories = default_factories or {}
 
     used_names = collect_param_names(
         params=params, hints=hints, obj_name=obj_name, recurse=recurse, kw_only=kw_only

@@ -67,9 +67,11 @@ cov-report = [
 
 [tool.ruff]
 target-version = "py310"
+preview = true
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I", "UP"]
+select = ["B", "E", "F", "I", "RUF", "UP", "DOC102", "DOC202", "DOC403", "DOC502"]
+ignore = ["E501", "RUF001", "RUF002"]
 
 [tool.ruff.lint.per-file-ignores]
 "startle/_type_utils.py" = ["UP007", "UP045"]

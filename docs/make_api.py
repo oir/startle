@@ -78,7 +78,7 @@ def func_api(func: Callable, file: TextIO):
     for param in sig.parameters.values():
         maybe_default = ""
         if param.default is not inspect.Parameter.empty:
-            maybe_default = f" = {repr(param.default)}"
+            maybe_default = f" = {param.default!r}"
         if (
             last_param_kind is not inspect.Parameter.KEYWORD_ONLY
             and param.kind is inspect.Parameter.KEYWORD_ONLY
@@ -109,7 +109,7 @@ def func_api(func: Callable, file: TextIO):
         if default is inspect.Parameter.empty:
             default = "_required_"
         else:
-            default = f"`{repr(default)}`"
+            default = f"`{default!r}`"
         print(f"| {name} | {typ} | {desc} | {default} |", file=file)
 
     print("\n", file=file)

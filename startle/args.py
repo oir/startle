@@ -534,9 +534,9 @@ class Args:
         # (2) then print usage line
         console.print(Text("Usage:", style=Sty.title))
         usage_components = [Text(f"  {name}")]
-        pos_only_str = Text(" ").join(
-            [usage(arg, "usage line") for arg in positional_only]
-        )
+        pos_only_str = Text(" ").join([
+            usage(arg, "usage line") for arg in positional_only
+        ])
         if pos_only_str:
             usage_components.append(pos_only_str)
         for opt in positional_and_named:

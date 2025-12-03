@@ -32,9 +32,7 @@ def error(msg: str, *, exit: Literal[True] = True, endl: bool = True) -> NoRetur
 def error(msg: str, *, exit: Literal[False], endl: bool) -> None: ...
 
 
-def error(
-    msg: str, *, exit: Literal[True, False] = True, endl: bool = True
-) -> None | NoReturn:
+def error(msg: str, *, exit: bool = True, endl: bool = True) -> None:
     """
     Print an error message to the console.
     Args:
@@ -63,7 +61,7 @@ def post_error(*, exit: Literal[True] = True) -> NoReturn: ...
 def post_error(*, exit: Literal[False]) -> None: ...
 
 
-def post_error(*, exit: Literal[True, False] = True) -> None | NoReturn:
+def post_error(*, exit: bool = True) -> None:
     """
     Print a post-error message to the console.
     """

@@ -18,7 +18,7 @@ from .classes import get_class_initializer_params
 def reserve_short_names(
     params: Iterable[tuple[str, "Parameter | TypeHint"]],
     used_names: list[str],
-    arg_helps: ParamHelps = {},
+    arg_helps: ParamHelps | None = None,
     used_short_names: set[str] | None = None,
 ) -> set[str]:
     def is_kw(param_or_annot: "Parameter | TypeHint") -> bool:
@@ -38,6 +38,8 @@ def reserve_short_names(
     for name in used_names:
         if len(name) == 1:
             used_short_names.add(name)
+
+    arg_helps = arg_helps or {}
 
     # Discover if there are any docstring-specified short names,
     # these also take precedence over the first letter of the parameter name

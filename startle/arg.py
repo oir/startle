@@ -97,10 +97,10 @@ class Arg:
         assert value is not None, "N-ary options should have values!"
         assert self.container_type is not None, "Programming error!"
         if isinstance(container, list):
-            return container + [value]
+            return [*container, value]
         elif self.container_type is tuple:
             assert isinstance(container, tuple), "Programming error!"
-            return container + (value,)
+            return (*container, value)
         elif self.container_type is set:
             assert isinstance(container, set), "Programming error!"
             return container | {value}
