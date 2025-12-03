@@ -18,7 +18,7 @@ ParamHelps = dict[str, ParamHelp]
 
 class _DocstrParts:
     function_params_headers = ("Args:", "Arguments:")
-    class_params_headers = "Attributes:"
+    class_params_headers = ("Attributes:",)
     brief_enders = (
         "Args:",
         "Arguments:",
