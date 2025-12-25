@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Annotated, Callable
+from typing import Annotated, Any, Callable
 
 from pytest import mark
 
@@ -211,7 +211,7 @@ def test_nargs():
         Args:
             words: List of words to count characters in.
             extra_words: Extra words to count characters in.
-            verbose: If true, print extra information.
+            verbose: If true: print extra information.
         """
         pass
 
@@ -232,7 +232,7 @@ def test_nargs():
         Args:
             words: List of words to count characters in.
             extra_words: Extra words to count characters in.
-            verbose: If true, print extra information.
+            verbose: If true: print extra information.
         """
         pass
 
@@ -253,7 +253,7 @@ def test_nargs():
         Args:
             words: List of words to count characters in.
             extra_words: Extra words to count characters in.
-            verbose: If true, print extra information.
+            verbose: If true: print extra information.
         """
         pass
 
@@ -269,7 +269,7 @@ Some additional explanation in a new paragraph.
 [{TS}]where[/]
   [dim](positional)[/]  {pos("words", "text")} [dim][[/]{dpos("words", "text")}[dim] ...][/]       [i]List of words to count characters in.[/] [yellow](required)[/] 
   [dim](option)[/]      {name("-e")}{dopt("|")}{name("--extra-words")} {var("<text>")} [dim][[/]{dvar("<text>")}[dim] ...][/]  [i]Extra words to count characters in.[/] [green](default: [/][green][][/][green])[/]
-  [dim](option)[/]      {name("-v")}{dopt("|")}{name("--verbose")}                          [i]If true, print extra information.[/] [green](flag)[/]         
+  [dim](option)[/]      {name("-v")}{dopt("|")}{name("--verbose")}                          [i]If true: print extra information.[/] [green](flag)[/]         
   [dim](option)[/]      {dname("-?")}{dopt("|")}{dname("--help")}                             [i dim]Show this help message and exit.[/]                 
 """
 
@@ -323,7 +323,7 @@ def ls3(index: int, /, path: Path, *args: str, dummy: float, **kwargs: int) -> N
 
 
 @mark.parametrize("ls", [ls1, ls2, ls3])
-def test_ordering(ls: Callable):
+def test_ordering(ls: Callable[..., Any]):
     # Help order respects the order of the arguments in the signature:
     # 1. positional only
     # 2. positional or keyword

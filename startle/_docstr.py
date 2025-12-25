@@ -28,7 +28,7 @@ class _DocstrParts:
         "Attributes:",
     )
 
-    param_pattern = re.compile(r"(\S+)(?:\s+(.*?))?:(.*)")
+    param_pattern = re.compile(r"(\S+?)(?:\s+(.*?))?:(.*)")
     # "param_name annotation: description", annotation optional
 
     short_name_pattern = re.compile(r"(?:(?<=^)|(?<=\s))\[(\S)\](?:(?=\s)|(?=$))")
