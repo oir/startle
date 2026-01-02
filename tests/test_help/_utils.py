@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 from rich.console import Console
 from startle._inspect.make_args import make_args_from_class, make_args_from_func
@@ -15,7 +15,7 @@ def remove_trailing_spaces(text: str) -> str:
 
 
 def check_help_from_func(
-    f: Callable, program_name: str, expected: str, recurse: bool = False
+    f: Callable[..., Any], program_name: str, expected: str, recurse: bool = False
 ):
     console = Console(width=120, highlight=False, force_terminal=True)
     with console.capture() as capture:

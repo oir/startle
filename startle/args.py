@@ -1,4 +1,5 @@
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -69,6 +70,15 @@ class Args:
                 unique_args.append(arg)
                 seen.add(id(arg))
         return unique_args
+
+    @property
+    def _children(self) -> Iterable["Arg"]:
+        """
+        Yield all child Args instances. Only relevant when parsing recursively.
+        """
+        for arg in self._args:
+            if arg.args:
+                yield arg
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -244,6 +254,14 @@ class Args:
         if name in ["help", "?"]:
             self.print_help()
             raise SystemExit(0)
+
+        for child in self._children:
+            try:
+                assert child.args is not None, "Programming error!"
+                return child.args._parse_named(name, args, state)
+            except ParserOptionError:
+                pass
+
         if "=" in name:
             return self._parse_equals_syntax(name, state)
         normal_name = name.replace("_", "-")
@@ -369,33 +387,27 @@ class Args:
 
         return remaining_args
 
-    def _parse(self, args: list[str]):
-        args = self._maybe_parse_children(args)
-        state = _ParsingState()
+    def _check_completion(self) -> None:
+        for child in self._children:
+            assert child.args is not None, "Programming error!"
+            try:
+                child.args._check_completion()
 
-        while state.idx < len(args):
-            if not state.positional_only and args[state.idx] == "--":
-                # all subsequent arguments will be attempted to be parsed as positional
-                state.positional_only = True
-                state.idx += 1
-                continue
-            name = self._is_name(args[state.idx])
-            if not state.positional_only and name:
-                # this must be a named argument / option
-                if names := self._is_combined_short_names(args[state.idx]):
-                    state = self._parse_combined_short_names(names, args, state)
-                else:
-                    try:
-                        state = self._parse_named(name, args, state)
-                    except ParserOptionError as e:
-                        if self._var_args and str(e).startswith("Unexpected option"):
-                            self._var_args.parse(args[state.idx])
-                            state.idx += 1
-                        else:
-                            raise
-            else:
-                # this must be a positional argument
-                state = self._parse_positional(args, state)
+                # construct the actual object
+                init_args, init_kwargs = child.args.make_func_args()
+                child._value = child.type_(*init_args, **init_kwargs)  # type: ignore
+                child._parsed = True  # type: ignore
+            except ParserOptionError as e:
+                estr = str(e)
+                if estr.startswith("Required option") and estr.endswith(
+                    " is not provided!"
+                ):
+                    # this is allowed if arg has a default value
+                    if not child.required:
+                        child._value = child.default  # type: ignore
+                        child._parsed = True  # type: ignore
+                        continue
+                raise e
 
         # check if all required arguments are given, assign defaults otherwise
         for arg in self._positional_args + self._named_args:
@@ -413,6 +425,47 @@ class Args:
                 else:
                     arg._value = arg.default  # type: ignore
                     arg._parsed = True  # type: ignore
+
+    def _parse(self, args: list[str]):
+        # args = self._maybe_parse_children(args)
+        state = _ParsingState()
+
+        while state.idx < len(args):
+            if not state.positional_only and args[state.idx] == "--":
+                # all subsequent arguments will be attempted to be parsed as positional
+                state.positional_only = True
+                state.idx += 1
+                continue
+            name = self._is_name(args[state.idx])
+            if not state.positional_only and name:
+                # this must be a named argument / option
+                if names := self._is_combined_short_names(args[state.idx]):
+                    state = self._parse_combined_short_names(names, args, state)
+                else:
+                    parsed_by_child = False
+                    # for child in self._children:
+                    #     assert child.args is not None, "Programming error!"
+                    #     if name in child.args._name2idx:
+                    #         # delegate to child Args
+                    #         state = child.args._parse_named(name, args, state)
+                    #         parsed_by_child = True
+                    #         break
+                    if not parsed_by_child:
+                        try:
+                            state = self._parse_named(name, args, state)
+                        except ParserOptionError as e:
+                            if self._var_args and str(e).startswith(
+                                "Unexpected option"
+                            ):
+                                self._var_args.parse(args[state.idx])
+                                state.idx += 1
+                            else:
+                                raise
+            else:
+                # this must be a positional argument
+                state = self._parse_positional(args, state)
+
+        self._check_completion()
 
     def make_func_args(self) -> tuple[list[Any], dict[str, Any]]:
         """
