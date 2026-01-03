@@ -757,3 +757,21 @@ def test_combined_short_flags() -> None:
         {},
         recurse=True,
     )
+    check_args(
+        make_fruit_salad,
+        [
+            "--color",
+            "green",
+            "--length",
+            "7.5",
+            "-hrs",
+            "3",
+        ],
+        [
+            AppleConfig(color="green", heavy=True),
+            BananaConfig(length=7.5, ripe=True),
+            3,
+        ],
+        {},
+        recurse=True,
+    )

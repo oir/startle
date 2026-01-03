@@ -111,6 +111,20 @@ class Args:
                 return value
         return False
 
+    def _find_arg_by_name(self, name: str) -> Arg | None:
+        """
+        Find an argument by its name (short or long) among self or the children.
+        Returns the Arg if found, otherwise None.
+        """
+        if name in self._name2idx:
+            return self._named_args[self._name2idx[name]]
+        for child in self._children:
+            assert child.args is not None, "Programming error!"
+            result = child.args._find_arg_by_name(name)
+            if result is not None:
+                return result
+        return None
+
     def add(self, arg: Arg):
         """
         Add an argument to the parser.
@@ -195,9 +209,9 @@ class Args:
             if name == "?":
                 self.print_help()
                 raise SystemExit(0)
-            if name not in self._name2idx:
+            opt = self._find_arg_by_name(name)
+            if opt is None:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
-            opt = self._named_args[self._name2idx[name]]
             if opt.is_parsed and not opt.is_nary:
                 raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 
