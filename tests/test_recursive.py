@@ -716,57 +716,21 @@ def make_fruit_salad(
     pass
 
 
-def test_combined_short_flags() -> None:
+@mark.parametrize(
+    "cli_args",
+    [
+        ["--color", "green", "--heavy", "--length", "7.5", "--ripe", "--servings", "3"],
+        ["--color", "green", "--length", "7.5", "-h", "-r", "-s", "3"],
+        ["--color", "green", "--length", "7.5", "-hrs", "3"],
+        ["--color", "green", "--length", "7.5", "-hrs=3"],
+        ["--color", "green", "--length", "7.5", "-rhs", "3"],
+        ["--color", "green", "--length", "7.5", "-rhs=3"],
+    ],
+)
+def test_combined_short_flags(cli_args: list[str]) -> None:
     check_args(
         make_fruit_salad,
-        [
-            "--color",
-            "green",
-            "--heavy",
-            "--length",
-            "7.5",
-            "--ripe",
-            "--servings",
-            "3",
-        ],
-        [
-            AppleConfig(color="green", heavy=True),
-            BananaConfig(length=7.5, ripe=True),
-            3,
-        ],
-        {},
-        recurse=True,
-    )
-    check_args(
-        make_fruit_salad,
-        [
-            "--color",
-            "green",
-            "--length",
-            "7.5",
-            "-h",
-            "-r",
-            "-s",
-            "3",
-        ],
-        [
-            AppleConfig(color="green", heavy=True),
-            BananaConfig(length=7.5, ripe=True),
-            3,
-        ],
-        {},
-        recurse=True,
-    )
-    check_args(
-        make_fruit_salad,
-        [
-            "--color",
-            "green",
-            "--length",
-            "7.5",
-            "-hrs",
-            "3",
-        ],
+        cli_args,
         [
             AppleConfig(color="green", heavy=True),
             BananaConfig(length=7.5, ripe=True),
