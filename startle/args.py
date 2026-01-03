@@ -1,4 +1,5 @@
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -70,6 +71,15 @@ class Args:
                 seen.add(id(arg))
         return unique_args
 
+    @property
+    def _children(self) -> Iterable["Arg"]:
+        """
+        Yield all child Args instances. Only relevant when parsing recursively.
+        """
+        for arg in self._args:
+            if arg.args:
+                yield arg
+
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
         """
@@ -100,6 +110,20 @@ class Args:
             if len(value) > 1:
                 return value
         return False
+
+    def _find_arg_by_name(self, name: str) -> Arg | None:
+        """
+        Find an argument by its name (short or long) among self or the children.
+        Returns the Arg if found, otherwise None.
+        """
+        if name in self._name2idx:
+            return self._named_args[self._name2idx[name]]
+        for child in self._children:
+            assert child.args is not None, "Programming error!"
+            result = child.args._find_arg_by_name(name)
+            if result is not None:
+                return result
+        return None
 
     def add(self, arg: Arg):
         """
@@ -185,9 +209,9 @@ class Args:
             if name == "?":
                 self.print_help()
                 raise SystemExit(0)
-            if name not in self._name2idx:
+            opt = self._find_arg_by_name(name)
+            if opt is None:
                 raise ParserOptionError(f"Unexpected option `{name}`!")
-            opt = self._named_args[self._name2idx[name]]
             if opt.is_parsed and not opt.is_nary:
                 raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
 
@@ -244,6 +268,14 @@ class Args:
         if name in ["help", "?"]:
             self.print_help()
             raise SystemExit(0)
+
+        for child in self._children:
+            try:
+                assert child.args is not None, "Programming error!"
+                return child.args._parse_named(name, args, state)
+            except ParserOptionError:
+                pass
+
         if "=" in name:
             return self._parse_equals_syntax(name, state)
         normal_name = name.replace("_", "-")
@@ -333,44 +365,46 @@ class Args:
         state.positional_idx += 1
         return state
 
-    def _maybe_parse_children(self, args: list[str]) -> list[str]:
-        """
-        Parse child Args, if any.
-        This method is only relevant when recurse=True is used in start() or parse().
-
-        Returns:
-            Remaining args after parsing child Args.
-        """
-        remaining_args = args.copy()
-        for arg in self._args:
-            if child_args := arg.args:
-                try:
-                    child_args.parse(remaining_args)
-                except ParserOptionError as e:
-                    estr = str(e)
-                    if estr.startswith("Required option") and estr.endswith(
-                        " is not provided!"
-                    ):
-                        # this is allowed if arg has a default value
-                        if not arg.required:
-                            arg._value = arg.default  # type: ignore
-                            arg._parsed = True  # type: ignore
-                            continue
-                        # note that we do not consume any args, even partially
-                    raise e
-
-                assert child_args._var_args is not None, "Programming error!"
-                remaining_args: list[str] = child_args._var_args.value or []
+    def _check_completion(self) -> None:
+        for child in self._children:
+            assert child.args is not None, "Programming error!"
+            try:
+                child.args._check_completion()
 
                 # construct the actual object
-                init_args, init_kwargs = child_args.make_func_args()
-                arg._value = arg.type_(*init_args, **init_kwargs)  # type: ignore
-                arg._parsed = True  # type: ignore
+                init_args, init_kwargs = child.args.make_func_args()
+                child._value = child.type_(*init_args, **init_kwargs)  # type: ignore
+                child._parsed = True  # type: ignore
+            except ParserOptionError as e:
+                estr = str(e)
+                if estr.startswith("Required option") and estr.endswith(
+                    " is not provided!"
+                ):
+                    # this is allowed if arg has a default value
+                    if not child.required:
+                        child._value = child.default  # type: ignore
+                        child._parsed = True  # type: ignore
+                        continue
+                raise e
 
-        return remaining_args
+        # check if all required arguments are given, assign defaults otherwise
+        for arg in self._positional_args + self._named_args:
+            if not arg.is_parsed:
+                if arg.required:
+                    if arg.is_named:
+                        # if a positional arg is also named, prefer this type of error message
+                        raise ParserOptionError(
+                            f"Required option `{arg.name}` is not provided!"
+                        )
+                    else:
+                        raise ParserOptionError(
+                            f"Required positional argument <{arg.name.long}> is not provided!"
+                        )
+                else:
+                    arg._value = arg.default  # type: ignore
+                    arg._parsed = True  # type: ignore
 
     def _parse(self, args: list[str]):
-        args = self._maybe_parse_children(args)
         state = _ParsingState()
 
         while state.idx < len(args):
@@ -397,22 +431,7 @@ class Args:
                 # this must be a positional argument
                 state = self._parse_positional(args, state)
 
-        # check if all required arguments are given, assign defaults otherwise
-        for arg in self._positional_args + self._named_args:
-            if not arg.is_parsed:
-                if arg.required:
-                    if arg.is_named:
-                        # if a positional arg is also named, prefer this type of error message
-                        raise ParserOptionError(
-                            f"Required option `{arg.name}` is not provided!"
-                        )
-                    else:
-                        raise ParserOptionError(
-                            f"Required positional argument <{arg.name.long}> is not provided!"
-                        )
-                else:
-                    arg._value = arg.default  # type: ignore
-                    arg._parsed = True  # type: ignore
+        self._check_completion()
 
     def make_func_args(self) -> tuple[list[Any], dict[str, Any]]:
         """
