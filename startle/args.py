@@ -351,42 +351,6 @@ class Args:
         state.positional_idx += 1
         return state
 
-    def _maybe_parse_children(self, args: list[str]) -> list[str]:
-        """
-        Parse child Args, if any.
-        This method is only relevant when recurse=True is used in start() or parse().
-
-        Returns:
-            Remaining args after parsing child Args.
-        """
-        remaining_args = args.copy()
-        for arg in self._args:
-            if child_args := arg.args:
-                try:
-                    child_args.parse(remaining_args)
-                except ParserOptionError as e:
-                    estr = str(e)
-                    if estr.startswith("Required option") and estr.endswith(
-                        " is not provided!"
-                    ):
-                        # this is allowed if arg has a default value
-                        if not arg.required:
-                            arg._value = arg.default  # type: ignore
-                            arg._parsed = True  # type: ignore
-                            continue
-                        # note that we do not consume any args, even partially
-                    raise e
-
-                assert child_args._var_args is not None, "Programming error!"
-                remaining_args: list[str] = child_args._var_args.value or []
-
-                # construct the actual object
-                init_args, init_kwargs = child_args.make_func_args()
-                arg._value = arg.type_(*init_args, **init_kwargs)  # type: ignore
-                arg._parsed = True  # type: ignore
-
-        return remaining_args
-
     def _check_completion(self) -> None:
         for child in self._children:
             assert child.args is not None, "Programming error!"
@@ -427,7 +391,6 @@ class Args:
                     arg._parsed = True  # type: ignore
 
     def _parse(self, args: list[str]):
-        # args = self._maybe_parse_children(args)
         state = _ParsingState()
 
         while state.idx < len(args):
