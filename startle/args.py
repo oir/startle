@@ -405,25 +405,14 @@ class Args:
                 if names := self._is_combined_short_names(args[state.idx]):
                     state = self._parse_combined_short_names(names, args, state)
                 else:
-                    parsed_by_child = False
-                    # for child in self._children:
-                    #     assert child.args is not None, "Programming error!"
-                    #     if name in child.args._name2idx:
-                    #         # delegate to child Args
-                    #         state = child.args._parse_named(name, args, state)
-                    #         parsed_by_child = True
-                    #         break
-                    if not parsed_by_child:
-                        try:
-                            state = self._parse_named(name, args, state)
-                        except ParserOptionError as e:
-                            if self._var_args and str(e).startswith(
-                                "Unexpected option"
-                            ):
-                                self._var_args.parse(args[state.idx])
-                                state.idx += 1
-                            else:
-                                raise
+                    try:
+                        state = self._parse_named(name, args, state)
+                    except ParserOptionError as e:
+                        if self._var_args and str(e).startswith("Unexpected option"):
+                            self._var_args.parse(args[state.idx])
+                            state.idx += 1
+                        else:
+                            raise
             else:
                 # this must be a positional argument
                 state = self._parse_positional(args, state)
