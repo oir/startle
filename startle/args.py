@@ -72,13 +72,13 @@ class Args:
         return unique_args
 
     @property
-    def _children(self) -> Iterable["Arg"]:
+    def _children(self) -> Iterable["tuple[Arg, Args]"]:
         """
         Yield all child Args instances. Only relevant when parsing recursively.
         """
         for arg in self._args:
             if arg.args:
-                yield arg
+                yield arg, arg.args
 
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
@@ -118,9 +118,8 @@ class Args:
         """
         if name in self._name2idx:
             return self._named_args[self._name2idx[name]]
-        for child in self._children:
-            assert child.args is not None, "Programming error!"
-            result = child.args._find_arg_by_name(name)
+        for _, child_args in self._children:
+            result = child_args._find_arg_by_name(name)
             if result is not None:
                 return result
         return None
@@ -269,10 +268,9 @@ class Args:
             self.print_help()
             raise SystemExit(0)
 
-        for child in self._children:
+        for _, child_args in self._children:
             try:
-                assert child.args is not None, "Programming error!"
-                return child.args._parse_named(name, args, state)
+                return child_args._parse_named(name, args, state)
             except ParserOptionError:
                 pass
 
@@ -366,13 +364,12 @@ class Args:
         return state
 
     def _check_completion(self) -> None:
-        for child in self._children:
-            assert child.args is not None, "Programming error!"
+        for child, child_args in self._children:
             try:
-                child.args._check_completion()
+                child_args._check_completion()
 
                 # construct the actual object
-                init_args, init_kwargs = child.args.make_func_args()
+                init_args, init_kwargs = child_args.make_func_args()
                 child._value = child.type_(*init_args, **init_kwargs)  # type: ignore
                 child._parsed = True  # type: ignore
             except ParserOptionError as e:
