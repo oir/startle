@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, MutableSequence, Sequence
 from inspect import Parameter
 from typing import Any, Literal, cast, get_args, get_origin
 
@@ -97,6 +97,13 @@ def get_annotation_naryness(
     if normalized_annotation in [list, tuple, set]:
         container_type = cast(type, normalized_annotation)
         return True, container_type, str
+
+    # handle abstract collections
+    if orig in [Sequence, MutableSequence, Iterable]:
+        return True, list, strip_annotated(args_[0]) if args_ else str
+    if normalized_annotation in [Sequence, MutableSequence, Iterable]:
+        return True, list, str
+
     return False, None, normalized_annotation
 
 
