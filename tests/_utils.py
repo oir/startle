@@ -1,3 +1,4 @@
+import types
 from typing import Any, Callable
 
 from startle._inspect.make_args import make_args_from_func
@@ -61,3 +62,24 @@ class Opts:
 
 
 Opt = Callable[[str, list[str]], list[str]]
+
+
+def copy_function(f: Callable[..., Any]) -> Callable[..., Any]:
+    new_func = types.FunctionType(
+        f.__code__,
+        f.__globals__,
+        name=f.__name__,
+        argdefs=f.__defaults__,
+        closure=f.__closure__,
+    )
+    new_func.__dict__.update(f.__dict__)
+    new_func.__annotations__ = dict(f.__annotations__)
+    return new_func
+
+
+def update_annotation(
+    f: Callable[..., Any], annotations: dict[str, Any]
+) -> Callable[..., Any]:
+    f = copy_function(f)
+    f.__annotations__.update(annotations)
+    return f

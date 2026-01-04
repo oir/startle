@@ -1,69 +1,41 @@
-from typing import Callable, List
+from typing import Any, Callable, Iterable, List, MutableSequence, Sequence
 
 from pytest import mark, raises
 from startle.error import ParserOptionError, ParserValueError
 
-from ._utils import check_args
+from ._utils import check_args, update_annotation
 
 
-def add_int(*, numbers: list[int]) -> None:
+def add(*, numbers: list[int]) -> None:
     print(sum(numbers))
 
 
-def add_float(*, numbers: list[float]) -> None:
-    print(sum(numbers))
-
-
-def add_str(*, numbers: list[str]) -> None:
-    print(" ".join(numbers))
-
-
-def add_int2(*, numbers: List[int]) -> None:
-    print(sum(numbers))
-
-
-def add_float2(*, numbers: List[float]) -> None:
-    print(sum(numbers))
-
-
-def add_str2(*, numbers: list[str]) -> None:
-    print(" ".join(numbers))
-
-
-@mark.parametrize(
-    "add, scalar",
-    [
-        (add_int, int),
-        (add_float, float),
-        (add_str, str),
-        (add_int2, int),
-        (add_float2, float),
-        (add_str2, str),
-    ],
-)
+@mark.parametrize("container", [list, List, Iterable, Sequence, MutableSequence])
+@mark.parametrize("scalar", [int, float, str])
 @mark.parametrize("opt", ["-n", "--numbers"])
-def test_keyword_list(add: Callable, scalar: type, opt: str) -> None:
+def test_keyword_list(container: Any, scalar: type, opt: str) -> None:
+    add_ = update_annotation(add, {"numbers": container[scalar]})
     cli = [opt] + [str(i) for i in range(5)]
-    check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
+    check_args(add_, cli, [], {"numbers": [scalar(i) for i in range(5)]})
     cli = [f"{opt}={i}" for i in range(5)]
-    check_args(add, cli, [], {"numbers": [scalar(i) for i in range(5)]})
+    check_args(add_, cli, [], {"numbers": [scalar(i) for i in range(5)]})
 
     check_args(
-        add,
+        add_,
         ["--numbers", "0", "1", "-n", "2"],
         [],
         {"numbers": [scalar(i) for i in range(3)]},
     )
 
     with raises(ParserOptionError, match="Required option `numbers` is not provided!"):
-        check_args(add, [], [], {})
+        check_args(add_, [], [], {})
 
     if scalar in [int, float]:
         with raises(
             ParserValueError,
             match=f"Cannot parse {'integer' if scalar is int else 'float'} from `x`!",
         ):
-            check_args(add, [opt, "0", "1", "x"], [], {})
+            check_args(add_, [opt, "0", "1", "x"], [], {})
 
 
 def addwh1(*, widths: list[int], heights: list[float] = []) -> None:
@@ -91,7 +63,7 @@ def addwh3(*, widths: list[str], heights: list[int] = []) -> None:
 )
 @mark.parametrize("short", [False, True])
 def test_keyword_nargs_long(
-    add: Callable, wscalar: type, hscalar: type, short: bool
+    add: Callable[..., Any], wscalar: type, hscalar: type, short: bool
 ) -> None:
     wopt = "-w" if short else "--widths"
     hopt = "--heights"
@@ -157,12 +129,12 @@ def add_list_pos_str2(numbers: List[str], /) -> None:
     print(" ".join(numbers))
 
 
-def add_list_pos_str3(numbers: list, /) -> None:
-    print(" ".join(numbers))
+def add_list_pos_str3(numbers: list, /) -> None:  # type: ignore
+    print(" ".join(numbers))  # type: ignore
 
 
-def add_list_pos_str4(numbers: List, /) -> None:
-    print(" ".join(numbers))
+def add_list_pos_str4(numbers: List, /) -> None:  # type: ignore
+    print(" ".join(numbers))  # type: ignore
 
 
 @mark.parametrize(
@@ -176,9 +148,9 @@ def add_list_pos_str4(numbers: List, /) -> None:
         (add_list_pos_str2, str),
         (add_list_pos_str3, str),
         (add_list_pos_str4, str),
-    ],
+    ],  # type: ignore
 )
-def test_positional_nargs(add: Callable, scalar: type) -> None:
+def test_positional_nargs(add: Callable[..., Any], scalar: type) -> None:
     cli = ["0", "1", "2", "3", "4"]
     check_args(add, cli, [[scalar(i) for i in range(5)]], {})
 
@@ -222,12 +194,12 @@ def posd_add_list_str2(numbers: List[str] = ["3", "5"], /) -> None:
     print(" ".join(numbers))
 
 
-def posd_add_list_str3(numbers: list = ["3", "5"], /) -> None:
-    print(" ".join(numbers))
+def posd_add_list_str3(numbers: list = ["3", "5"], /) -> None:  # type: ignore
+    print(" ".join(numbers))  # type: ignore
 
 
-def posd_add_list_str4(numbers: List = ["3", "5"], /) -> None:
-    print(" ".join(numbers))
+def posd_add_list_str4(numbers: List = ["3", "5"], /) -> None:  # type: ignore
+    print(" ".join(numbers))  # type: ignore
 
 
 @mark.parametrize(
@@ -241,9 +213,9 @@ def posd_add_list_str4(numbers: List = ["3", "5"], /) -> None:
         (posd_add_list_str2, str),
         (posd_add_list_str3, str),
         (posd_add_list_str4, str),
-    ],
+    ],  # type: ignore
 )
-def test_positional_nargs_with_defaults(add: Callable, scalar: type) -> None:
+def test_positional_nargs_with_defaults(add: Callable[..., Any], scalar: type) -> None:
     cli = ["0", "1", "2", "3", "4"]
     check_args(add, cli, [[scalar(i) for i in range(5)]], {})
     check_args(add, [], [[scalar(3), scalar(5)]], {})
@@ -267,7 +239,7 @@ def test_positional_nargs_infeasible():
         print(" ".join(widths))
         print(" ".join(heights))
 
-    for rectangle, type_ in [
+    for rectangle, type_ in [  # type: ignore
         (rectangle_int, int),
         (rectangle_float, float),
         (rectangle_str, str),
