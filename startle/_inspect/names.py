@@ -94,6 +94,8 @@ def get_annotation_naryness(
         return True, orig, strip_annotated(args_[0]) if args_ else str
     if orig is tuple and len(args_) == 2 and args_[1] is ...:
         return True, orig, strip_annotated(args_[0]) if args_ else str
+    if orig is tuple and not args_:
+        return True, orig, str
     if normalized_annotation in [list, tuple, set]:
         container_type = cast(type, normalized_annotation)
         return True, container_type, str

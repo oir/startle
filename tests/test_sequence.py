@@ -134,7 +134,9 @@ def add_pos(numbers: list[int], /) -> None:
     pass
 
 
-@mark.parametrize("container", [list, List, Sequence, MutableSequence, Iterable, tuple])
+@mark.parametrize(
+    "container", [list, List, Sequence, MutableSequence, Iterable, tuple, Tuple]
+)
 @mark.parametrize("scalar", [int, float, str, None])
 def test_positional_nargs(container: Any, scalar: type | None) -> None:
     add_ = copy_function(add_pos, annotations={"numbers": hint(container, scalar)})
