@@ -99,10 +99,15 @@ def get_annotation_naryness(
         return True, container_type, str
 
     # handle abstract collections
-    if orig in [Sequence, MutableSequence, Iterable]:
+    if orig in [MutableSequence]:
         return True, list, strip_annotated(args_[0]) if args_ else str
-    if normalized_annotation in [Sequence, MutableSequence, Iterable]:
+    if normalized_annotation in [MutableSequence]:
         return True, list, str
+
+    if orig in [Sequence, Iterable]:
+        return True, tuple, strip_annotated(args_[0]) if args_ else str
+    if normalized_annotation in [Sequence, Iterable]:
+        return True, tuple, str
 
     return False, None, normalized_annotation
 
