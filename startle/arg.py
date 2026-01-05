@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Sequence, Set
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -91,8 +91,8 @@ class Arg:
             self.metavar = get_metavar(self.type_)
 
     def _append(
-        self, container: Sequence[Any] | set[Any], value: Any
-    ) -> Sequence[Any] | set[Any]:
+        self, container: Sequence[Any] | Set[Any], value: Any
+    ) -> Sequence[Any] | Set[Any]:
         assert self.is_nary, "Programming error!"
         assert value is not None, "N-ary options should have values!"
         assert self.container_type is not None, "Programming error!"
@@ -104,6 +104,9 @@ class Arg:
         elif self.container_type is set:
             assert isinstance(container, set), "Programming error!"
             return container | {value}
+        elif self.container_type is frozenset:
+            assert isinstance(container, frozenset), "Programming error!"
+            return container | frozenset({value})
         else:
             raise ParserConfigError("Unsupported container type!")
 

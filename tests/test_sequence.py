@@ -1,5 +1,15 @@
 import re
-from typing import Any, Iterable, List, MutableSequence, Sequence, Tuple
+from typing import (
+    Any,
+    FrozenSet,
+    Iterable,
+    List,
+    MutableSequence,
+    MutableSet,
+    Sequence,
+    Set,
+    Tuple,
+)
 
 from pytest import mark, raises
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
@@ -7,6 +17,8 @@ from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 from ._utils import check_args, copy_function
 
 TUPLE_TYPES = [tuple, Tuple, Iterable, Sequence]
+SET_TYPES = [set, Set, MutableSet]
+FROZENSET_TYPES = [frozenset, FrozenSet]
 
 
 def hint(container: Any, scalar: type | None) -> Any:
@@ -17,31 +29,54 @@ def hint(container: Any, scalar: type | None) -> Any:
     return container[scalar]
 
 
+def container_class(container: Any) -> type:
+    if container in TUPLE_TYPES:
+        return tuple
+    if container in SET_TYPES:
+        return set
+    if container in FROZENSET_TYPES:
+        return frozenset
+    return list
+
+
 def add(*, numbers: list[int]) -> None:
     print(sum(numbers))
 
 
 @mark.parametrize(
-    "container", [list, List, Sequence, MutableSequence, Iterable, tuple, Tuple]
+    "container",
+    [
+        list,
+        List,
+        Sequence,
+        MutableSequence,
+        Iterable,
+        tuple,
+        Tuple,
+        set,
+        Set,
+        MutableSet,
+        frozenset,
+        FrozenSet,
+    ],
 )
 @mark.parametrize("scalar", [int, float, str])
 @mark.parametrize("opt", ["-n", "--numbers"])
 def test_keyword_list(container: Any, scalar: type, opt: str) -> None:
     add_ = copy_function(add, annotations={"numbers": hint(container, scalar)})
 
-    maybe_tuple = tuple if container in TUPLE_TYPES else list
+    ctr_cls = container_class(container)
 
     cli = [opt] + [str(i) for i in range(5)]
-    check_args(add_, cli, [], {"numbers": maybe_tuple([scalar(i) for i in range(5)])})
+    check_args(add_, cli, [], {"numbers": ctr_cls([scalar(i) for i in range(5)])})
 
     cli = [f"{opt}={i}" for i in range(5)]
-    check_args(add_, cli, [], {"numbers": maybe_tuple([scalar(i) for i in range(5)])})
-
+    check_args(add_, cli, [], {"numbers": ctr_cls([scalar(i) for i in range(5)])})
     check_args(
         add_,
         ["--numbers", "0", "1", "-n", "2"],
         [],
-        {"numbers": maybe_tuple([scalar(i) for i in range(3)])},
+        {"numbers": ctr_cls([scalar(i) for i in range(3)])},
     )
 
     with raises(ParserOptionError, match="Required option `numbers` is not provided!"):
