@@ -1,3 +1,5 @@
+from copy import copy
+from types import FunctionType
 from typing import Any, Callable
 
 from startle._inspect.make_args import make_args_from_func
@@ -61,3 +63,27 @@ class Opts:
 
 
 Opt = Callable[[str, list[str]], list[str]]
+
+
+def copy_function(
+    f: Callable[..., Any],
+    annotations: dict[str, Any] | None = None,
+    defaults: tuple[Any, ...] | None = None,
+    kwdefaults: dict[str, Any] | None = None,
+) -> Callable[..., Any]:
+    new_func = FunctionType(
+        f.__code__,
+        f.__globals__,
+        name=f.__name__,
+    )
+    new_func.__dict__.update(f.__dict__)
+    new_func.__annotations__ = copy(f.__annotations__)
+    if annotations:
+        new_func.__annotations__.update(annotations)
+    new_func.__defaults__ = copy(f.__defaults__) if f.__defaults__ else None
+    if defaults:
+        new_func.__defaults__ = defaults
+    new_func.__kwdefaults__ = copy(f.__kwdefaults__) if f.__kwdefaults__ else None
+    if kwdefaults:
+        new_func.__kwdefaults__ = kwdefaults
+    return new_func
