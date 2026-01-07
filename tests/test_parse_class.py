@@ -53,7 +53,9 @@ class ConfigDataClassAnnotated:
     label: Annotated[str, "some metadata"] = "default"
 
 
-def check_parse_exits(capsys: CaptureFixture[str], cls: type, args: list[str], expected: str) -> None:
+def check_parse_exits(
+    capsys: CaptureFixture[str], cls: type, args: list[str], expected: str
+) -> None:
     with raises(SystemExit) as excinfo:
         parse(cls, args=args)
     assert str(excinfo.value) == "1"

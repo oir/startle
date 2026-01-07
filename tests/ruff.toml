@@ -2,4 +2,4 @@ target-version = "py312"
 preview = true
 
 [lint]
-ignore = ["E501", "RUF001", "RUF002", "RUF043"]
+ignore = ["E501", "RUF001", "RUF002", "RUF043", "UP007", "UP045"]
