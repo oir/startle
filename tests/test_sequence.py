@@ -2,6 +2,14 @@ import re
 from collections.abc import Iterable, MutableSequence, MutableSet, Sequence
 from typing import (
     Any,
+    Tuple as TyTuple,
+    List as TyList,
+    Iterable as TyIterable,
+    Sequence as TySequence,
+    Set as TySet,
+    FrozenSet as TyFrozenSet,
+    MutableSequence as TyMutableSequence,
+    MutableSet as TyMutableSet,
 )
 
 from pytest import mark, raises
@@ -9,15 +17,15 @@ from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
 from ._utils import check_args, copy_function
 
-TUPLE_TYPES = [tuple, tuple, Iterable, Sequence]
-SET_TYPES = [set, set, MutableSet]
-FROZENSET_TYPES = [frozenset, frozenset]
+TUPLE_TYPES = [tuple, TyTuple, Iterable, Sequence, TyIterable, TySequence]
+SET_TYPES = [set, TySet, MutableSet, TyMutableSet]
+FROZENSET_TYPES = [frozenset, TyFrozenSet]
 
 
 def hint(container: Any, scalar: type | None) -> Any:
     if scalar is None:
         return container
-    if container in [tuple, tuple]:
+    if container in [tuple, TyTuple]:
         return container[scalar, ...]  # type: ignore
     return container[scalar]
 
@@ -38,17 +46,21 @@ def add(*, numbers: list[int]) -> None:
 
 container_hints: list[Any] = [
     list,
-    list,
+    TyList,
     Sequence,
+    TySequence,
     MutableSequence,
+    TyMutableSequence,
     Iterable,
+    TyIterable,
     tuple,
-    tuple,
+    TyTuple,
     set,
-    set,
+    TySet,
     MutableSet,
+    TyMutableSet,
     frozenset,
-    frozenset,
+    TyFrozenSet,
 ]
 
 
