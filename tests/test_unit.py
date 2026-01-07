@@ -1,6 +1,11 @@
 import re
 import sys
-from typing import Any, Optional, Union
+from typing import (
+    Any,
+    List,
+    Optional,
+    Union,
+)
 
 from pytest import mark, raises
 from startle._inspect.dataclasses import get_default_factories
@@ -44,7 +49,7 @@ def test_strip_optional():
 
 
 def test_shorten_type_annotation():
-    from typing import Any, List, Literal
+    from typing import Any, Literal
 
     assert shorten_type_annotation(int) == "int"
     assert shorten_type_annotation(str) == "str"
@@ -65,11 +70,11 @@ def test_shorten_type_annotation():
     assert shorten_type_annotation(Optional[str | float]) == "str | float | None"
 
     assert shorten_type_annotation(list[int]) == "list[int]"
-    assert shorten_type_annotation(List[int]) == "list[int]"
-    assert shorten_type_annotation(List[int | None]) == "list[int | None]"
+    assert shorten_type_annotation(List[int]) == "list[int]"  # noqa
+    assert shorten_type_annotation(List[int | None]) == "list[int | None]"  # noqa
     assert shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
     assert shorten_type_annotation(list) == "list"  # type: ignore
-    assert shorten_type_annotation(List) == "typing.List"  # TODO:
+    assert shorten_type_annotation(List) == "typing.List"  # TODO:  # noqa
     assert shorten_type_annotation(Any) in ["Any", "typing.Any"]  # TODO:
     assert shorten_type_annotation(list[list]) == "list[list]"  # type: ignore
 
@@ -164,13 +169,12 @@ def test_arg_properties():
 
 def test_get_default_factories():
     from dataclasses import dataclass, field
-    from typing import List, Optional
 
     @dataclass
     class Example:
         a: int = 5
-        b: List[int] = field(default_factory=lambda: [1, 2, 3])
-        c: Optional[str] = None
+        b: List[int] = field(default_factory=lambda: [1, 2, 3])  # noqa
+        c: Optional[str] = None  # noqa
 
     factories = get_default_factories(Example)
     assert "a" not in factories

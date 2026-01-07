@@ -1,6 +1,7 @@
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from pytest import mark, raises
 from startle.error import ParserConfigError, ParserOptionError

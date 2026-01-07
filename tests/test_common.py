@@ -1,6 +1,7 @@
 import re
+from collections.abc import Callable
 from functools import wraps
-from typing import Annotated, Any, Callable
+from typing import Annotated, Any
 
 from pytest import mark, raises
 from startle._inspect.make_args import make_args_from_func

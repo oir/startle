@@ -1,13 +1,14 @@
 import re
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, Callable, TypedDict
+from typing import Annotated, TypedDict
 
 from pytest import CaptureFixture, mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
-from typing_extensions import NotRequired as TE_NotRequired
-from typing_extensions import Required as TE_Required
+from typing_extensions import NotRequired as TE_NotRequired  # noqa
+from typing_extensions import Required as TE_Required  # noqa
 
 
 @dataclass
@@ -52,7 +53,9 @@ class ConfigDataClassAnnotated:
     label: Annotated[str, "some metadata"] = "default"
 
 
-def check_parse_exits(capsys, cls: type, args: list[str], expected: str) -> None:
+def check_parse_exits(
+    capsys: CaptureFixture[str], cls: type, args: list[str], expected: str
+) -> None:
     with raises(SystemExit) as excinfo:
         parse(cls, args=args)
     assert str(excinfo.value) == "1"

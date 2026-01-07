@@ -1,4 +1,5 @@
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 from pytest import mark, raises
 from startle.error import ParserOptionError, ParserValueError
@@ -24,7 +25,7 @@ def hi_w_args_kwargs(msg: str, n: int, *args, **kwargs) -> None:
 
 @mark.parametrize("hi", [hi_w_args, hi_w_args_kwargs])
 @mark.parametrize("unks", [[], ["arg1"], ["arg1", "arg2"], ["arg1", "arg2", "arg3"]])
-def test_var_args(hi: Callable, unks: list[str]):
+def test_var_args(hi: Callable[..., Any], unks: list[str]):
     check_args(
         hi,
         ["hello", "3", *unks],
@@ -45,7 +46,7 @@ def test_var_args_2(unks: list[str]):
 
 @mark.parametrize("hi", [hi_w_kwargs, hi_w_args_kwargs])
 @mark.parametrize("unks", [{}, {"arg-a": "val1"}, {"arg-a": "val1", "arg-b": "val2"}])
-def test_var_kwargs(hi: Callable, unks: dict[str, str]):
+def test_var_kwargs(hi: Callable[..., Any], unks: dict[str, str]):
     check_args(
         hi,
         ["hello", "3"] + [f"--{k}={v}" for k, v in unks.items()],
@@ -74,7 +75,7 @@ def test_var_kwargs(hi: Callable, unks: dict[str, str]):
         ["--arg-a", "val1", "val2", "--n", "3", "hello"],
     ],
 )
-def test_var_kwargs_list(hi: Callable, cli_args: list[str]):
+def test_var_kwargs_list(hi: Callable[..., Any], cli_args: list[str]):
     check_args(hi, cli_args, ["hello", 3], {"arg_a": ["val1", "val2"]})
 
 
@@ -161,7 +162,7 @@ def test_var_args_typed(unks: list[str]):
     with raises(ParserValueError, match="Cannot parse integer from `arg1`!"):
         check_args(
             hi_w_args_typed,
-            ["hello", "3", *unks + ["arg1"]],
+            ["hello", "3", *unks, "arg1"],
             [],
             {},
         )
@@ -169,7 +170,7 @@ def test_var_args_typed(unks: list[str]):
 
 @mark.parametrize("hi", [hi_w_kwargs_typed, hi_w_args_kwargs_typed])
 @mark.parametrize("unks", [{}, {"arg-a": "1.0"}, {"arg-a": "1.0", "arg-b": "2.1"}])
-def test_var_kwargs_typed(hi: Callable, unks: dict[str, str]):
+def test_var_kwargs_typed(hi: Callable[..., Any], unks: dict[str, str]):
     check_args(
         hi,
         ["hello", "3"] + [f"--{k}={v}" for k, v in unks.items()],
@@ -212,7 +213,7 @@ def test_var_kwargs_typed(hi: Callable, unks: dict[str, str]):
         ["--arg-a", "1.0", "2.1", "--n", "3", "hello"],
     ],
 )
-def test_var_nary_kwargs_typed_list(hi: Callable, cli_args: list[str]):
+def test_var_nary_kwargs_typed_list(hi: Callable[..., Any], cli_args: list[str]):
     check_args(hi, cli_args, ["hello", 3], {"arg_a": [1.0, 2.1]})
 
 
