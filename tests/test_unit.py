@@ -173,8 +173,8 @@ def test_get_default_factories():
     @dataclass
     class Example:
         a: int = 5
-        b: list[int] = field(default_factory=lambda: [1, 2, 3])
-        c: str | None = None
+        b: List[int] = field(default_factory=lambda: [1, 2, 3])  # noqa
+        c: Optional[str] = None  # noqa
 
     factories = get_default_factories(Example)
     assert "a" not in factories
