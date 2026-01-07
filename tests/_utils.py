@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from copy import copy
 from types import FunctionType
-from typing import Any, Callable
+from typing import Any
 
 from startle._inspect.make_args import make_args_from_func
 

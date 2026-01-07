@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union
+from collections.abc import Callable
 
 from pytest import mark
 
@@ -13,11 +13,11 @@ def hi2(msg: None | str = None) -> None:
     print(f"{msg or 'hi'}!")
 
 
-def hi3(msg: Optional[str] = None) -> None:
+def hi3(msg: str | None = None) -> None:
     print(f"{msg or 'hi'}!")
 
 
-def hi4(msg: Union[str, None] = None) -> None:
+def hi4(msg: str | None = None) -> None:
     print(f"{msg or 'hi'}!")
 
 
@@ -36,11 +36,11 @@ def int_digits2(number: None | int = None) -> None:
     print(f"{number or 0}!")
 
 
-def int_digits3(number: Optional[int] = None) -> None:
+def int_digits3(number: int | None = None) -> None:
     print(f"{number or 0}!")
 
 
-def int_digits4(number: Union[int, None] = None) -> None:
+def int_digits4(number: int | None = None) -> None:
     print(f"{number or 0}!")
 
 
@@ -59,11 +59,11 @@ def float_digits2(number: None | float = None) -> None:
     print(f"{number or 0.0}!")
 
 
-def float_digits3(number: Optional[float] = None) -> None:
+def float_digits3(number: float | None = None) -> None:
     print(f"{number or 0.0}!")
 
 
-def float_digits4(number: Union[float, None] = None) -> None:
+def float_digits4(number: float | None = None) -> None:
     print(f"{number or 0.0}!")
 
 
@@ -84,11 +84,11 @@ def maybe2(predicate: None | bool = None) -> None:
     print(f"{predicate or False}!")
 
 
-def maybe3(predicate: Optional[bool] = None) -> None:
+def maybe3(predicate: bool | None = None) -> None:
     print(f"{predicate or False}!")
 
 
-def maybe4(predicate: Union[bool, None] = None) -> None:
+def maybe4(predicate: bool | None = None) -> None:
     print(f"{predicate or False}!")
 
 
