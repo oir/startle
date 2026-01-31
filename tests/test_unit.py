@@ -24,12 +24,12 @@ from startle.error import ParserConfigError
 
 def test_normalize_annotation():
     assert normalize_annotation(int) is int
-    assert normalize_annotation(Union[int, None]) is Optional[int]
-    assert normalize_annotation(int | None) is Optional[int]
-    assert normalize_annotation(Optional[int]) is Optional[int]
+    assert normalize_annotation(Union[int, None]) == Optional[int]
+    assert normalize_annotation(int | None) == Optional[int]
+    assert normalize_annotation(Optional[int]) == Optional[int]
 
-    assert normalize_annotation(Union[str, float]) is Union[str, float]
-    assert normalize_annotation(str | float) is Union[str, float]
+    assert normalize_annotation(Union[str, float]) == Union[str, float]
+    assert normalize_annotation(str | float) == Union[str, float]
 
 
 def test_strip_optional():
@@ -41,12 +41,12 @@ def test_strip_optional():
     assert normalize_strip_optional(int | None) is int
     assert normalize_strip_optional(Optional[int]) is int
 
-    assert normalize_strip_optional(Union[str, float, None]) is Union[str, float]
-    assert normalize_strip_optional(str | float | None) is Union[str, float]
-    assert normalize_strip_optional(Optional[str | float]) is Union[str, float]
+    assert normalize_strip_optional(Union[str, float, None]) == Union[str, float]
+    assert normalize_strip_optional(str | float | None) == Union[str, float]
+    assert normalize_strip_optional(Optional[str | float]) == Union[str, float]
 
-    assert normalize_strip_optional(Union[str, float]) is Union[str, float]
-    assert normalize_strip_optional(str | float) is Union[str, float]
+    assert normalize_strip_optional(Union[str, float]) == Union[str, float]
+    assert normalize_strip_optional(str | float) == Union[str, float]
 
 
 def test_shorten_type_annotation():
