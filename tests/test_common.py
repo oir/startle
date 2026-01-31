@@ -54,6 +54,12 @@ def hi_float_decorated(name: str = "john", /, *, count: float = 1.0) -> None:
         print(f"hello, {name}!")
 
 
+# Any should manifest a str
+def hi_any(name: Any = "john", /, *, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"hello, {name}!")
+
+
 @mark.parametrize(
     "hi, count_t",
     [
@@ -62,6 +68,7 @@ def hi_float_decorated(name: str = "john", /, *, count: float = 1.0) -> None:
         (hi_float_annotated, float),
         (hi_int_stringified, int),
         (hi_float_decorated, float),
+        (hi_any, int),
     ],
 )
 def test_args_with_defaults(hi: Callable[..., Any], count_t: type):

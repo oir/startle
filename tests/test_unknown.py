@@ -11,7 +11,15 @@ def hi_w_args(msg: str, n: int, *args) -> None:
     pass
 
 
+def hi_w_args_2(msg: str, n: int, *args: Any) -> None:
+    pass
+
+
 def hi_w_kwargs(msg: str, n: int, **kwargs) -> None:
+    pass
+
+
+def hi_w_kwargs_2(msg: str, n: int, **kwargs: Any) -> None:
     pass
 
 
@@ -23,7 +31,11 @@ def hi_w_args_kwargs(msg: str, n: int, *args, **kwargs) -> None:
     pass
 
 
-@mark.parametrize("hi", [hi_w_args, hi_w_args_kwargs])
+def hi_w_args_kwargs_2(msg: str, n: int, *args: Any, **kwargs: Any) -> None:
+    pass
+
+
+@mark.parametrize("hi", [hi_w_args, hi_w_args_2, hi_w_args_kwargs, hi_w_args_kwargs_2])
 @mark.parametrize("unks", [[], ["arg1"], ["arg1", "arg2"], ["arg1", "arg2", "arg3"]])
 def test_var_args(hi: Callable[..., Any], unks: list[str]):
     check_args(
@@ -34,17 +46,20 @@ def test_var_args(hi: Callable[..., Any], unks: list[str]):
     )
 
 
+@mark.parametrize("hi", [hi_w_args, hi_w_args_2])
 @mark.parametrize("unks", [["arg1", "--arg2"], ["arg1", "arg2", "--arg3=val"]])
-def test_var_args_2(unks: list[str]):
+def test_var_args_2(hi: Callable[..., Any], unks: list[str]):
     check_args(
-        hi_w_args,
+        hi,
         ["hello", "3", *unks],
         ["hello", 3, *unks],
         {},
     )
 
 
-@mark.parametrize("hi", [hi_w_kwargs, hi_w_args_kwargs])
+@mark.parametrize(
+    "hi", [hi_w_kwargs, hi_w_args_kwargs, hi_w_kwargs_2, hi_w_args_kwargs_2]
+)
 @mark.parametrize("unks", [{}, {"arg-a": "val1"}, {"arg-a": "val1", "arg-b": "val2"}])
 def test_var_kwargs(hi: Callable[..., Any], unks: dict[str, str]):
     check_args(
@@ -82,6 +97,9 @@ def test_var_kwargs_list(hi: Callable[..., Any], cli_args: list[str]):
 def test_var_kwargs_errors():
     with raises(ParserOptionError, match="Option `arg-a` is missing argument!"):
         check_args(hi_w_kwargs, ["hello", "3", "--arg-a"], [], {})
+    with raises(ParserOptionError, match="Option `arg-a` is missing argument!"):
+        check_args(hi_w_kwargs_2, ["hello", "3", "--arg-a"], [], {})
+
     with raises(ParserOptionError, match="Required option `msg` is not provided!"):
         check_args(hi_w_nary_kwargs, ["--arg-a", "val1", "val2", "hello", "3"], [], {})
     with raises(ParserOptionError, match="Unexpected positional argument: `world`!"):
@@ -99,35 +117,42 @@ def test_var_kwargs_errors():
         ["hello", 3],
         {"arg_a": "--arg-b"},
     )
-
-
-def test_var_args_kwargs():
     check_args(
-        hi_w_args_kwargs,
+        hi_w_kwargs_2,
+        ["hello", "3", "--arg-a", "--arg-b"],
+        ["hello", 3],
+        {"arg_a": "--arg-b"},
+    )
+
+
+@mark.parametrize("hi", [hi_w_args_kwargs, hi_w_args_kwargs_2])
+def test_var_args_kwargs(hi: Callable[..., Any]):
+    check_args(
+        hi,
         ["hello", "3"],
         ["hello", 3],
         {},
     )
     check_args(
-        hi_w_args_kwargs,
+        hi,
         ["hello", "3", "arg1", "arg2", "--arg-a=val1", "--arg-b=val2"],
         ["hello", 3, "arg1", "arg2"],
         {"arg_a": "val1", "arg_b": "val2"},
     )
     check_args(
-        hi_w_args_kwargs,
+        hi,
         ["hello", "3", "arg1", "arg2", "--arg-a=val1", "--arg-b=val2", "arg3"],
         ["hello", 3, "arg1", "arg2", "arg3"],
         {"arg_a": "val1", "arg_b": "val2"},
     )
     check_args(
-        hi_w_args_kwargs,
+        hi,
         ["hello", "3", "arg1", "arg2", "arg3", "--arg-a=val1", "--arg-b", "val2"],
         ["hello", 3, "arg1", "arg2", "arg3"],
         {"arg_a": "val1", "arg_b": "val2"},
     )
     check_args(
-        hi_w_args_kwargs,
+        hi,
         ["hello", "3", "arg1", "arg2", "--arg-a=val1", "--arg-b", "val2", "arg3"],
         ["hello", 3, "arg1", "arg2", "arg3"],
         {"arg_a": "val1", "arg_b": "val2"},
