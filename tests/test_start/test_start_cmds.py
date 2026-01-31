@@ -1,7 +1,8 @@
 from collections.abc import Callable
 from functools import partial
+from typing import Any
 
-from pytest import mark, raises
+from pytest import mark, raises, CaptureFixture
 from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import (
@@ -58,7 +59,9 @@ def div(a: int, b: int) -> None:
 
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
 @mark.parametrize("default", [False, True])
-def test_calc(capsys, run: Callable, default: bool) -> None:
+def test_calc(
+    capsys: CaptureFixture[str], run: Callable[..., Any], default: bool
+) -> None:
     run_ = partial(run, default="add") if default else run
 
     check(capsys, run_, [add, sub, mul, div], ["add", "2", "3"], "2 + 3 = 5\n")
@@ -124,20 +127,27 @@ def test_calc(capsys, run: Callable, default: bool) -> None:
         "Error: Required option `b` is not provided!\n",
     )
 
-    check_exits(
-        capsys,
-        partial(run, default="boop"),
-        [add, sub, mul, div],
-        ["boop", "2", "3"],
-        "Error: Default command `boop` is not among the subcommands! Available \nsubcommands: add, sub, mul, div\n",
-    )
-    check_exits(
-        capsys,
-        partial(run, default="add"),
-        add,
-        ["2", "3"],
-        "Error: Default subcommand is not supported for a single function.\n",
-    )
+    with raises(
+        ParserConfigError, match="Default command `boop` is not among the subcommands!"
+    ):
+        check_exits(
+            capsys,
+            partial(run, default="boop"),
+            [add, sub, mul, div],
+            ["boop", "2", "3"],
+            "",
+        )
+    with raises(
+        ParserConfigError,
+        match="Default subcommand is not supported for a single function.",
+    ):
+        check_exits(
+            capsys,
+            partial(run, default="add"),
+            add,
+            ["2", "3"],
+            "",
+        )
 
     if not default:
         with raises(ParserOptionError, match=r"Unknown command `2`!"):
@@ -173,7 +183,7 @@ def that_command(*, foo: int, bar: str = "qux") -> None:
 
 
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
-def test_underscores(capsys, run: Callable) -> None:
+def test_underscores(capsys: CaptureFixture[str], run: Callable[..., Any]) -> None:
     check(
         capsys,
         run,

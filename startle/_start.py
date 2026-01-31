@@ -47,11 +47,9 @@ def start(
         return _start_cmds(obj, name, args, catch, default)
     else:
         if default is not None:
-            msg = "Default subcommand is not supported for a single function."
-            if catch:
-                error(msg)
-            else:
-                raise ParserConfigError(msg)
+            raise ParserConfigError(
+                "Default subcommand is not supported for a single function."
+            )
         return _start_func(obj, name, args, catch, recurse)
 
 
@@ -74,14 +72,8 @@ def _start_func(
     Returns:
         The return value of the function `func`.
     """
-    try:
-        # first, make Args object from the function
-        args_ = make_args_from_func(func, program_name=name or "", recurse=recurse)
-    except ParserConfigError as e:
-        if catch:
-            error(str(e))
-        else:
-            raise e
+    # first, make Args object from the function
+    args_ = make_args_from_func(func, program_name=name or "", recurse=recurse)
 
     try:
         # then, parse the arguments from the CLI
@@ -134,23 +126,15 @@ def _start_cmds(
         # TODO: more reliable way of getting the program name
         return f"{name or sys.argv[0]} {cmd_name}"
 
-    try:
-        # first, make Cmds object from the functions
-        cmds = Cmds(
-            {
-                cmd_name: make_args_from_func(
-                    func, program_name=cmd_prog_name(cmd_name)
-                )
-                for cmd_name, func in cmd2func.items()
-            },
-            program_name=name or "",
-            default=default or "",
-        )
-    except ParserConfigError as e:
-        if catch:
-            error(str(e))
-        else:
-            raise e
+    # first, make Cmds object from the functions
+    cmds = Cmds(
+        {
+            cmd_name: make_args_from_func(func, program_name=cmd_prog_name(cmd_name))
+            for cmd_name, func in cmd2func.items()
+        },
+        program_name=name or "",
+        default=default or "",
+    )
 
     args: Args | None = None
     try:

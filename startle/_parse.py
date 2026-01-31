@@ -4,7 +4,7 @@ from rich.console import Console
 from rich.text import Text
 
 from ._inspect.make_args import make_args_from_class
-from .error import ParserConfigError, ParserOptionError, ParserValueError
+from .error import ParserOptionError, ParserValueError
 
 T = TypeVar("T")
 
@@ -35,23 +35,8 @@ def parse(
     Returns:
         An instance of the class `cls`.
     """
-    try:
-        # first, make Args object from the class
-        args_ = make_args_from_class(cls, brief=brief, program_name=name or "")
-    except ParserConfigError as e:
-        if catch:
-            console = Console(markup=False)
-            console.print(
-                Text.assemble(
-                    ("Error:", "bold red"),
-                    " ",
-                    (str(e), "red"),
-                    "\n",
-                )
-            )
-            raise SystemExit(1) from e
-        else:
-            raise e
+    # first, make Args object from the class
+    args_ = make_args_from_class(cls, brief=brief, program_name=name or "")
 
     try:
         # then, parse the arguments from the CLI
