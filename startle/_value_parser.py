@@ -63,8 +63,9 @@ def _to_enum(value: str, enum_type: type) -> Enum:
         ) from err
 
 
-PARSERS: dict[type, Callable[[str], Any]] = {
+PARSERS: dict[Any, Callable[[str], Any]] = {
     str: _to_str,
+    Any: _to_str,
     int: _to_int,
     float: _to_float,
     bool: _to_bool,

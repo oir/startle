@@ -6,10 +6,11 @@ from typing import Any, Literal, get_args, get_origin
 
 from ._type_utils import strip_optional
 
-METAVARS: dict[type, str | list[str]] = {
+METAVARS: dict[Any, str | list[str]] = {
     int: "int",
     float: "float",
     str: "text",
+    Any: "text",
     bool: ["true", "false"],
     Path: "path",
 }

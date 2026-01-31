@@ -9,6 +9,7 @@ That is, how a raw string argument is processed to construct an object with the 
 | Type (hint) | Parsed value for argument string `s` | Metavar |
 | ---- | ------------- | ------- |
 | `str` | `s` | `<text>` |
+| `typing.Any` | `s` | `<text>` |
 | `int` | `int(s)` | `<int>` |
 | `float` | `float(s)` | `<float>` |
 | `bool` | `True` if lowercased `s` is in `["true", "t", "yes", "y", "1"]` <br> `False` if lowercased `s` is in `["false", "f", "no", "n", "0"]` <br> parse error otherwise | `true\|false` |
@@ -49,15 +50,57 @@ The following type hints turn an argument (or an option) to _n-ary_, meaning tha
 of type `T`, multiple string arguments from the command line are repeatedly parsed as `T`s and
 appended to the container.
 
+<table>
+  <tr>
+    <th>Type (hint)</th>
+    <th>Parsed value given <code>args: list[str]</code> as a list of command line arguments</th>
+  </tr>
+  <tr>
+    <td><code>list[T]</code></td>
+    <td rowspan="3"><code>[parse_T(arg) for arg in args]</code><br>where <code>parse_T()</code> denotes the parsing method for <code>T</code></td>
+  </tr>
+  <tr>
+    <td><code>typing.List[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>collections.abc.MutableSequence[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>tuple[T]</code></td>
+    <td rowspan="4"><code>tuple([parse_T(arg) for arg in args])</code><br>where <code>parse_T()</code> denotes the parsing method for <code>T</code></td>
+  </tr>
+  <tr>
+    <td><code>typing.Tuple[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>collections.abc.Sequence[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>collections.abc.Iterable[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>set[T]</code></td>
+    <td rowspan="3"><code>set([parse_T(arg) for arg in args])</code><br>where <code>parse_T()</code> denotes the parsing method for <code>T</code></td>
+  </tr>
+  <tr>
+    <td><code>typing.Set[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>collections.abc.MutableSet[T]</code></td>
+  </tr>
+  <tr>
+    <td><code>frozenset[T]</code></td>
+    <td rowspan="2"><code>frozenset([parse_T(arg) for arg in args])</code><br>where <code>parse_T()</code> denotes the parsing method for <code>T</code></td>
+  </tr>
+  <tr>
+    <td><code>typing.FrozenSet[T]</code></td>
+  </tr>
+</table>
 
-| Type (hint) | Parsed value given `args: list[str]` as a list of command line arguments |
-| ---- | ------------- | 
-| `list[T]` or `typing.List[T]` | `[parse_T(arg) for arg in args]` <br> where `parse_T()` denotes the parsing method for `T` |
-| `list` | `args` (thus, `list` is treated as the same as `list[str]`) |
-| `tuple[T]` or `typing.Tuple[T]` | `tuple([parse_T(arg) for arg in args])` <br> where `parse_T()` denotes the parsing method for `T` |
-| `tuple` | `tuple(args)` |
-| `set[T]` or `typing.Set[T]` | `set([parse_T(arg) for arg in args])` <br> where `parse_T()` denotes the parsing method for `T` |
-| `set` | `set(args)` |
+> [!INFO]
+> If any n-ary annotation is missing the inner type `T`, it is assumed
+> to be `str`, e.g. `list` or `frozenset` is assumed to be `list[str]`
+> or `frozenset[str]`, respectively.
 
 ## User defined types
 
