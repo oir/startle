@@ -1,6 +1,7 @@
 from collections.abc import Callable
+from typing import Any
 
-from pytest import mark, raises
+from pytest import mark, raises, CaptureFixture
 from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import (
@@ -44,7 +45,9 @@ def hi6(*, name: str, count: int = 1) -> None:
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4, hi5, hi6])
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
-def test_hi(capsys, run: Callable, hi: Callable) -> None:
+def test_hi(
+    capsys: CaptureFixture[str], run: Callable[..., Any], hi: Callable[..., Any]
+) -> None:
     if hi in [hi1, hi2, hi3, hi4]:
         check(capsys, run, hi, ["Alice"], "Hello, Alice!\n")
 
@@ -96,7 +99,9 @@ def test_hi(capsys, run: Callable, hi: Callable) -> None:
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4, hi5, hi6])
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
-def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
+def test_parse_err(
+    capsys: CaptureFixture[str], run: Callable[..., Any], hi: Callable[..., Any]
+) -> None:
     if hi in [hi1, hi5, hi6]:
         check_exits(
             capsys, run, hi, [], "Error: Required option `name` is not provided!"
@@ -141,31 +146,26 @@ def test_parse_err(capsys, run: Callable, hi: Callable) -> None:
 
 
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
-def test_config_err(capsys, run: Callable) -> None:
+@mark.parametrize("catch", [False, True])
+def test_config_err(run: Callable[..., Any], catch: bool) -> None:
     def f(help: bool = False) -> None:
         pass
 
     def f2(dummy: str) -> None:
         pass
 
-    check_exits(
-        capsys, run, f, [], "Error: Cannot use `help` as parameter name in `f()`!"
-    )
-    check_exits(
-        capsys, run, [f, f2], [], "Error: Cannot use `help` as parameter name in `f()`!"
-    )
     with raises(
         ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
     ):
-        run(f, [], catch=False)
+        run(f, [], catch=catch)
     with raises(
         ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
     ):
-        run([f, f2], [], catch=False)
+        run([f, f2], [], catch=catch)
 
 
 @mark.parametrize("help_cmd", ["--help", "-?", "-?b", "-b?"])
-def test_custom_program_name_help(capsys, help_cmd: str) -> None:
+def test_custom_program_name_help(capsys: CaptureFixture[str], help_cmd: str) -> None:
     def f(*, blip: bool = False) -> None:
         """
         Do something.

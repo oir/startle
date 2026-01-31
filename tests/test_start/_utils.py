@@ -1,7 +1,8 @@
 import sys
 from collections.abc import Callable
+from typing import Any
 
-from pytest import raises
+from pytest import raises, CaptureFixture
 from startle import start
 
 
@@ -10,8 +11,11 @@ def remove_trailing_spaces(text: str) -> str:
     return "\n".join(line.rstrip() for line in lines)
 
 
+Funcs = Callable[..., Any] | list[Callable[..., Any]] | dict[str, Callable[..., Any]]
+
+
 def run_w_explicit_args(
-    func: Callable | list[Callable] | dict[str, Callable],
+    func: Funcs,
     args: list[str],
     name: str | None = None,
     catch: bool = True,
@@ -21,7 +25,7 @@ def run_w_explicit_args(
 
 
 def run_w_sys_argv(
-    func: Callable | list[Callable] | dict[str, Callable],
+    func: Funcs,
     args: list[str],
     name: str | None = None,
     catch: bool = True,
@@ -34,9 +38,9 @@ def run_w_sys_argv(
 
 
 def check(
-    capsys,
-    run: Callable,
-    f: Callable | list[Callable] | dict[str, Callable],
+    capsys: CaptureFixture[str],
+    run: Callable[..., Any],
+    f: Funcs,
     args: list[str],
     expected: str,
 ) -> None:
@@ -46,9 +50,9 @@ def check(
 
 
 def check_exits(
-    capsys,
-    run: Callable,
-    f: Callable | list[Callable] | dict[str, Callable],
+    capsys: CaptureFixture[str],
+    run: Callable[..., Any],
+    f: Funcs,
     args: list[str],
     expected: str,
     *,

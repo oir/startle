@@ -190,7 +190,8 @@ def test_class_with_all_defaults(
     )
 
 
-def test_dataclass_with_help_attr(capsys: CaptureFixture[str]):
+@mark.parametrize("catch", [True, False])
+def test_dataclass_with_help_attr(capsys: CaptureFixture[str], catch: bool):
     @dataclass
     class Config:
         """
@@ -204,13 +205,11 @@ def test_dataclass_with_help_attr(capsys: CaptureFixture[str]):
     with raises(
         ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
     ):
-        parse(Config, args=[], catch=False)
-    check_parse_exits(
-        capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
-    )
+        parse(Config, args=[], catch=catch)
 
 
-def test_dataclass_with_unsupported_attr_type(capsys: CaptureFixture[str]):
+@mark.parametrize("catch", [True, False])
+def test_dataclass_with_unsupported_attr_type(capsys: CaptureFixture[str], catch: bool):
     @dataclass
     class Config:
         """
@@ -227,13 +226,7 @@ def test_dataclass_with_unsupported_attr_type(capsys: CaptureFixture[str]):
             "Unsupported type `list[list[int]]` for parameter `label` in `Config`!"
         ),
     ):
-        parse(Config, args=[], catch=False)
-    check_parse_exits(
-        capsys,
-        Config,
-        [],
-        "Error: Unsupported type `list[list[int]]` for parameter `label` in `Config`!\n",
-    )
+        parse(Config, args=[], catch=catch)
 
 
 class ConfigTypedDict(TypedDict):
@@ -427,7 +420,8 @@ def test_typeddict_with_partial(capsys: CaptureFixture[str], Config: type):
         parse(Config, args=[], catch=False)
 
 
-def test_typeddict_with_help_attr(capsys: CaptureFixture[str]):
+@mark.parametrize("catch", [True, False])
+def test_typeddict_with_help_attr(capsys: CaptureFixture[str], catch: bool):
     class Config(TypedDict):
         """
         A configuration dict for the program.
@@ -440,7 +434,4 @@ def test_typeddict_with_help_attr(capsys: CaptureFixture[str]):
     with raises(
         ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
     ):
-        parse(Config, args=[], catch=False)
-    check_parse_exits(
-        capsys, Config, [], "Error: Cannot use `help` as parameter name in `Config`!\n"
-    )
+        parse(Config, args=[], catch=catch)
