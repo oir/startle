@@ -1,11 +1,6 @@
 import re
 import sys
-from typing import (
-    Any,
-    List,
-    Optional,
-    Union,
-)
+from typing import Any, Optional, Union
 
 from pytest import mark, raises
 from startle._inspect.dataclasses import get_default_factories
@@ -49,7 +44,7 @@ def test_strip_optional():
 
 
 def test_shorten_type_annotation():
-    from typing import Any, Literal
+    from typing import Any, List, Literal
 
     assert shorten_type_annotation(int) == "int"
     assert shorten_type_annotation(str) == "str"
