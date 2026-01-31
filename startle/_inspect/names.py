@@ -67,6 +67,7 @@ def make_name(
             return Name(short=param_name_sub)
         if docstr_param.short_name:
             # no need to check used_short_names, this name is already in there
+            # TODO: check for docstring-specified short name conflicts
             return Name(short=docstr_param.short_name, long=param_name_sub)
         if param_name_sub[0] not in used_short_names:
             used_short_names.add(param_name_sub[0])
@@ -165,7 +166,9 @@ def collect_param_names(
     hints: Mapping[str, TypeHint],
     obj_name: str,
     recurse: bool | Literal["child"] = False,
+    naming: Literal["flat", "nested"] = "flat",
     kw_only: bool = False,
+    _parent_name: str = "",
 ) -> list[str]:
     """
     Get all parameter names in the object hierarchy.
@@ -195,7 +198,10 @@ def collect_param_names(
         _, _, normalized_annotation = get_naryness(param, normalized_annotation)
 
         if is_parsable(normalized_annotation):
-            name = param_name.replace("_", "-")
+            if recurse == "child" and naming == "nested":
+                name = f"{_parent_name}.{param_name}".replace("_", "-")
+            else:
+                name = param_name.replace("_", "-")
             if is_kw(param):
                 if name in used_names:
                     raise ParserConfigError(
@@ -210,7 +216,9 @@ def collect_param_names(
                 hints=_get_hints(normalized_annotation),
                 obj_name=normalized_annotation.__name__,
                 recurse="child",
+                naming=naming,
                 kw_only=True,  # children are kw-only for now
+                _parent_name=f"{_parent_name}.{param_name}",
             )
             for child_name in child_names:
                 if child_name in used_names:

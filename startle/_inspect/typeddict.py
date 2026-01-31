@@ -26,7 +26,9 @@ def make_args_from_typeddict(
     program_name: str = "",
     brief: str = "",
     recurse: bool | Literal["child"] = False,
+    naming: Literal["flat", "nested"] = "flat",
     _used_short_names: set[str] | None = None,
+    _parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a TypedDict.
@@ -37,8 +39,10 @@ def make_args_from_typeddict(
         brief: A brief description of the TypedDict, for help string.
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
-        _used_short_names: (internal) set of already used short names coming from parent Args.
+        naming: How to name nested arguments when `recurse` is True.
+        _used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
+        _parent_name: Name of parent object when recursing with nested naming.
     """
     from .make_args import get_param_help, make_args_from_class
 
@@ -52,7 +56,13 @@ def make_args_from_typeddict(
     args = Args(brief=brief, program_name=program_name)
 
     used_names = collect_param_names(
-        params=params, hints=hints, obj_name=obj_name, recurse=recurse, kw_only=True
+        params=params,
+        hints=hints,
+        obj_name=obj_name,
+        recurse=recurse,
+        naming=naming,
+        kw_only=True,
+        _parent_name=_parent_name,
     )
     used_short_names = (
         _used_short_names if _used_short_names is not None else set[str]()
@@ -89,7 +99,10 @@ def make_args_from_typeddict(
 
         child_args: Args | None = None
         if is_parsable(normalized_annotation):
-            name = make_name(param_name_sub, named, docstr_param, used_short_names)
+            if recurse == "child" and naming == "nested":
+                name = Name(long=param_name_sub)
+            else:
+                name = make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
             if nary:
                 raise ParserConfigError(
@@ -105,8 +118,10 @@ def make_args_from_typeddict(
             child_args = make_args_from_class(
                 normalized_annotation,
                 recurse="child" if recurse else False,
+                naming=naming,
                 kw_only=True,  # children are kw-only for now
                 _used_short_names=used_short_names,
+                _parent_name=f"{_parent_name}.{param_name}",
             )
             child_args._parent = args  # type: ignore
             name = Name(long=param_name_sub)

@@ -1,6 +1,6 @@
 import sys
 from collections.abc import Callable
-from typing import Any, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast
 
 from ._console import console, error, post_error
 from ._inspect.make_args import make_args_from_func
@@ -19,6 +19,7 @@ def start(
     catch: bool = True,
     default: str | None = None,
     recurse: bool = False,
+    naming: Literal["flat", "nested"] = "flat",
 ) -> Any:
     """
     Given a function, or a container of functions `obj`, parse its arguments from
@@ -38,19 +39,28 @@ def start(
             after the program name. This is only used if `obj` is a list or dict, and
             errors otherwise.
         recurse: (experimental) Whether to recursively parse objects using their initializers.
+        naming: How to name nested arguments when `recurse` is True.
+            "flat" means all arguments are at the top level with their names (e.g. `--baz`),
+            while "nested" means arguments are named using dot notation to indicate
+            their nesting (e.g. `--foo.bar.baz`).
+            Ignored if `recurse` is False.
     Returns:
         The return value of the function `obj`, or the subcommand of `obj` if it is
         a list or dict.
     """
     if isinstance(obj, list) or isinstance(obj, dict):
         obj = cast(list[Callable[..., Any]] | dict[str, Callable[..., Any]], obj)
+        if recurse:
+            raise ParserConfigError(
+                "Recurse option is not yet supported for multiple functions."
+            )
         return _start_cmds(obj, name, args, catch, default)
     else:
         if default is not None:
             raise ParserConfigError(
                 "Default subcommand is not supported for a single function."
             )
-        return _start_func(obj, name, args, catch, recurse)
+        return _start_func(obj, name, args, catch, recurse, naming)
 
 
 def _start_func(
@@ -59,6 +69,7 @@ def _start_func(
     args: list[str] | None = None,
     catch: bool = True,
     recurse: bool = False,
+    naming: Literal["flat", "nested"] = "flat",
 ) -> T:
     """
     Given a function `func`, parse its arguments from the CLI and call it.
@@ -69,11 +80,18 @@ def _start_func(
         args: The arguments to parse. If None, uses the arguments from the CLI.
         catch: Whether to catch and print errors instead of raising.
         recurse: (experimental) Whether to recursively parse objects using their initializers.
+        naming: How to name nested arguments when `recurse` is True.
+            "flat" means all arguments are at the top level with their names (e.g. `--baz`),
+            while "nested" means arguments are named using dot notation to indicate
+            their nesting (e.g. `--foo.bar.baz`).
+            Ignored if `recurse` is False.
     Returns:
         The return value of the function `func`.
     """
     # first, make Args object from the function
-    args_ = make_args_from_func(func, program_name=name or "", recurse=recurse)
+    args_ = make_args_from_func(
+        func, program_name=name or "", recurse=recurse, naming=naming
+    )
 
     try:
         # then, parse the arguments from the CLI
