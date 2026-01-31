@@ -1,5 +1,6 @@
 import re
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 from pytest import mark, raises
 from startle.error import ParserValueError

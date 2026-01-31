@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from pytest import mark, raises
 from startle.error import ParserConfigError, ParserOptionError

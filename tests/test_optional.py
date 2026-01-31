@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from pytest import mark
 
@@ -23,7 +23,7 @@ def hi4(msg: Union[str, None] = None) -> None:
 
 @mark.parametrize("hi", [hi1, hi2, hi3, hi4])
 @mark.parametrize("opt", Opts())
-def test_optional_str(hi: Callable, opt: Opt):
+def test_optional_str(hi: Callable[..., Any], opt: Opt):
     check_args(hi, [], [None], {})
     check_args(hi, opt("msg", ["hello"]), ["hello"], {})
 
@@ -46,7 +46,7 @@ def int_digits4(number: Union[int, None] = None) -> None:
 
 @mark.parametrize("int_digits", [int_digits1, int_digits2, int_digits3, int_digits4])
 @mark.parametrize("opt", Opts())
-def test_optional_int(int_digits: Callable, opt: Opt):
+def test_optional_int(int_digits: Callable[..., Any], opt: Opt):
     check_args(int_digits, [], [None], {})
     check_args(int_digits, opt("number", ["3"]), [3], {})
 
@@ -71,7 +71,7 @@ def float_digits4(number: Union[float, None] = None) -> None:
     "float_digits", [float_digits1, float_digits2, float_digits3, float_digits4]
 )
 @mark.parametrize("opt", Opts())
-def test_optional_float(float_digits: Callable, opt: Opt):
+def test_optional_float(float_digits: Callable[..., Any], opt: Opt):
     check_args(float_digits, [], [None], {})
     check_args(float_digits, opt("number", ["3.14"]), [3.14], {})
 
@@ -100,7 +100,7 @@ def maybe4(predicate: Union[bool, None] = None) -> None:
     "false", ["false", "False", "FALSE", "f", "F", "no", "No", "NO", "n", "N", "0"]
 )
 @mark.parametrize("opt", Opts())
-def test_optional_bool(maybe: Callable, true: str, false: str, opt: Opt):
+def test_optional_bool(maybe: Callable[..., Any], true: str, false: str, opt: Opt):
     check_args(maybe, [], [None], {})
     check_args(maybe, opt("predicate", [true]), [True], {})
     check_args(maybe, opt("predicate", [false]), [False], {})

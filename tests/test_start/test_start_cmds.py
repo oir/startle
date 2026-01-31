@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from functools import partial
-from typing import Callable
 
 from pytest import mark, raises
 from startle.error import ParserConfigError, ParserOptionError

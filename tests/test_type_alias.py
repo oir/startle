@@ -7,8 +7,9 @@ that cannot be gracefully handled with `if sys.version_info < (3, 12): ...`.
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, Callable
+from typing import Annotated
 
 from pytest import mark, raises
 from startle import parse, register

@@ -1,4 +1,5 @@
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from rich.console import Console
 from startle._inspect.make_args import make_args_from_class, make_args_from_func
