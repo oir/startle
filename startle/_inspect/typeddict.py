@@ -100,7 +100,7 @@ def make_args_from_typeddict(
         child_args: Args | None = None
         if is_parsable(normalized_annotation):
             if recurse == "child" and naming == "nested":
-                name = Name(long=param_name_sub)
+                name = Name(long=f"{_parent_name}.{param_name_sub}")
             else:
                 name = make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
@@ -124,7 +124,11 @@ def make_args_from_typeddict(
                 _parent_name=f"{_parent_name}.{param_name}",
             )
             child_args._parent = args  # type: ignore
-            name = Name(long=param_name_sub)
+            name = Name(
+                long=f"{_parent_name}.{param_name_sub}"
+                if naming == "nested"
+                else param_name_sub
+            )
         else:
             raise ParserConfigError(
                 f"Unsupported type `{shorten_type_annotation(annotation)}` "

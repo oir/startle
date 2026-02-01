@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from copy import copy
 from types import FunctionType
-from typing import Any
+from typing import Any, Literal
 
 from startle._inspect.make_args import make_args_from_func
 
@@ -12,6 +12,7 @@ def check_args(
     expected_args: list[Any],
     expected_kwargs: dict[str, Any],
     recurse: bool = False,
+    naming: Literal["flat", "nested"] = "flat",
 ):
     """
     Check if the parser can parse the CLI arguments correctly.
@@ -22,9 +23,12 @@ def check_args(
         expected_args: The expected positional arguments.
         expected_kwargs: The expected keyword arguments
         recurse: Whether to recursively parse complex types.
+        naming: The naming convention to use for nested arguments.
     """
     args, kwargs = (
-        make_args_from_func(f, recurse=recurse).parse(cli_args).make_func_args()
+        make_args_from_func(f, recurse=recurse, naming=naming)
+        .parse(cli_args)
+        .make_func_args()
     )
     assert args == expected_args
     assert kwargs == expected_kwargs
