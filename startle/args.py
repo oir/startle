@@ -442,7 +442,7 @@ class Args:
         """
 
         def var(opt: Arg) -> str:
-            return opt.name.long_or_short.replace("-", "_")
+            return opt.name.long_or_short.replace("-", "_").split(".")[-1]
 
         positional_args = [arg.value for arg in self._positional_args]
         named_args = {

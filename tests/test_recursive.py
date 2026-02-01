@@ -89,6 +89,51 @@ def test_recursive_w_defaults(
         )
 
 
+@mark.parametrize("count_opt", ["--count", "-c"])
+@mark.parametrize("sides", [4, 6, None])
+@mark.parametrize("kind", ["single", "pair", None])
+@mark.parametrize("count", [1, 2, None])
+def test_recursive_w_defaults_nested(
+    count_opt: str,
+    sides: int | None,
+    kind: Literal["single", "pair"] | None,
+    count: int | None,
+) -> None:
+    cli_args: list[str] = []
+    config_kwargs = {}
+    if sides is not None:
+        cli_args += ["--cfg.sides", str(sides)]
+        config_kwargs["sides"] = sides
+    if kind is not None:
+        cli_args += ["--cfg.kind", kind]
+        config_kwargs["kind"] = kind
+    if count is not None:
+        cli_args += [count_opt, str(count)]
+
+    expected_cfg = DieConfig(**config_kwargs)  # type: ignore[arg-type]
+    expected_count = count if count is not None else 1
+    check_args(
+        throw_dice,
+        cli_args,
+        [expected_cfg, expected_count],
+        {},
+        recurse=True,
+        naming="nested",
+    )
+    with raises(
+        ParserConfigError,
+        match="Cannot recurse into parameter `cfg` of non-class type `DieConfig | str` in `throw_dice_union()`!",
+    ):
+        check_args(
+            throw_dice_union,
+            cli_args,
+            [expected_cfg, expected_count],
+            {},
+            recurse=True,
+            naming="nested",
+        )
+
+
 @dataclass
 class DieConfig2:
     """
@@ -190,6 +235,63 @@ def test_recursive_w_required(
         check_args(func, cli_args, [expected_cfg, expected_count], {}, recurse=True)
 
 
+@mark.parametrize("count_opt", ["--count", "-c"])
+@mark.parametrize("sides", [4, 6, None])
+@mark.parametrize("kind", ["single", "pair", None])
+@mark.parametrize("count", [1, 2, None])
+@mark.parametrize("cls", [DieConfig2, DieConfig2TD])
+def test_recursive_w_required_nested(
+    count_opt: str,
+    sides: int | None,
+    kind: Literal["single", "pair"] | None,
+    count: int | None,
+    cls: type,
+) -> None:
+    if cls is DieConfig2:
+        func = throw_dice2
+    else:
+        func = throw_dice2_td
+    cli_args: list[str] = []
+    config_kwargs = {}
+    if sides is not None:
+        cli_args += ["--cfg.sides", str(sides)]
+        config_kwargs["sides"] = sides
+    if kind is not None:
+        cli_args += ["--cfg.kind", kind]
+        config_kwargs["kind"] = kind
+    if count is not None:
+        cli_args += [count_opt, str(count)]
+
+    if sides is None:
+        with raises(
+            ParserOptionError, match="Required option `cfg.sides` is not provided!"
+        ):
+            check_args(func, cli_args, [], {}, recurse=True, naming="nested")
+    elif kind is None:
+        with raises(
+            ParserOptionError, match="Required option `cfg.kind` is not provided!"
+        ):
+            check_args(func, cli_args, [], {}, recurse=True, naming="nested")
+    elif count is None:
+        with raises(
+            ParserOptionError, match="Required option `count` is not provided!"
+        ):
+            check_args(func, cli_args, [], {}, recurse=True, naming="nested")
+    else:
+        expected_cfg: DieConfig2 | dict[str, Any] = (
+            DieConfig2(**config_kwargs) if cls is DieConfig2 else {**config_kwargs}  # type: ignore[arg-type]
+        )
+        expected_count = count
+        check_args(
+            func,
+            cli_args,
+            [expected_cfg, expected_count],
+            {},
+            recurse=True,
+            naming="nested",
+        )
+
+
 def throw_dice3(
     count: int, cfg: DieConfig2 = DieConfig2(sides=6, kind="single")
 ) -> None:
@@ -262,6 +364,43 @@ def test_recursive_w_inner_required() -> None:
     #     )
 
 
+def test_recursive_w_inner_required_nested() -> None:
+    check_args(
+        throw_dice3,
+        ["--cfg.sides", "4", "--cfg.kind", "pair", "--count", "2"],
+        [2, DieConfig2(sides=4, kind="pair")],
+        {},
+        recurse=True,
+        naming="nested",
+    )
+    check_args(
+        throw_dice4,
+        ["--cfg.sides", "4", "--cfg.kind", "pair", "--count", "2"],
+        [2, DieConfig2(sides=4, kind="pair")],
+        {},
+        recurse=True,
+        naming="nested",
+    )
+
+    # DieConfig2 requires sides and kind, however cfg has a default.
+    check_args(
+        throw_dice3,
+        ["--count", "2"],
+        [2, DieConfig2(sides=6, kind="single")],
+        {},
+        recurse=True,
+        naming="nested",
+    )
+    check_args(
+        throw_dice4,
+        ["--count", "2"],
+        [2, None],
+        {},
+        recurse=True,
+        naming="nested",
+    )
+
+
 class ConfigWithVarArgs:
     def __init__(self, *values: int) -> None:
         self.values = list(values)
@@ -281,7 +420,8 @@ class NestedTypedDictWithVarArgs(TypedDict):
     config: ConfigWithVarArgs
 
 
-def test_recursive_unsupported() -> None:
+@mark.parametrize("naming", ["flat", "nested"])
+def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
     def f1(cfg: ConfigWithVarArgs) -> None:
         pass
 
@@ -298,22 +438,22 @@ def test_recursive_unsupported() -> None:
         ParserConfigError,
         match="Cannot have variadic parameter `values` in child Args of `ConfigWithVarArgs`!",
     ):
-        check_args(f1, [], [], {}, recurse=True)
+        check_args(f1, [], [], {}, recurse=True, naming=naming)
     with raises(
         ParserConfigError,
         match="Cannot have variadic parameter `settings` in child Args of `ConfigWithVarKwargs`!",
     ):
-        check_args(f2, [], [], {}, recurse=True)
+        check_args(f2, [], [], {}, recurse=True, naming=naming)
     with raises(
         ParserConfigError,
         match="Cannot have variadic parameter `values` in child Args of `ConfigWithVarArgs`!",
     ):
-        check_args(f3, [], [], {}, recurse=True)
+        check_args(f3, [], [], {}, recurse=True, naming=naming)
     with raises(
         ParserConfigError,
         match="Cannot have variadic parameter `values` in child Args of `ConfigWithVarArgs`!",
     ):
-        check_args(f3b, [], [], {}, recurse=True)
+        check_args(f3b, [], [], {}, recurse=True, naming=naming)
 
     def f4a(cfgs: list[DieConfig]) -> None:
         pass
@@ -340,7 +480,7 @@ def test_recursive_unsupported() -> None:
                 f"Cannot recurse into n-ary parameter `cfgs` in `{f.__name__}()`!"
             ),
         ):
-            check_args(f, [], [], {}, recurse=True)
+            check_args(f, [], [], {}, recurse=True, naming=naming)
 
     for f in [f5a, f5b]:
         with raises(
@@ -349,8 +489,7 @@ def test_recursive_unsupported() -> None:
                 f"Cannot recurse into variadic parameter `cfgs` in `{f.__name__}()`!"
             ),
         ):
-            check_args(f, [], [], {}, recurse=True)
-
+            check_args(f, [], [], {}, recurse=True, naming=naming)
     for f in [f6a, f6b]:
         with raises(
             ParserConfigError,
@@ -358,7 +497,7 @@ def test_recursive_unsupported() -> None:
                 f"Cannot recurse into variadic parameter `cfgs` in `{f.__name__}()`!"
             ),
         ):
-            check_args(f, [], [], {}, recurse=True)
+            check_args(f, [], [], {}, recurse=True, naming=naming)
 
     def f7a(cfg: DieConfig, sides: int) -> None:
         pass
@@ -378,25 +517,113 @@ def test_recursive_unsupported() -> None:
     def f8d(cfg: DieConfig2TD, cfg2: DieConfig2TD) -> None:
         pass
 
-    for f in [f7a, f7b]:
-        with raises(
-            ParserConfigError,
-            match=re.escape(
-                f"Option name `sides` is used multiple times in `{f.__name__}()`!"
-                " Recursive parsing requires unique option names among all levels."
-            ),
-        ):
-            check_args(f, [], [], {}, recurse=True)
+    if naming == "flat":
+        for f in [f7a, f7b]:
+            with raises(
+                ParserConfigError,
+                match=re.escape(
+                    f"Option name `sides` is used multiple times in `{f.__name__}()`!"
+                    " Recursive parsing requires unique option names among all levels."
+                ),
+            ):
+                check_args(f, [], [], {}, recurse=True)
+    else:
+        check_args(
+            f7a,
+            ["--cfg.sides", "4", "--cfg.kind", "pair", "--sides", "8"],
+            [DieConfig(sides=4, kind="pair"), 8],
+            {},
+            recurse=True,
+            naming="nested",
+        )
+        check_args(
+            f7b,
+            ["--cfg.sides", "4", "--cfg.kind", "pair", "--sides", "8"],
+            [{"sides": 4, "kind": "pair"}, 8],
+            {},
+            recurse=True,
+            naming="nested",
+        )
 
-    for f in [f8a, f8b, f8c, f8d]:
-        with raises(
-            ParserConfigError,
-            match=re.escape(
-                f"Option name `sides` is used multiple times in `{f.__name__}()`!"
-                " Recursive parsing requires unique option names among all levels."
-            ),
-        ):
-            check_args(f, [], [], {}, recurse=True)
+    if naming == "flat":
+        for f in [f8a, f8b, f8c, f8d]:
+            with raises(
+                ParserConfigError,
+                match=re.escape(
+                    f"Option name `sides` is used multiple times in `{f.__name__}()`!"
+                    " Recursive parsing requires unique option names among all levels."
+                ),
+            ):
+                check_args(f, [], [], {}, recurse=True)
+    else:
+        check_args(
+            f8a,
+            [
+                "--cfg.sides",
+                "4",
+                "--cfg.kind",
+                "pair",
+                "--cfg2.sides",
+                "8",
+                "--cfg2.kind",
+                "single",
+            ],
+            [DieConfig(sides=4, kind="pair"), DieConfig(sides=8, kind="single")],
+            {},
+            recurse=True,
+            naming="nested",
+        )
+        check_args(
+            f8b,
+            [
+                "--cfg.sides",
+                "4",
+                "--cfg.kind",
+                "pair",
+                "--cfg2.sides",
+                "8",
+                "--cfg2.kind",
+                "single",
+            ],
+            [DieConfig(sides=4, kind="pair"), {"sides": 8, "kind": "single"}],
+            {},
+            recurse=True,
+            naming="nested",
+        )
+        check_args(
+            f8c,
+            [
+                "--cfg.sides",
+                "4",
+                "--cfg.kind",
+                "pair",
+                "--cfg2.sides",
+                "8",
+                "--cfg2.kind",
+                "single",
+            ],
+            [{"sides": 4, "kind": "pair"}, DieConfig(sides=8, kind="single")],
+            {},
+            recurse=True,
+            naming="nested",
+        )
+        check_args(
+            f8d,
+            [
+                "--cfg.sides",
+                "4",
+                "--cfg.kind",
+                "pair",
+                "--cfg2.sides",
+                "8",
+                "--cfg2.kind",
+                "single",
+            ],
+            [{"sides": 4, "kind": "pair"}, {"sides": 8, "kind": "single"}],
+            {},
+            recurse=True,
+            naming="nested",
+        )
 
 
 @dataclass
@@ -578,6 +805,60 @@ Fuse two monsters with polymerization.
     if fuse is not fuse2td:
         # TypedDict does not have default values for now, every option is required.
         check_help_from_func(fuse, "fuse.py", expected, recurse=True)
+
+
+@mark.parametrize("fuse", [fuse2, fuse2td])
+def test_recursive_dataclass_nested(fuse: Callable[..., Any]) -> None:
+    if fuse is fuse1:
+        expected = FusionConfig(
+            left_path="monster1.dat",
+            right_path="monster2.dat",
+            output_path="fused_monster.dat",
+            components=["wing", "tail"],
+            alpha=0.7,
+        )
+    elif fuse is fuse2:
+        expected = FusionConfig2(
+            io_paths=IOPaths(
+                input_paths=InputPaths(
+                    left_path="monster1.dat", right_path="monster2.dat"
+                ),
+                output_path="fused_monster.dat",
+            ),
+            components=["wing", "tail"],
+            alpha=0.7,
+        )
+    else:
+        expected = {
+            "io_paths": IOPaths(
+                input_paths=InputPaths(
+                    left_path="monster1.dat", right_path="monster2.dat"
+                ),
+                output_path="fused_monster.dat",
+            ),
+            "components": ["wing", "tail"],
+            "alpha": 0.7,
+        }
+    check_args(
+        fuse,
+        [
+            "--cfg.io-paths.input-paths.left-path",
+            "monster1.dat",
+            "--cfg.io-paths.input-paths.right-path",
+            "monster2.dat",
+            "--cfg.io-paths.output-path",
+            "fused_monster.dat",
+            "--cfg.components",
+            "wing",
+            "tail",
+            "--cfg.alpha",
+            "0.7",
+        ],
+        [expected],
+        {},
+        recurse=True,
+        naming="nested",
+    )
 
 
 @dataclass
