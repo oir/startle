@@ -1,18 +1,14 @@
-from collections.abc import Iterable, Mapping, MutableSequence, MutableSet, Sequence
+from collections.abc import Iterable, Mapping
 from inspect import Parameter
-from typing import Any, Literal, cast, get_args, get_origin
+from typing import Literal
 
 from .._docstr import ParamHelp, ParamHelps
-from .._type_utils import (
-    TypeHint,
-    is_typeddict,
-    normalize_annotation,
-    strip_annotated,
-)
+from .._type_utils import TypeHint, is_typeddict, normalize_annotation
 from .._value_parser import is_parsable
 from ..arg import Name
 from ..error import ParserConfigError
 from .classes import get_class_initializer_params
+from .nary import get_naryness
 
 
 def reserve_short_names(
@@ -75,71 +71,6 @@ def make_name(
     return Name(long=param_name_sub)
 
 
-def get_annotation_naryness(
-    normalized_annotation: Any,
-) -> tuple[bool, type | None, Any]:
-    """
-    Get the n-ary status, container type, and normalized annotation for an annotation.
-    For n-ary parameters, the type (updated `normalized_annotation`) will refer
-    to the inner type.
-
-    If inner type is absent from the hint, assume str.
-
-    Returns:
-        `nary`, `container_type`, and `normalized_annotation` as a tuple.
-    """
-    orig = get_origin(normalized_annotation)
-    args_ = get_args(normalized_annotation)
-
-    if orig in [list, set, frozenset]:
-        return True, orig, strip_annotated(args_[0]) if args_ else str
-    if orig is tuple and len(args_) == 2 and args_[1] is ...:
-        return True, orig, strip_annotated(args_[0]) if args_ else str
-    if orig is tuple and not args_:
-        return True, orig, str
-    if normalized_annotation in [list, tuple, set, frozenset]:
-        container_type = cast(type, normalized_annotation)
-        return True, container_type, str
-
-    # handle abstract collections
-    if orig in [MutableSequence]:
-        return True, list, strip_annotated(args_[0]) if args_ else str
-    if normalized_annotation in [MutableSequence]:
-        return True, list, str
-
-    if orig in [Sequence, Iterable]:
-        return True, tuple, strip_annotated(args_[0]) if args_ else str
-    if normalized_annotation in [Sequence, Iterable]:
-        return True, tuple, str
-
-    if orig in [MutableSet]:
-        return True, set, strip_annotated(args_[0]) if args_ else str
-    if normalized_annotation in [MutableSet]:
-        return True, set, str
-
-    return False, None, normalized_annotation
-
-
-def get_naryness(
-    param_or_annot: "Parameter | TypeHint", normalized_annotation: Any
-) -> tuple[bool, type | None, Any]:
-    """
-    Get the n-ary status, container type, and normalized annotation for a parameter.
-    For n-ary parameters, the type (updated `normalized_annotation`) will refer
-    to the inner type.
-
-    If inner type is absent from the hint, assume str.
-
-    Returns:
-        `nary`, `container_type`, and `normalized_annotation` as a tuple.
-    """
-    if isinstance(param_or_annot, Parameter):
-        if param_or_annot.kind is Parameter.VAR_POSITIONAL:
-            return True, list, normalized_annotation
-
-    return get_annotation_naryness(normalized_annotation)
-
-
 def _get_params_or_annotations(
     annotation: type,
 ) -> Iterable[tuple[str, "Parameter | TypeHint"]]:
@@ -168,7 +99,7 @@ def collect_param_names(
     recurse: bool | Literal["child"] = False,
     naming: Literal["flat", "nested"] = "flat",
     kw_only: bool = False,
-    _parent_name: str = "",
+    parent_name: str = "",
 ) -> list[str]:
     """
     Get all parameter names in the object hierarchy.
@@ -199,7 +130,7 @@ def collect_param_names(
 
         if is_parsable(normalized_annotation):
             if recurse == "child" and naming == "nested":
-                name = f"{_parent_name}.{param_name}".replace("_", "-")
+                name = f"{parent_name}.{param_name}".replace("_", "-")
             else:
                 name = param_name.replace("_", "-")
             if is_kw(param):
@@ -218,7 +149,7 @@ def collect_param_names(
                 recurse="child",
                 naming=naming,
                 kw_only=True,  # children are kw-only for now
-                _parent_name=f"{_parent_name}.{param_name}",
+                parent_name=f"{parent_name}.{param_name}",
             )
             for child_name in child_names:
                 if child_name in used_names:

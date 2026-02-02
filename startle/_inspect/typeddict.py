@@ -12,12 +12,8 @@ from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args, Missing
 from ..error import ParserConfigError
-from .names import (
-    collect_param_names,
-    get_annotation_naryness,
-    make_name,
-    reserve_short_names,
-)
+from .names import collect_param_names, make_name, reserve_short_names
+from .nary import get_annotation_naryness
 
 
 def make_args_from_typeddict(
@@ -27,8 +23,8 @@ def make_args_from_typeddict(
     brief: str = "",
     recurse: bool | Literal["child"] = False,
     naming: Literal["flat", "nested"] = "flat",
-    _used_short_names: set[str] | None = None,
-    _parent_name: str = "",
+    used_short_names: set[str] | None = None,
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a TypedDict.
@@ -40,9 +36,9 @@ def make_args_from_typeddict(
         recurse: Whether to recurse into non-parsable types to create sub-Args.
             "child" is same as True, but it also indicates that this is not the root Args.
         naming: How to name nested arguments when `recurse` is True.
-        _used_short_names: Set of already used short names coming from parent Args.
+        used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     from .make_args import get_param_help, make_args_from_class
 
@@ -62,11 +58,9 @@ def make_args_from_typeddict(
         recurse=recurse,
         naming=naming,
         kw_only=True,
-        _parent_name=_parent_name,
+        parent_name=parent_name,
     )
-    used_short_names = (
-        _used_short_names if _used_short_names is not None else set[str]()
-    )
+    used_short_names = used_short_names if used_short_names is not None else set[str]()
     used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
@@ -100,7 +94,7 @@ def make_args_from_typeddict(
         child_args: Args | None = None
         if is_parsable(normalized_annotation):
             if recurse == "child" and naming == "nested":
-                name = Name(long=f"{_parent_name}.{param_name_sub}")
+                name = Name(long=f"{parent_name}.{param_name_sub}")
             else:
                 name = make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
@@ -120,12 +114,12 @@ def make_args_from_typeddict(
                 recurse="child" if recurse else False,
                 naming=naming,
                 kw_only=True,  # children are kw-only for now
-                _used_short_names=used_short_names,
-                _parent_name=f"{_parent_name}.{param_name}",
+                used_short_names=used_short_names,
+                parent_name=f"{parent_name}.{param_name}",
             )
             child_args._parent = args  # type: ignore
             name = Name(
-                long=f"{_parent_name}.{param_name_sub}"
+                long=f"{parent_name}.{param_name_sub}"
                 if naming == "nested"
                 else param_name_sub
             )

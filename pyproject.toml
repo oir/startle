@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "startle"
-description = "Instantly start a CLI from functions or classes"
+description = "Instantly start a CLI from functions, classes, or TypedDicts"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-keywords = ["cli", "command line interface", "argparse"]
+keywords = ["CLI", "command line interface", "argparse"]
 authors = [
   { name = "Ozan Irsoy" }
 ]

@@ -89,8 +89,8 @@ def _make_args_from_params(
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     naming: Literal["flat", "nested"] = "flat",
-    _used_short_names: set[str] | None = None,
-    _parent_name: str = "",
+    used_short_names: set[str] | None = None,
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a list of parameters.
@@ -106,9 +106,9 @@ def _make_args_from_params(
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
         naming: How to name nested arguments when `recurse` is True.
-        _used_short_names: Set of already used short names coming from parent Args.
+        used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     args = Args(brief=brief, program_name=program_name)
 
@@ -122,11 +122,9 @@ def _make_args_from_params(
         recurse=recurse,
         naming=naming,
         kw_only=kw_only,
-        _parent_name=_parent_name,
+        parent_name=parent_name,
     )
-    used_short_names = (
-        _used_short_names if _used_short_names is not None else set[str]()
-    )
+    used_short_names = used_short_names if used_short_names is not None else set[str]()
     used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
@@ -142,7 +140,7 @@ def _make_args_from_params(
         docstr_param = get_param_help(param_name, param, arg_helps)
 
         if recurse == "child" and naming == "nested":
-            param_name_sub = f"{_parent_name}.{param_name}".replace("_", "-")
+            param_name_sub = f"{parent_name}.{param_name}".replace("_", "-")
         else:
             param_name_sub = param_name.replace("_", "-")
 
@@ -176,8 +174,8 @@ def _make_args_from_params(
                 recurse="child" if recurse else False,
                 naming=naming,
                 kw_only=True,  # children are kw-only for now
-                _used_short_names=used_short_names,
-                _parent_name=f"{_parent_name}.{param_name}"
+                used_short_names=used_short_names,
+                parent_name=f"{parent_name}.{param_name}"
                 if recurse == "child"
                 else param_name,
             )
@@ -239,7 +237,7 @@ def make_args_from_func(
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     naming: Literal["flat", "nested"] = "flat",
-    _parent_name: str = "",
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a function signature.
@@ -251,7 +249,7 @@ def make_args_from_func(
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
         naming: How to name nested arguments when `recurse` is True.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     # Get the signature of the function
     sig = inspect.signature(func)
@@ -271,7 +269,7 @@ def make_args_from_func(
         recurse=recurse,
         kw_only=kw_only,
         naming=naming,
-        _parent_name=_parent_name,
+        parent_name=parent_name,
     )
 
 
@@ -283,8 +281,8 @@ def make_args_from_class(
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     naming: Literal["flat", "nested"] = "flat",
-    _used_short_names: set[str] | None = None,
-    _parent_name: str = "",
+    used_short_names: set[str] | None = None,
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -297,9 +295,9 @@ def make_args_from_class(
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
         naming: How to name nested arguments when `recurse` is True.
-        _used_short_names: Set of already used short names coming from parent Args.
+        used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     # TODO: check if cls is a class?
 
@@ -310,8 +308,8 @@ def make_args_from_class(
             brief=brief,
             recurse=recurse,
             naming=naming,
-            _used_short_names=_used_short_names,
-            _parent_name=_parent_name,
+            used_short_names=used_short_names,
+            parent_name=parent_name,
         )
 
     params = get_class_initializer_params(cls)
@@ -330,6 +328,6 @@ def make_args_from_class(
         recurse=recurse,
         kw_only=kw_only,
         naming=naming,
-        _used_short_names=_used_short_names,
-        _parent_name=_parent_name,
+        used_short_names=used_short_names,
+        parent_name=parent_name,
     )
