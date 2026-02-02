@@ -11,7 +11,11 @@ from .._type_utils import (
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args, Missing
-from ..error import ParserConfigError
+from ..error import (
+    NaryNonRecursableParamError,
+    NonClassNonRecursableParamError,
+    UnsupportedTypeError,
+)
 from .names import collect_param_names, make_name, reserve_short_names
 from .nary import get_annotation_naryness
 
@@ -99,15 +103,11 @@ def make_args_from_typeddict(
                 name = make_name(param_name_sub, named, docstr_param, used_short_names)
         elif recurse:
             if nary:
-                raise ParserConfigError(
-                    f"Cannot recurse into n-ary parameter `{param_name}` "
-                    f"in `{obj_name}`!"
-                )
+                raise NaryNonRecursableParamError(param_name, obj_name)
             normalized_annotation = strip_optional(normalized_annotation)
             if not isinstance(normalized_annotation, type):
-                raise ParserConfigError(
-                    f"Cannot recurse into parameter `{param_name}` of non-class type "
-                    f"`{shorten_type_annotation(annotation)}` in `{obj_name}`!"
+                raise NonClassNonRecursableParamError(
+                    param_name, shorten_type_annotation(annotation), obj_name
                 )
             child_args = make_args_from_class(
                 normalized_annotation,
@@ -124,9 +124,8 @@ def make_args_from_typeddict(
                 else param_name_sub
             )
         else:
-            raise ParserConfigError(
-                f"Unsupported type `{shorten_type_annotation(annotation)}` "
-                f"for parameter `{param_name}` in `{obj_name}`!"
+            raise UnsupportedTypeError(
+                param_name, shorten_type_annotation(annotation), obj_name
             )
 
         # the following should hold if normalized_annotation is parsable
