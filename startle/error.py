@@ -90,3 +90,21 @@ class UnsupportedTypeError(ParserConfigError):
         super().__init__(
             f"Unsupported type `{annotation}` for parameter `{param_name}` in `{obj_name}`!"
         )
+
+
+class MissingNameError(ParserConfigError):
+    """
+    Exception raised when a parameter is missing a name.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("Named arguments should have at least one name!")
+
+
+class MissingContainerTypeError(ParserConfigError):
+    """
+    Exception raised when a n-ary parameter is missing a container type.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("Container type must be specified for n-ary options!")

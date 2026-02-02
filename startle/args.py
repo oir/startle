@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from ._help import Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
-from .error import ParserConfigError, ParserOptionError
+from .error import (
+    MissingContainerTypeError,
+    MissingNameError,
+    ParserOptionError,
+)
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -132,9 +136,7 @@ class Args:
             self._positional_args.append(arg)
         if arg.is_named:  # named argument
             if not arg.name.long_or_short:
-                raise ParserConfigError(
-                    "Named arguments should have at least one name!"
-                )
+                raise MissingNameError()
             self._named_args.append(arg)
             if arg.name.short:
                 self._name2idx[arg.name.short] = len(self._named_args) - 1
@@ -147,9 +149,7 @@ class Args:
         This argument stores remaining positional arguments as if it was a list[T] type.
         """
         if arg.is_nary and arg.container_type is None:
-            raise ParserConfigError(
-                "Container type must be specified for n-ary options!"
-            )
+            raise MissingContainerTypeError()
         self._var_args = arg
 
     def enable_unknown_opts(self, arg: Arg) -> None:
@@ -159,9 +159,7 @@ class Args:
         Arg objects as needed on the fly.
         """
         if arg.is_nary and arg.container_type is None:
-            raise ParserConfigError(
-                "Container type must be specified for n-ary options!"
-            )
+            raise MissingContainerTypeError()
         self._var_kwargs = arg
 
     def _parse_equals_syntax(self, name: str, state: _ParsingState) -> _ParsingState:
