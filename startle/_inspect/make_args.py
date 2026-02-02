@@ -2,12 +2,7 @@ import inspect
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import is_dataclass
 from inspect import Parameter
-from typing import (
-    Any,
-    Literal,
-    cast,
-    get_type_hints,
-)
+from typing import Any, Literal, cast, get_type_hints
 
 from .._docstr import ParamHelp, ParamHelps, parse_docstring
 from .._type_utils import (
@@ -20,7 +15,13 @@ from .._type_utils import (
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
-from ..error import ParserConfigError
+from ..error import (
+    NaryNonRecursableParamError,
+    NonClassNonRecursableParamError,
+    UnsupportedTypeError,
+    VariadicChildParamError,
+    VariadicNonRecursableParamError,
+)
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
 from .names import (
@@ -63,18 +64,13 @@ def check_recursable(
     Raise if the given parameter cannot be recursed into, no-op otherwise.
     """
     if is_variadic(param):
-        raise ParserConfigError(
-            f"Cannot recurse into variadic parameter `{param_name}` in `{obj_name}`!"
-        )
+        raise VariadicNonRecursableParamError(param_name, obj_name)
     if nary:
-        raise ParserConfigError(
-            f"Cannot recurse into n-ary parameter `{param_name}` in `{obj_name}`!"
-        )
+        raise NaryNonRecursableParamError(param_name, obj_name)
     normalized_annotation = strip_optional(normalized_annotation)
     if not isinstance(normalized_annotation, type):
-        raise ParserConfigError(
-            f"Cannot recurse into parameter `{param_name}` of non-class type "
-            f"`{shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
+        raise NonClassNonRecursableParamError(
+            param_name, shorten_type_annotation(param.annotation), obj_name
         )
 
 
@@ -145,9 +141,7 @@ def _make_args_from_params(
             param_name_sub = param_name.replace("_", "-")
 
         if recurse == "child" and is_variadic(param):
-            raise ParserConfigError(
-                f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
-            )
+            raise VariadicChildParamError(param_name, obj_name)
 
         positional = is_positional(param) and not kw_only
         named = is_keyword(param) or kw_only
@@ -182,9 +176,8 @@ def _make_args_from_params(
             child_args._parent = args  # type: ignore
             name = Name(long=param_name_sub)
         else:
-            raise ParserConfigError(
-                f"Unsupported type `{shorten_type_annotation(param.annotation)}` "
-                f"for parameter `{param_name}` in `{obj_name}`!"
+            raise UnsupportedTypeError(
+                param_name, shorten_type_annotation(param.annotation), obj_name
             )
 
         # the following should hold if normalized_annotation is parsable

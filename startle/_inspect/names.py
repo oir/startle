@@ -6,7 +6,7 @@ from .._docstr import ParamHelp, ParamHelps
 from .._type_utils import TypeHint, is_typeddict, normalize_annotation
 from .._value_parser import is_parsable
 from ..arg import Name
-from ..error import ParserConfigError
+from ..error import HelpCollisionError, NameCollisionError
 from .classes import get_class_initializer_params
 from .nary import get_naryness
 
@@ -121,9 +121,7 @@ def collect_param_names(
     used_names = list[str]()
     for param_name, param in params:
         if param_name == "help":
-            raise ParserConfigError(
-                f"Cannot use `help` as parameter name in `{obj_name}`!"
-            )
+            raise HelpCollisionError(obj_name)
 
         normalized_annotation = normalize_annotation(hints.get(param_name, str))
         _, _, normalized_annotation = get_naryness(param, normalized_annotation)
@@ -135,10 +133,7 @@ def collect_param_names(
                 name = param_name.replace("_", "-")
             if is_kw(param):
                 if name in used_names:
-                    raise ParserConfigError(
-                        f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing with `flat` naming requires unique option names among all levels."
-                    )
+                    raise NameCollisionError(name, obj_name)
                 used_names_set.add(name)
                 used_names.append(name)
         elif recurse:
@@ -153,10 +148,7 @@ def collect_param_names(
             )
             for child_name in child_names:
                 if child_name in used_names:
-                    raise ParserConfigError(
-                        f"Option name `{child_name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing with `flat` naming requires unique option names among all levels."
-                    )
+                    raise NameCollisionError(child_name, obj_name)
                 used_names_set.add(child_name)
                 used_names.append(child_name)
     return used_names
