@@ -26,6 +26,52 @@ class ParserConfigError(Exception):
     pass
 
 
+class MissingOptionNameError(ParserOptionError):
+    """
+    Exception raised when `-` does not have a name following it.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("Prefix `-` is not followed by an option!")
+
+
+class UnexpectedOptionError(ParserOptionError):
+    """
+    Exception raised when an unexpected option is provided to the parser.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Unexpected option `{name}`!")
+
+
+class DuplicateOptionError(ParserOptionError):
+    """
+    Exception raised when a duplicate option is provided to the parser when it is not n-ary.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Option `{name}` is multiply given!")
+
+
+class FlagWithValueError(ParserOptionError):
+    """
+    Exception raised when a flag option is provided with a value via --option=value syntax.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Option `{name}` is a flag and cannot be assigned a value!")
+
+
+class NonFlagInShortNameCombinationError(ParserOptionError):
+    """
+    Exception raised when a non-flag option is used in a short name combination (e.g. -abc),
+    not as the last one.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Option `{name}` is not a flag and cannot be combined!")
+
+
 class NameCollisionError(ParserConfigError):
     """
     Exception raised when there is a name collision in the parser configuration during
@@ -94,7 +140,7 @@ class UnsupportedTypeError(ParserConfigError):
 
 class MissingNameError(ParserConfigError):
     """
-    Exception raised when a parameter is missing a name.
+    Exception raised when both long and short names are missing when initializing `Name`.
     """
 
     def __init__(self) -> None:

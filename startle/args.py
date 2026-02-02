@@ -6,9 +6,14 @@ from typing import TYPE_CHECKING, Any, Literal
 from ._help import Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import (
+    DuplicateOptionError,
+    FlagWithValueError,
     MissingContainerTypeError,
     MissingNameError,
+    MissingOptionNameError,
+    NonFlagInShortNameCombinationError,
     ParserOptionError,
+    UnexpectedOptionError,
 )
 
 if TYPE_CHECKING:
@@ -99,7 +104,7 @@ class Args:
         if value.startswith("-"):
             name = value[1:]
             if not name:
-                raise ParserOptionError("Prefix `-` is not followed by an option!")
+                raise MissingOptionNameError()
             return name
         return False
 
@@ -183,14 +188,12 @@ class Args:
                     )
                 )
             else:
-                raise ParserOptionError(f"Unexpected option `{name}`!")
+                raise UnexpectedOptionError(name)
         opt = self._named_args[self._name2idx[normal_name]]
         if opt.is_parsed and not opt.is_nary:
-            raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
+            raise DuplicateOptionError(str(opt.name))
         if opt.is_flag:
-            raise ParserOptionError(
-                f"Option `{opt.name}` is a flag and cannot be assigned a value!"
-            )
+            raise FlagWithValueError(str(opt.name))
         opt.parse(value)
         state.idx += 1
         return state
@@ -208,16 +211,14 @@ class Args:
                 raise SystemExit(0)
             opt = self._find_arg_by_name(name)
             if opt is None:
-                raise ParserOptionError(f"Unexpected option `{name}`!")
+                raise UnexpectedOptionError(name)
             if opt.is_parsed and not opt.is_nary:
-                raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
+                raise DuplicateOptionError(str(opt.name))
 
             if i < len(names) - 1:
                 # up until the last option, all options must be flags
                 if not opt.is_flag:
-                    raise ParserOptionError(
-                        f"Option `{opt.name}` is not a flag and cannot be combined!"
-                    )
+                    raise NonFlagInShortNameCombinationError(str(opt.name))
                 opt.parse()
             else:
                 # last option can be a flag or a regular option
@@ -288,10 +289,10 @@ class Args:
                     )
                 )
             else:
-                raise ParserOptionError(f"Unexpected option `{name}`!")
+                raise UnexpectedOptionError(name)
         opt = self._named_args[self._name2idx[normal_name]]
         if opt.is_parsed and not opt.is_nary:
-            raise ParserOptionError(f"Option `{opt.name}` is multiply given!")
+            raise DuplicateOptionError(str(opt.name))
 
         if opt.is_flag:
             opt.parse()
