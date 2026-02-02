@@ -217,3 +217,15 @@ def test_underscores(capsys: CaptureFixture[str], run: Callable[..., Any]) -> No
     )
     with raises(ParserOptionError, match=r"Unknown command `that.command`!"):
         run([this_command, that_command], ["that.command", "2", "foo"], catch=False)
+
+
+def test_recursive_commands() -> None:
+    with raises(
+        ParserConfigError,
+        match=("Recurse option is not yet supported for multiple functions."),
+    ):
+        run_w_explicit_args(
+            [add, sub],
+            ["add", "2", "3"],
+            recurse=True,
+        )

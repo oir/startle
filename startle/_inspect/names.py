@@ -137,7 +137,7 @@ def collect_param_names(
                 if name in used_names:
                     raise ParserConfigError(
                         f"Option name `{name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing requires unique option names among all levels."
+                        " Recursive parsing with `flat` naming requires unique option names among all levels."
                     )
                 used_names_set.add(name)
                 used_names.append(name)
@@ -155,7 +155,7 @@ def collect_param_names(
                 if child_name in used_names:
                     raise ParserConfigError(
                         f"Option name `{child_name}` is used multiple times in `{obj_name}`!"
-                        " Recursive parsing requires unique option names among all levels."
+                        " Recursive parsing with `flat` naming requires unique option names among all levels."
                     )
                 used_names_set.add(child_name)
                 used_names.append(child_name)
