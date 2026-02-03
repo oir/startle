@@ -7,13 +7,18 @@ from ._help import Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
 from .arg import Arg, Name
 from .error import (
     DuplicateOptionError,
+    DuplicatePositionalArgumentError,
     FlagWithValueError,
     MissingContainerTypeError,
     MissingNameError,
     MissingOptionNameError,
+    MissingOptionValueError,
+    MissingRequiredOptionError,
+    MissingRequiredPositionalArgumentError,
     NonFlagInShortNameCombinationError,
     ParserOptionError,
     UnexpectedOptionError,
+    UnexpectedPositionalArgumentError,
 )
 
 if TYPE_CHECKING:
@@ -241,15 +246,13 @@ class Args:
                         values.append(args[state.idx])
                         state.idx += 1
                     if not values:
-                        raise ParserOptionError(
-                            f"Option `{opt.name}` is missing argument!"
-                        )
+                        raise MissingOptionValueError(str(opt.name))
                     for value in values:
                         opt.parse(value)
                     return state
                 # not a flag, not n-ary
                 if state.idx + 1 >= len(args):
-                    raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
+                    raise MissingOptionValueError(str(opt.name))
                 opt.parse(args[state.idx + 1])
                 state.idx += 2
                 return state
@@ -306,14 +309,14 @@ class Args:
                 values.append(args[state.idx])
                 state.idx += 1
             if not values:
-                raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
+                raise MissingOptionValueError(str(opt.name))
             for value in values:
                 opt.parse(value)
             return state
 
         # not a flag, not n-ary
         if state.idx + 1 >= len(args):
-            raise ParserOptionError(f"Option `{opt.name}` is missing argument!")
+            raise MissingOptionValueError(str(opt.name))
         opt.parse(args[state.idx + 1])
         state.idx += 2
         return state
@@ -338,15 +341,11 @@ class Args:
                 state.idx += 1
                 return state
             else:
-                raise ParserOptionError(
-                    f"Unexpected positional argument: `{args[state.idx]}`!"
-                )
+                raise UnexpectedPositionalArgumentError(args[state.idx])
 
         arg = self._positional_args[state.positional_idx]
         if arg.is_parsed:
-            raise ParserOptionError(
-                f"Positional argument `{args[state.idx]}` is multiply given!"
-            )
+            raise DuplicatePositionalArgumentError(args[state.idx])
         if arg.is_nary:
             # n-ary positional arg
             values: list[str] = []
@@ -371,17 +370,13 @@ class Args:
                 init_args, init_kwargs = child_args.make_func_args()
                 child._value = child.type_(*init_args, **init_kwargs)  # type: ignore
                 child._parsed = True  # type: ignore
-            except ParserOptionError as e:
-                estr = str(e)
-                if estr.startswith("Required option") and estr.endswith(
-                    " is not provided!"
-                ):
-                    # this is allowed if arg has a default value
-                    if not child.required:
-                        child._value = child.default  # type: ignore
-                        child._parsed = True  # type: ignore
-                        continue
-                raise e
+            except MissingRequiredOptionError as e:
+                if not child.required:
+                    child._value = child.default  # type: ignore
+                    child._parsed = True  # type: ignore
+                    continue
+                else:
+                    raise e
 
         # check if all required arguments are given, assign defaults otherwise
         for arg in self._positional_args + self._named_args:
@@ -389,13 +384,9 @@ class Args:
                 if arg.required:
                     if arg.is_named:
                         # if a positional arg is also named, prefer this type of error message
-                        raise ParserOptionError(
-                            f"Required option `{arg.name}` is not provided!"
-                        )
+                        raise MissingRequiredOptionError(str(arg.name))
                     else:
-                        raise ParserOptionError(
-                            f"Required positional argument <{arg.name.long}> is not provided!"
-                        )
+                        raise MissingRequiredPositionalArgumentError(str(arg.name))
                 else:
                     arg._value = arg.default  # type: ignore
                     arg._parsed = True  # type: ignore
@@ -417,12 +408,12 @@ class Args:
                 else:
                     try:
                         state = self._parse_named(name, args, state)
-                    except ParserOptionError as e:
-                        if self._var_args and str(e).startswith("Unexpected option"):
+                    except UnexpectedOptionError as e:
+                        if self._var_args:
                             self._var_args.parse(args[state.idx])
                             state.idx += 1
                         else:
-                            raise
+                            raise e
             else:
                 # this must be a positional argument
                 state = self._parse_positional(args, state)

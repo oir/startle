@@ -26,6 +26,9 @@ class ParserConfigError(Exception):
     pass
 
 
+# Below are the specific errors derived from one of the above base errors
+
+
 class MissingOptionNameError(ParserOptionError):
     """
     Exception raised when `-` does not have a name following it.
@@ -33,6 +36,34 @@ class MissingOptionNameError(ParserOptionError):
 
     def __init__(self) -> None:
         super().__init__("Prefix `-` is not followed by an option!")
+
+
+class MissingOptionValueError(ParserOptionError):
+    """
+    Exception raised when an option is missing an argument value
+    (e.g. `--option` is given but no value follows).
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Option `{name}` is missing argument!")
+
+
+class MissingRequiredOptionError(ParserOptionError):
+    """
+    Exception raised when a required option is missing.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Required option `{name}` is not provided!")
+
+
+class MissingRequiredPositionalArgumentError(ParserOptionError):
+    """
+    Exception raised when a required positional argument is missing.
+    """
+
+    def __init__(self, long_name: str) -> None:
+        super().__init__(f"Required positional argument <{long_name}> is not provided!")
 
 
 class UnexpectedOptionError(ParserOptionError):
@@ -44,6 +75,15 @@ class UnexpectedOptionError(ParserOptionError):
         super().__init__(f"Unexpected option `{name}`!")
 
 
+class UnexpectedPositionalArgumentError(ParserOptionError):
+    """
+    Exception raised when an unexpected positional argument is provided to the parser.
+    """
+
+    def __init__(self, value: str) -> None:
+        super().__init__(f"Unexpected positional argument: `{value}`!")
+
+
 class DuplicateOptionError(ParserOptionError):
     """
     Exception raised when a duplicate option is provided to the parser when it is not n-ary.
@@ -51,6 +91,17 @@ class DuplicateOptionError(ParserOptionError):
 
     def __init__(self, name: str) -> None:
         super().__init__(f"Option `{name}` is multiply given!")
+
+
+class DuplicatePositionalArgumentError(ParserOptionError):
+    """
+    Exception raised when a duplicate positional argument is provided to the parser when it is not n-ary.
+    This is practically impossible to happen via command-line input, but kept for
+    completeness and programming errors.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Positional argument `{name}` is multiply given!")
 
 
 class FlagWithValueError(ParserOptionError):
