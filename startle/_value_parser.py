@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Literal, cast
 
 from ._type_utils import strip_optional
-from .error import ParserValueError
+from .error import UnsupportedValueTypeError, ValueParsingError
 
 
 def _to_str(value: str) -> str:
@@ -21,14 +21,14 @@ def _to_int(value: str) -> int:
     try:
         return int(value)
     except ValueError as err:
-        raise ParserValueError(f"Cannot parse integer from `{value}`!") from err
+        raise ValueParsingError(value, "integer") from err
 
 
 def _to_float(value: str) -> float:
     try:
         return float(value)
     except ValueError as err:
-        raise ParserValueError(f"Cannot parse float from `{value}`!") from err
+        raise ValueParsingError(value, "float") from err
 
 
 def _to_bool(value: str) -> bool:
@@ -36,7 +36,7 @@ def _to_bool(value: str) -> bool:
         return True
     if value.lower() in {"false", "f", "no", "n", "0"}:
         return False
-    raise ParserValueError(f"Cannot parse boolean from `{value}`!")
+    raise ValueParsingError(value, "boolean")
 
 
 def _to_path(value: str) -> Path:
@@ -54,13 +54,9 @@ def _to_enum(value: str, enum_type: type) -> Enum:
             enum_type_ = cast(type[Enum], enum_type)
             return enum_type_[value.upper().replace("-", "_")]
         except KeyError as err:
-            raise ParserValueError(
-                f"Cannot parse enum {enum_type.__name__} from `{value}`!"
-            ) from err
+            raise ValueParsingError(value, f"enum {enum_type.__name__}") from err
     except ValueError as err:
-        raise ParserValueError(
-            f"Cannot parse enum {enum_type.__name__} from `{value}`!"
-        ) from err
+        raise ValueParsingError(value, f"enum {enum_type.__name__}") from err
 
 
 PARSERS: dict[Any, Callable[[str], Any]] = {
@@ -88,9 +84,7 @@ def _get_parser(type_: Any) -> Callable[[str], Any] | None:
             def parser(value: str) -> str:
                 if value in type_args:
                     return value
-                raise ParserValueError(
-                    f"Cannot parse literal {type_args} from `{value}`!"
-                )
+                raise ValueParsingError(value, f"literal {type_args}")
 
             return parser
 
@@ -112,7 +106,7 @@ def parse(value: str, type_: Any) -> Any:
         return parser(value)
 
     # otherwise it is unsupported
-    raise ParserValueError(f"Unsupported type {type_.__module__}.{type_.__qualname__}!")
+    raise UnsupportedValueTypeError(f"{type_.__module__}.{type_.__qualname__}")
 
 
 def is_parsable(type_: Any) -> bool:

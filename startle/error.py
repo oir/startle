@@ -29,6 +29,24 @@ class ParserConfigError(Exception):
 # Below are the specific errors derived from one of the above base errors
 
 
+class ValueParsingError(ParserValueError):
+    """
+    Exception raised when a value cannot be parsed to the expected type.
+    """
+
+    def __init__(self, value: str, type_: str) -> None:
+        super().__init__(f"Cannot parse {type_} from `{value}`!")
+
+
+class UnsupportedValueTypeError(ParserValueError):
+    """
+    Exception raised when a value type is unsupported for parsing.
+    """
+
+    def __init__(self, type_: Any) -> None:
+        super().__init__(f"Unsupported type `{type_}`!")
+
+
 class MissingOptionNameError(ParserOptionError):
     """
     Exception raised when `-` does not have a name following it.
@@ -123,6 +141,24 @@ class NonFlagInShortNameCombinationError(ParserOptionError):
         super().__init__(f"Option `{name}` is not a flag and cannot be combined!")
 
 
+class MissingCommandError(ParserOptionError):
+    """
+    Exception raised when no command is given and there is no default command.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("No command given!")
+
+
+class UnexpectedCommandError(ParserOptionError):
+    """
+    Exception raised when an unknown command is given and there is no default command.
+    """
+
+    def __init__(self, cmd: str) -> None:
+        super().__init__(f"Unknown command `{cmd}`!")
+
+
 class NameCollisionError(ParserConfigError):
     """
     Exception raised when there is a name collision in the parser configuration during
@@ -205,3 +241,33 @@ class MissingContainerTypeError(ParserConfigError):
 
     def __init__(self) -> None:
         super().__init__("Container type must be specified for n-ary options!")
+
+
+class ArgumentKindError(ParserConfigError):
+    """
+    Exception raised when an argument is neither positional nor named.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("An argument should be either positional or named (or both)!")
+
+
+class UnsupportedContainerTypeError(ParserConfigError):
+    """
+    Exception raised when an unsupported container type is used for n-ary options.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("Unsupported container type!")
+
+
+class UnexpectedDefaultCommandError(ParserConfigError):
+    """
+    Exception raised when the default command is not among the subcommands.
+    """
+
+    def __init__(self, default: str, available_cmds: list[str]) -> None:
+        super().__init__(
+            f"Default command `{default}` is not among the subcommands!"
+            f" Available subcommands: {', '.join(available_cmds)}"
+        )

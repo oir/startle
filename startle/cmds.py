@@ -3,7 +3,11 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from .args import Args
-from .error import ParserConfigError, ParserOptionError
+from .error import (
+    MissingCommandError,
+    UnexpectedCommandError,
+    UnexpectedDefaultCommandError,
+)
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -26,9 +30,8 @@ class Cmds:
 
     def __post_init__(self):
         if self.default and self.default not in self.cmd_parsers:
-            raise ParserConfigError(
-                f"Default command `{self.default}` is not among the subcommands!"
-                f" Available subcommands: {', '.join(self.cmd_parsers.keys())}"
+            raise UnexpectedDefaultCommandError(
+                self.default, list(self.cmd_parsers.keys())
             )
 
     def get_cmd_parser(
@@ -37,7 +40,7 @@ class Cmds:
         cli_args = cli_args if cli_args is not None else sys.argv[1:]
 
         if not cli_args and not self.default:
-            raise ParserOptionError("No command given!")
+            raise MissingCommandError()
 
         if cli_args:
             cmd = cli_args[0]
@@ -49,7 +52,7 @@ class Cmds:
 
             if normal_cmd not in self.cmd_parsers:
                 if not self.default:
-                    raise ParserOptionError(f"Unknown command `{cmd}`!")
+                    raise UnexpectedCommandError(cmd)
                 return self.default, self.cmd_parsers[self.default], cli_args
 
             return normal_cmd, self.cmd_parsers[normal_cmd], cli_args[1:]
