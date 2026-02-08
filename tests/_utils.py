@@ -3,7 +3,7 @@ from copy import copy
 from types import FunctionType
 from typing import Any, Literal
 
-from startle._inspect.make_args import make_args_from_func
+from startle._inspect.make_args import make_args_from_func, CommonConfig
 
 
 def check_args(
@@ -26,7 +26,7 @@ def check_args(
         naming: The naming convention to use for nested arguments.
     """
     args, kwargs = (
-        make_args_from_func(f, recurse=recurse, naming=naming)
+        make_args_from_func(f, cfg=CommonConfig(recurse=recurse, naming=naming))
         .parse(cli_args)
         .make_func_args()
     )

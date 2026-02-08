@@ -2,9 +2,9 @@ import inspect
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import is_dataclass
 from inspect import Parameter
-from typing import Any, Literal, cast, get_type_hints
+from typing import Any, cast, get_type_hints
 
-from .._docstr import ParamHelp, ParamHelps, parse_docstring
+from .._docstr import ParamHelp, ParamHelps, get_param_help, parse_docstring
 from .._type_utils import (
     TypeHint,
     is_typeddict,
@@ -17,6 +17,7 @@ from ..arg import Arg, Name
 from ..args import Args
 from ..error import UnsupportedTypeError, VariadicChildParamError
 from .classes import get_class_initializer_params
+from .config import CommonConfig
 from .dataclasses import get_default_factories
 from .names import (
     collect_param_names,
@@ -29,58 +30,32 @@ from .recursable import check_recursable
 from .typeddict import make_args_from_td
 
 
-def get_param_help(
-    param_name: str,
-    param: "Parameter | TypeHint",
-    arg_helps: ParamHelps,
-) -> ParamHelp:
-    param_key: str | None = None
-    if param_name in arg_helps:
-        param_key = param_name
-    elif isinstance(param, Parameter):
-        if param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
-            # admit both "arg" and "*arg" as valid names
-            param_key = f"*{param_name}"
-        elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
-            # admit both "arg" and "**arg" as valid names
-            param_key = f"**{param_name}"
-
-    return arg_helps[param_key] if param_key else ParamHelp()
-
-
 def _make_arg_from_param(
     *,
     param_name: str,
     param: Parameter,
-    hints: Mapping[str, TypeHint],
-    obj_name: str,
-    arg_helps: ParamHelps,
-    default_factories: dict[str, Any],
-    recurse: bool | Literal["child"],
-    kw_only: bool,
-    naming: Literal["flat", "nested"],
+    hint: TypeHint,
+    help: ParamHelp,
+    default_factory: Any,
     used_short_names: set[str],
-    parent_name: str,
     args: Args,
+    cfg: CommonConfig,
 ) -> Arg:
-    normalized_annotation = normalize_annotation(hints.get(param_name, str))
+    normalized_annotation = normalize_annotation(hint)
 
     required = param.default is inspect.Parameter.empty
     default = param.default if not required else None
 
-    default_factory = default_factories.get(param_name, None)
-    docstr_param = get_param_help(param_name, param, arg_helps)
-
-    if recurse == "child" and naming == "nested":
-        param_name_sub = f"{parent_name}.{param_name}".replace("_", "-")
+    if cfg.recurse == "child" and cfg.naming == "nested":
+        param_name_sub = f"{cfg.parent_name}.{param_name}".replace("_", "-")
     else:
         param_name_sub = param_name.replace("_", "-")
 
-    if recurse == "child" and is_variadic(param):
-        raise VariadicChildParamError(param_name, obj_name)
+    if cfg.recurse == "child" and is_variadic(param):
+        raise VariadicChildParamError(param_name, cfg.obj_name)
 
-    positional = is_positional(param) and not kw_only
-    named = is_keyword(param) or kw_only
+    positional = is_positional(param) and not cfg.kw_only
+    named = is_keyword(param) or cfg.kw_only
 
     nary, container_type, normalized_annotation = get_naryness(
         param, normalized_annotation
@@ -88,12 +63,12 @@ def _make_arg_from_param(
 
     child_args: Args | None = None
     if is_parsable(normalized_annotation):
-        if recurse == "child" and naming == "nested":
+        if cfg.recurse == "child" and cfg.naming == "nested":
             name = Name(long=param_name_sub)
         else:
-            name = make_name(param_name_sub, named, docstr_param, used_short_names)
-    elif recurse:
-        check_recursable(param_name, param, normalized_annotation, obj_name, nary)
+            name = make_name(param_name_sub, named, help, used_short_names)
+    elif cfg.recurse:
+        check_recursable(param_name, param, normalized_annotation, cfg.obj_name, nary)
         normalized_annotation = strip_optional(normalized_annotation)
         assert isinstance(normalized_annotation, type), (
             "Unexpected type form that is not a type!"
@@ -101,19 +76,21 @@ def _make_arg_from_param(
 
         child_args = make_args_from_class(
             normalized_annotation,
-            recurse="child" if recurse else False,
-            naming=naming,
-            kw_only=True,  # children are kw-only for now
             used_short_names=used_short_names,
-            parent_name=f"{parent_name}.{param_name}"
-            if recurse == "child"
-            else param_name,
+            cfg=CommonConfig(
+                recurse="child" if cfg.recurse else False,
+                naming=cfg.naming,
+                kw_only=True,  # children are kw-only for now
+                parent_name=f"{cfg.parent_name}.{param_name}"
+                if cfg.recurse == "child"
+                else param_name,
+            ),
         )
         child_args._parent = args  # type: ignore
         name = Name(long=param_name_sub)
     else:
         raise UnsupportedTypeError(
-            param_name, shorten_type_annotation(param.annotation), obj_name
+            param_name, shorten_type_annotation(param.annotation), cfg.obj_name
         )
 
     # the following should hold if normalized_annotation is parsable
@@ -124,7 +101,7 @@ def _make_arg_from_param(
         name=name,
         type_=normalized_annotation,
         container_type=container_type,
-        help=docstr_param.desc,
+        help=help.desc,
         required=required,
         default=default,
         default_factory=default_factory,
@@ -136,71 +113,49 @@ def _make_arg_from_param(
 
 
 def _make_args_from_params(
+    *,
     params: Iterable[tuple[str, Parameter]],
     hints: Mapping[str, TypeHint],
-    obj_name: str,
     brief: str = "",
-    arg_helps: ParamHelps | None = None,
+    helps: ParamHelps | None = None,
     program_name: str = "",
     default_factories: dict[str, Any] | None = None,
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-    naming: Literal["flat", "nested"] = "flat",
     used_short_names: set[str] | None = None,
-    parent_name: str = "",
+    cfg: CommonConfig,
 ) -> Args:
     """
     Create an Args object from a list of parameters.
 
     Args:
         params: An iterable of (parameter name, Parameter) tuples.
-        obj_name: Name of the object (function or class) these parameters belong to.
         brief: A brief description of the object, for help string.
-        arg_helps: A mapping from parameter names to their docstring descriptions.
+        helps: A mapping from parameter names to their docstring descriptions.
         program_name: The name of the program, for help string.
         default_factories: A mapping from parameter names to their default factory functions.
-        recurse: Whether to recurse into non-parsable types to create sub-Args.
-            "child" is same as True, but it also indicates that this is not the root Args.
-        kw_only: If true, make all parameters keyword-only, regardless of their definition.
-        naming: How to name nested arguments when `recurse` is True.
         used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        parent_name: Name of parent object when recursing with nested naming.
+        cfg: Configuration.
     """
     args = Args(brief=brief, program_name=program_name)
 
-    arg_helps = arg_helps or {}
+    helps = helps or {}
     default_factories = default_factories or {}
 
-    used_names = collect_param_names(
-        params=params,
-        hints=hints,
-        obj_name=obj_name,
-        recurse=recurse,
-        naming=naming,
-        kw_only=kw_only,
-        parent_name=parent_name,
-    )
+    used_names = collect_param_names(params, hints, cfg)
     used_short_names = used_short_names if used_short_names is not None else set[str]()
-    used_short_names |= reserve_short_names(
-        params, used_names, arg_helps, used_short_names
-    )
+    used_short_names |= reserve_short_names(params, used_names, helps, used_short_names)
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
         arg = _make_arg_from_param(
             param_name=param_name,
             param=param,
-            hints=hints,
-            obj_name=obj_name,
-            arg_helps=arg_helps,
-            default_factories=default_factories,
-            recurse=recurse,
-            kw_only=kw_only,
-            naming=naming,
+            hint=hints.get(param_name, str),
+            help=get_param_help(param_name, param, helps),
+            default_factory=default_factories.get(param_name, None),
             used_short_names=used_short_names,
-            parent_name=parent_name,
             args=args,
+            cfg=cfg,
         )
         if param.kind is Parameter.VAR_POSITIONAL:
             arg.name = Name()
@@ -214,7 +169,7 @@ def _make_args_from_params(
     # We add a positional variadic argument for convenience when parsing
     # recursively. Child Args will consume its own arguments and leave
     # the rest for the parent to handle.
-    if recurse == "child":
+    if cfg.recurse == "child":
         args.enable_unknown_args(
             Arg(
                 name=Name(),
@@ -230,12 +185,8 @@ def _make_args_from_params(
 
 def make_args_from_func(
     func: Callable[..., Any],
-    *,
     program_name: str = "",
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-    naming: Literal["flat", "nested"] = "flat",
-    parent_name: str = "",
+    cfg: CommonConfig | None = None,
 ) -> Args:
     """
     Create an Args object from a function signature.
@@ -243,11 +194,7 @@ def make_args_from_func(
     Args:
         func: The function to create Args from.
         program_name: The name of the program, for help string.
-        recurse: Whether to recurse into non-parsable types to create sub-Args.
-            "child" is same as True, but it also indicates that this is not the root Args.
-        kw_only: If true, make all parameters keyword-only, regardless of their definition.
-        naming: How to name nested arguments when `recurse` is True.
-        parent_name: Name of parent object when recursing with nested naming.
+        cfg: Configuration.
     """
     # Get the signature of the function
     sig = inspect.signature(func)
@@ -256,18 +203,15 @@ def make_args_from_func(
 
     # Attempt to parse brief and arg descriptions from docstring
     brief, arg_helps = parse_docstring(func)
+    cfg = cfg or CommonConfig()
 
     return _make_args_from_params(
-        params,
-        hints,
-        f"{func.__name__}()",
-        brief,
-        arg_helps,
-        program_name,
-        recurse=recurse,
-        kw_only=kw_only,
-        naming=naming,
-        parent_name=parent_name,
+        params=params,
+        hints=hints,
+        brief=brief,
+        helps=arg_helps,
+        program_name=program_name,
+        cfg=cfg.copy(obj_name=f"{func.__name__}()"),
     )
 
 
@@ -276,11 +220,8 @@ def make_args_from_class(
     *,
     program_name: str = "",
     brief: str = "",
-    recurse: bool | Literal["child"] = False,
-    kw_only: bool = False,
-    naming: Literal["flat", "nested"] = "flat",
     used_short_names: set[str] | None = None,
-    parent_name: str = "",
+    cfg: CommonConfig | None = None,
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -289,25 +230,21 @@ def make_args_from_class(
         cls: The class to create Args from.
         program_name: The name of the program, for help string.
         brief: A brief description of the class, for help string.
-        recurse: Whether to recurse into non-parsable types to create sub-Args.
-            "child" is same as True, but it also indicates that this is not the root Args.
-        kw_only: If true, make all parameters keyword-only, regardless of their definition.
-        naming: How to name nested arguments when `recurse` is True.
         used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        parent_name: Name of parent object when recursing with nested naming.
+        cfg: Configuration.
     """
     # TODO: check if cls is a class?
+
+    cfg = cfg or CommonConfig()
 
     if is_typeddict(cls):
         return make_args_from_td(
             cls,
             program_name=program_name,
             brief=brief,
-            recurse=recurse,
-            naming=naming,
             used_short_names=used_short_names,
-            parent_name=parent_name,
+            cfg=cfg,
         )
 
     params = get_class_initializer_params(cls)
@@ -316,16 +253,12 @@ def make_args_from_class(
     default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
 
     return _make_args_from_params(
-        params,
-        hints,
-        cls.__name__,  # type: ignore
+        params=params,
+        hints=hints,
         brief=brief,
-        arg_helps=arg_helps,
+        helps=arg_helps,
         program_name=program_name,
         default_factories=default_factories,
-        recurse=recurse,
-        kw_only=kw_only,
-        naming=naming,
         used_short_names=used_short_names,
-        parent_name=parent_name,
+        cfg=cfg.copy(obj_name=f"{cls.__name__}"),  # type: ignore
     )

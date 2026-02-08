@@ -3,8 +3,11 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import singledispatch
+from inspect import Parameter
 from textwrap import dedent
 from typing import Any, Literal
+
+from ._type_utils import TypeHint
 
 
 @dataclass
@@ -130,3 +133,22 @@ def _(cls: type) -> tuple[str, ParamHelps]:
     docstring = inspect.getdoc(cls) or ""
 
     return _parse_docstring(docstring, "class")
+
+
+def get_param_help(
+    param_name: str,
+    param: "Parameter | TypeHint",
+    arg_helps: ParamHelps,
+) -> ParamHelp:
+    param_key: str | None = None
+    if param_name in arg_helps:
+        param_key = param_name
+    elif isinstance(param, Parameter):
+        if param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
+            # admit both "arg" and "*arg" as valid names
+            param_key = f"*{param_name}"
+        elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
+            # admit both "arg" and "**arg" as valid names
+            param_key = f"**{param_name}"
+
+    return arg_helps[param_key] if param_key else ParamHelp()

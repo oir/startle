@@ -3,7 +3,7 @@ from collections.abc import Callable
 from typing import Any, Literal, TypeVar, cast
 
 from ._console import console, error, post_error
-from ._inspect.make_args import make_args_from_func
+from ._inspect.make_args import CommonConfig, make_args_from_func
 from .args import Args
 from .cmds import Cmds
 from .error import (
@@ -91,7 +91,7 @@ def _start_func(
     """
     # first, make Args object from the function
     args_ = make_args_from_func(
-        func, program_name=name or "", recurse=recurse, naming=naming
+        func, name or "", CommonConfig(recurse=recurse, naming=naming)
     )
 
     try:
@@ -148,7 +148,7 @@ def _start_cmds(
     # first, make Cmds object from the functions
     cmds = Cmds(
         {
-            cmd_name: make_args_from_func(func, program_name=cmd_prog_name(cmd_name))
+            cmd_name: make_args_from_func(func, cmd_prog_name(cmd_name), CommonConfig())
             for cmd_name, func in cmd2func.items()
         },
         program_name=name or "",

@@ -1,6 +1,5 @@
 from collections.abc import Iterable, Mapping
 from inspect import Parameter
-from typing import Literal
 
 from .._docstr import ParamHelp, ParamHelps
 from .._type_utils import TypeHint, is_typeddict, normalize_annotation
@@ -8,6 +7,7 @@ from .._value_parser import is_parsable
 from ..arg import Name
 from ..error import HelpCollisionError, NameCollisionError
 from .classes import get_class_initializer_params
+from .config import CommonConfig
 from .nary import get_naryness
 
 
@@ -92,14 +92,9 @@ def _get_hints(
 
 
 def collect_param_names(
-    *,
     params: Iterable[tuple[str, "Parameter | TypeHint"]],
     hints: Mapping[str, TypeHint],
-    obj_name: str,
-    recurse: bool | Literal["child"] = False,
-    naming: Literal["flat", "nested"] = "flat",
-    kw_only: bool = False,
-    parent_name: str = "",
+    cfg: CommonConfig,
 ) -> list[str]:
     """
     Get all parameter names in the object hierarchy.
@@ -110,7 +105,7 @@ def collect_param_names(
     def is_kw(param: "Parameter | TypeHint") -> bool:
         # is non-variadic keyword parameter
         if isinstance(param, Parameter):
-            return kw_only or param.kind in [
+            return cfg.kw_only or param.kind in [
                 Parameter.KEYWORD_ONLY,
                 Parameter.POSITIONAL_OR_KEYWORD,
             ]
@@ -121,34 +116,36 @@ def collect_param_names(
     used_names = list[str]()
     for param_name, param in params:
         if param_name == "help":
-            raise HelpCollisionError(obj_name)
+            raise HelpCollisionError(cfg.obj_name)
 
         normalized_annotation = normalize_annotation(hints.get(param_name, str))
         _, _, normalized_annotation = get_naryness(param, normalized_annotation)
 
         if is_parsable(normalized_annotation):
-            if recurse == "child" and naming == "nested":
-                name = f"{parent_name}.{param_name}".replace("_", "-")
+            if cfg.recurse == "child" and cfg.naming == "nested":
+                name = f"{cfg.parent_name}.{param_name}".replace("_", "-")
             else:
                 name = param_name.replace("_", "-")
             if is_kw(param):
                 if name in used_names:
-                    raise NameCollisionError(name, obj_name)
+                    raise NameCollisionError(name, cfg.obj_name)
                 used_names_set.add(name)
                 used_names.append(name)
-        elif recurse:
+        elif cfg.recurse:
             child_names = collect_param_names(
                 params=_get_params_or_annotations(normalized_annotation),
                 hints=_get_hints(normalized_annotation),
-                obj_name=normalized_annotation.__name__,
-                recurse="child",
-                naming=naming,
-                kw_only=True,  # children are kw-only for now
-                parent_name=f"{parent_name}.{param_name}",
+                cfg=CommonConfig(
+                    obj_name=normalized_annotation.__name__,
+                    recurse="child",
+                    naming=cfg.naming,
+                    kw_only=True,  # children are kw-only for now
+                    parent_name=f"{cfg.parent_name}.{param_name}",
+                ),
             )
             for child_name in child_names:
                 if child_name in used_names:
-                    raise NameCollisionError(child_name, obj_name)
+                    raise NameCollisionError(child_name, cfg.obj_name)
                 used_names_set.add(child_name)
                 used_names.append(child_name)
     return used_names
