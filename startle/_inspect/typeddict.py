@@ -1,6 +1,6 @@
 from typing import Literal, cast, get_type_hints
 
-from .._docstr import parse_docstring
+from .._docstr import ParamHelps, parse_docstring
 from .._type_utils import (
     normalize_annotation,
     shorten_type_annotation,
@@ -20,7 +20,97 @@ from .names import collect_param_names, make_name, reserve_short_names
 from .nary import get_annotation_naryness
 
 
-def make_args_from_typeddict(
+def _make_arg_from_td_param(
+    *,
+    param_name: str,
+    annotation: type,
+    obj_name: str,
+    arg_helps: ParamHelps,
+    recurse: bool | Literal["child"],
+    naming: Literal["flat", "nested"],
+    used_short_names: set[str],
+    required_keys: frozenset[str],
+    optional_keys: frozenset[str],
+    parent_name: str,
+    args: Args,
+) -> Arg:
+    from .make_args import get_param_help, make_args_from_class
+
+    is_required, normalized_annotation = strip_required(annotation)
+    is_not_required, normalized_annotation = strip_not_required(normalized_annotation)
+    normalized_annotation = normalize_annotation(normalized_annotation)
+
+    required = param_name in required_keys or param_name not in optional_keys
+    # NotRequired[] and Required[] are stronger than total=False/True
+    if is_required:
+        required = True
+    elif is_not_required:
+        required = False
+
+    docstr_param = get_param_help(param_name, annotation, arg_helps)
+
+    param_name_sub = param_name.replace("_", "-")
+
+    positional = False
+    named = True
+
+    nary, container_type, normalized_annotation = get_annotation_naryness(
+        normalized_annotation
+    )
+
+    child_args: Args | None = None
+    if is_parsable(normalized_annotation):
+        if recurse == "child" and naming == "nested":
+            name = Name(long=f"{parent_name}.{param_name_sub}")
+        else:
+            name = make_name(param_name_sub, named, docstr_param, used_short_names)
+    elif recurse:
+        if nary:
+            raise NaryNonRecursableParamError(param_name, obj_name)
+        normalized_annotation = strip_optional(normalized_annotation)
+        if not isinstance(normalized_annotation, type):
+            raise NonClassNonRecursableParamError(
+                param_name, shorten_type_annotation(annotation), obj_name
+            )
+        child_args = make_args_from_class(
+            normalized_annotation,
+            recurse="child" if recurse else False,
+            naming=naming,
+            kw_only=True,  # children are kw-only for now
+            used_short_names=used_short_names,
+            parent_name=f"{parent_name}.{param_name}",
+        )
+        child_args._parent = args  # type: ignore
+        name = Name(
+            long=f"{parent_name}.{param_name_sub}"
+            if naming == "nested"
+            else param_name_sub
+        )
+    else:
+        raise UnsupportedTypeError(
+            param_name, shorten_type_annotation(annotation), obj_name
+        )
+
+    # the following should hold if normalized_annotation is parsable
+    # TODO: double check below for Optional[...]
+    normalized_annotation = cast(type, normalized_annotation)
+
+    return Arg(
+        name=name,
+        type_=normalized_annotation,
+        container_type=container_type,
+        help=docstr_param.desc,
+        required=required,
+        default=Missing if not required else None,
+        default_factory=None,
+        is_positional=positional,
+        is_named=named,
+        is_nary=nary,
+        args=child_args,
+    )
+
+
+def make_args_from_td(
     td: type,
     *,
     program_name: str = "",
@@ -44,12 +134,11 @@ def make_args_from_typeddict(
             Modified in-place if not None.
         parent_name: Name of parent object when recursing with nested naming.
     """
-    from .make_args import get_param_help, make_args_from_class
 
     params = get_type_hints(td, include_extras=True).items()
     hints = get_type_hints(td, include_extras=True)
-    optional_keys: frozenset[str] = td.__optional_keys__  # type: ignore
-    required_keys: frozenset[str] = td.__required_keys__  # type: ignore
+    optional_keys = cast(frozenset[str], td.__optional_keys__)  # type: ignore
+    required_keys = cast(frozenset[str], td.__required_keys__)  # type: ignore
     _, arg_helps = parse_docstring(td)
     obj_name = td.__name__
 
@@ -71,79 +160,18 @@ def make_args_from_typeddict(
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, annotation in params:
-        is_required, normalized_annotation = strip_required(annotation)
-        is_not_required, normalized_annotation = strip_not_required(
-            normalized_annotation
-        )
-        normalized_annotation = normalize_annotation(normalized_annotation)
-
-        required = param_name in required_keys or param_name not in optional_keys
-        # NotRequired[] and Required[] are stronger than total=False/True
-        if is_required:
-            required = True
-        elif is_not_required:
-            required = False
-
-        docstr_param = get_param_help(param_name, annotation, arg_helps)
-
-        param_name_sub = param_name.replace("_", "-")
-
-        positional = False
-        named = True
-
-        nary, container_type, normalized_annotation = get_annotation_naryness(
-            normalized_annotation
-        )
-
-        child_args: Args | None = None
-        if is_parsable(normalized_annotation):
-            if recurse == "child" and naming == "nested":
-                name = Name(long=f"{parent_name}.{param_name_sub}")
-            else:
-                name = make_name(param_name_sub, named, docstr_param, used_short_names)
-        elif recurse:
-            if nary:
-                raise NaryNonRecursableParamError(param_name, obj_name)
-            normalized_annotation = strip_optional(normalized_annotation)
-            if not isinstance(normalized_annotation, type):
-                raise NonClassNonRecursableParamError(
-                    param_name, shorten_type_annotation(annotation), obj_name
-                )
-            child_args = make_args_from_class(
-                normalized_annotation,
-                recurse="child" if recurse else False,
-                naming=naming,
-                kw_only=True,  # children are kw-only for now
-                used_short_names=used_short_names,
-                parent_name=f"{parent_name}.{param_name}",
-            )
-            child_args._parent = args  # type: ignore
-            name = Name(
-                long=f"{parent_name}.{param_name_sub}"
-                if naming == "nested"
-                else param_name_sub
-            )
-        else:
-            raise UnsupportedTypeError(
-                param_name, shorten_type_annotation(annotation), obj_name
-            )
-
-        # the following should hold if normalized_annotation is parsable
-        # TODO: double check below for Optional[...]
-        normalized_annotation = cast(type, normalized_annotation)
-
-        arg = Arg(
-            name=name,
-            type_=normalized_annotation,
-            container_type=container_type,
-            help=docstr_param.desc,
-            required=required,
-            default=Missing if not required else None,
-            default_factory=None,
-            is_positional=positional,
-            is_named=named,
-            is_nary=nary,
-            args=child_args,
+        arg = _make_arg_from_td_param(
+            param_name=param_name,
+            annotation=annotation,
+            obj_name=obj_name,
+            arg_helps=arg_helps,
+            recurse=recurse,
+            naming=naming,
+            used_short_names=used_short_names,
+            required_keys=required_keys,
+            optional_keys=optional_keys,
+            parent_name=parent_name,
+            args=args,
         )
         args.add(arg)
 

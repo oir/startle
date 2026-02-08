@@ -15,13 +15,7 @@ from .._type_utils import (
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
-from ..error import (
-    NaryNonRecursableParamError,
-    NonClassNonRecursableParamError,
-    UnsupportedTypeError,
-    VariadicChildParamError,
-    VariadicNonRecursableParamError,
-)
+from ..error import UnsupportedTypeError, VariadicChildParamError
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
 from .names import (
@@ -31,7 +25,8 @@ from .names import (
     reserve_short_names,
 )
 from .parameter import is_keyword, is_positional, is_variadic
-from .typeddict import make_args_from_typeddict
+from .recursable import check_recursable
+from .typeddict import make_args_from_td
 
 
 def get_param_help(
@@ -53,25 +48,91 @@ def get_param_help(
     return arg_helps[param_key] if param_key else ParamHelp()
 
 
-def check_recursable(
+def _make_arg_from_param(
+    *,
     param_name: str,
     param: Parameter,
-    normalized_annotation: Any,
+    hints: Mapping[str, TypeHint],
     obj_name: str,
-    nary: bool,
-) -> None:
-    """
-    Raise if the given parameter cannot be recursed into, no-op otherwise.
-    """
-    if is_variadic(param):
-        raise VariadicNonRecursableParamError(param_name, obj_name)
-    if nary:
-        raise NaryNonRecursableParamError(param_name, obj_name)
-    normalized_annotation = strip_optional(normalized_annotation)
-    if not isinstance(normalized_annotation, type):
-        raise NonClassNonRecursableParamError(
+    arg_helps: ParamHelps,
+    default_factories: dict[str, Any],
+    recurse: bool | Literal["child"],
+    kw_only: bool,
+    naming: Literal["flat", "nested"],
+    used_short_names: set[str],
+    parent_name: str,
+    args: Args,
+) -> Arg:
+    normalized_annotation = normalize_annotation(hints.get(param_name, str))
+
+    required = param.default is inspect.Parameter.empty
+    default = param.default if not required else None
+
+    default_factory = default_factories.get(param_name, None)
+    docstr_param = get_param_help(param_name, param, arg_helps)
+
+    if recurse == "child" and naming == "nested":
+        param_name_sub = f"{parent_name}.{param_name}".replace("_", "-")
+    else:
+        param_name_sub = param_name.replace("_", "-")
+
+    if recurse == "child" and is_variadic(param):
+        raise VariadicChildParamError(param_name, obj_name)
+
+    positional = is_positional(param) and not kw_only
+    named = is_keyword(param) or kw_only
+
+    nary, container_type, normalized_annotation = get_naryness(
+        param, normalized_annotation
+    )
+
+    child_args: Args | None = None
+    if is_parsable(normalized_annotation):
+        if recurse == "child" and naming == "nested":
+            name = Name(long=param_name_sub)
+        else:
+            name = make_name(param_name_sub, named, docstr_param, used_short_names)
+    elif recurse:
+        check_recursable(param_name, param, normalized_annotation, obj_name, nary)
+        normalized_annotation = strip_optional(normalized_annotation)
+        assert isinstance(normalized_annotation, type), (
+            "Unexpected type form that is not a type!"
+        )
+
+        child_args = make_args_from_class(
+            normalized_annotation,
+            recurse="child" if recurse else False,
+            naming=naming,
+            kw_only=True,  # children are kw-only for now
+            used_short_names=used_short_names,
+            parent_name=f"{parent_name}.{param_name}"
+            if recurse == "child"
+            else param_name,
+        )
+        child_args._parent = args  # type: ignore
+        name = Name(long=param_name_sub)
+    else:
+        raise UnsupportedTypeError(
             param_name, shorten_type_annotation(param.annotation), obj_name
         )
+
+    # the following should hold if normalized_annotation is parsable
+    # TODO: double check below for Optional[...]
+    normalized_annotation = cast(type, normalized_annotation)
+
+    return Arg(
+        name=name,
+        type_=normalized_annotation,
+        container_type=container_type,
+        help=docstr_param.desc,
+        required=required,
+        default=default,
+        default_factory=default_factory,
+        is_positional=positional,
+        is_named=named,
+        is_nary=nary,
+        args=child_args,
+    )
 
 
 def _make_args_from_params(
@@ -127,75 +188,19 @@ def _make_args_from_params(
 
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
-        normalized_annotation = normalize_annotation(hints.get(param_name, str))
-
-        required = param.default is inspect.Parameter.empty
-        default = param.default if not required else None
-
-        default_factory = default_factories.get(param_name, None)
-        docstr_param = get_param_help(param_name, param, arg_helps)
-
-        if recurse == "child" and naming == "nested":
-            param_name_sub = f"{parent_name}.{param_name}".replace("_", "-")
-        else:
-            param_name_sub = param_name.replace("_", "-")
-
-        if recurse == "child" and is_variadic(param):
-            raise VariadicChildParamError(param_name, obj_name)
-
-        positional = is_positional(param) and not kw_only
-        named = is_keyword(param) or kw_only
-
-        nary, container_type, normalized_annotation = get_naryness(
-            param, normalized_annotation
-        )
-
-        child_args: Args | None = None
-        if is_parsable(normalized_annotation):
-            if recurse == "child" and naming == "nested":
-                name = Name(long=param_name_sub)
-            else:
-                name = make_name(param_name_sub, named, docstr_param, used_short_names)
-        elif recurse:
-            check_recursable(param_name, param, normalized_annotation, obj_name, nary)
-            normalized_annotation = strip_optional(normalized_annotation)
-            assert isinstance(normalized_annotation, type), (
-                "Unexpected type form that is not a type!"
-            )
-
-            child_args = make_args_from_class(
-                normalized_annotation,
-                recurse="child" if recurse else False,
-                naming=naming,
-                kw_only=True,  # children are kw-only for now
-                used_short_names=used_short_names,
-                parent_name=f"{parent_name}.{param_name}"
-                if recurse == "child"
-                else param_name,
-            )
-            child_args._parent = args  # type: ignore
-            name = Name(long=param_name_sub)
-        else:
-            raise UnsupportedTypeError(
-                param_name, shorten_type_annotation(param.annotation), obj_name
-            )
-
-        # the following should hold if normalized_annotation is parsable
-        # TODO: double check below for Optional[...]
-        normalized_annotation = cast(type, normalized_annotation)
-
-        arg = Arg(
-            name=name,
-            type_=normalized_annotation,
-            container_type=container_type,
-            help=docstr_param.desc,
-            required=required,
-            default=default,
-            default_factory=default_factory,
-            is_positional=positional,
-            is_named=named,
-            is_nary=nary,
-            args=child_args,
+        arg = _make_arg_from_param(
+            param_name=param_name,
+            param=param,
+            hints=hints,
+            obj_name=obj_name,
+            arg_helps=arg_helps,
+            default_factories=default_factories,
+            recurse=recurse,
+            kw_only=kw_only,
+            naming=naming,
+            used_short_names=used_short_names,
+            parent_name=parent_name,
+            args=args,
         )
         if param.kind is Parameter.VAR_POSITIONAL:
             arg.name = Name()
@@ -295,7 +300,7 @@ def make_args_from_class(
     # TODO: check if cls is a class?
 
     if is_typeddict(cls):
-        return make_args_from_typeddict(
+        return make_args_from_td(
             cls,
             program_name=program_name,
             brief=brief,
