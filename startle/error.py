@@ -271,3 +271,21 @@ class UnexpectedDefaultCommandError(ParserConfigError):
             f"Default command `{default}` is not among the subcommands!"
             f" Available subcommands: {', '.join(available_cmds)}"
         )
+
+
+class CmdsRecurseError(ParserConfigError):
+    """
+    Exception raised when recurse==True for Cmds, which is not yet supported.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("Recurse option is not yet supported for multiple functions.")
+
+
+class SingleFunctionDefaultCommandError(ParserConfigError):
+    """
+    Exception raised when a default command is given for a single function.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("Default subcommand is not supported for a single function!")
