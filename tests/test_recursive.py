@@ -523,7 +523,7 @@ def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
                 ParserConfigError,
                 match=re.escape(
                     f"Option name `sides` is used multiple times in `{f.__name__}()`!"
-                    " Recursive parsing requires unique option names among all levels."
+                    " Recursive parsing with `flat` naming requires unique option names among all levels."
                 ),
             ):
                 check_args(f, [], [], {}, recurse=True)
@@ -551,7 +551,7 @@ def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
                 ParserConfigError,
                 match=re.escape(
                     f"Option name `sides` is used multiple times in `{f.__name__}()`!"
-                    " Recursive parsing requires unique option names among all levels."
+                    " Recursive parsing with `flat` naming requires unique option names among all levels."
                 ),
             ):
                 check_args(f, [], [], {}, recurse=True)

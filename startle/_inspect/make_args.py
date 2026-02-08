@@ -2,12 +2,7 @@ import inspect
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import is_dataclass
 from inspect import Parameter
-from typing import (
-    Any,
-    Literal,
-    cast,
-    get_type_hints,
-)
+from typing import Any, Literal, cast, get_type_hints
 
 from .._docstr import ParamHelp, ParamHelps, parse_docstring
 from .._type_utils import (
@@ -20,7 +15,13 @@ from .._type_utils import (
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
-from ..error import ParserConfigError
+from ..error import (
+    NaryNonRecursableParamError,
+    NonClassNonRecursableParamError,
+    UnsupportedTypeError,
+    VariadicChildParamError,
+    VariadicNonRecursableParamError,
+)
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
 from .names import (
@@ -63,18 +64,13 @@ def check_recursable(
     Raise if the given parameter cannot be recursed into, no-op otherwise.
     """
     if is_variadic(param):
-        raise ParserConfigError(
-            f"Cannot recurse into variadic parameter `{param_name}` in `{obj_name}`!"
-        )
+        raise VariadicNonRecursableParamError(param_name, obj_name)
     if nary:
-        raise ParserConfigError(
-            f"Cannot recurse into n-ary parameter `{param_name}` in `{obj_name}`!"
-        )
+        raise NaryNonRecursableParamError(param_name, obj_name)
     normalized_annotation = strip_optional(normalized_annotation)
     if not isinstance(normalized_annotation, type):
-        raise ParserConfigError(
-            f"Cannot recurse into parameter `{param_name}` of non-class type "
-            f"`{shorten_type_annotation(param.annotation)}` in `{obj_name}`!"
+        raise NonClassNonRecursableParamError(
+            param_name, shorten_type_annotation(param.annotation), obj_name
         )
 
 
@@ -89,8 +85,8 @@ def _make_args_from_params(
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     naming: Literal["flat", "nested"] = "flat",
-    _used_short_names: set[str] | None = None,
-    _parent_name: str = "",
+    used_short_names: set[str] | None = None,
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a list of parameters.
@@ -106,9 +102,9 @@ def _make_args_from_params(
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
         naming: How to name nested arguments when `recurse` is True.
-        _used_short_names: Set of already used short names coming from parent Args.
+        used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     args = Args(brief=brief, program_name=program_name)
 
@@ -122,11 +118,9 @@ def _make_args_from_params(
         recurse=recurse,
         naming=naming,
         kw_only=kw_only,
-        _parent_name=_parent_name,
+        parent_name=parent_name,
     )
-    used_short_names = (
-        _used_short_names if _used_short_names is not None else set[str]()
-    )
+    used_short_names = used_short_names if used_short_names is not None else set[str]()
     used_short_names |= reserve_short_names(
         params, used_names, arg_helps, used_short_names
     )
@@ -142,14 +136,12 @@ def _make_args_from_params(
         docstr_param = get_param_help(param_name, param, arg_helps)
 
         if recurse == "child" and naming == "nested":
-            param_name_sub = f"{_parent_name}.{param_name}".replace("_", "-")
+            param_name_sub = f"{parent_name}.{param_name}".replace("_", "-")
         else:
             param_name_sub = param_name.replace("_", "-")
 
         if recurse == "child" and is_variadic(param):
-            raise ParserConfigError(
-                f"Cannot have variadic parameter `{param_name}` in child Args of `{obj_name}`!"
-            )
+            raise VariadicChildParamError(param_name, obj_name)
 
         positional = is_positional(param) and not kw_only
         named = is_keyword(param) or kw_only
@@ -176,17 +168,16 @@ def _make_args_from_params(
                 recurse="child" if recurse else False,
                 naming=naming,
                 kw_only=True,  # children are kw-only for now
-                _used_short_names=used_short_names,
-                _parent_name=f"{_parent_name}.{param_name}"
+                used_short_names=used_short_names,
+                parent_name=f"{parent_name}.{param_name}"
                 if recurse == "child"
                 else param_name,
             )
             child_args._parent = args  # type: ignore
             name = Name(long=param_name_sub)
         else:
-            raise ParserConfigError(
-                f"Unsupported type `{shorten_type_annotation(param.annotation)}` "
-                f"for parameter `{param_name}` in `{obj_name}`!"
+            raise UnsupportedTypeError(
+                param_name, shorten_type_annotation(param.annotation), obj_name
             )
 
         # the following should hold if normalized_annotation is parsable
@@ -239,7 +230,7 @@ def make_args_from_func(
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     naming: Literal["flat", "nested"] = "flat",
-    _parent_name: str = "",
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a function signature.
@@ -251,7 +242,7 @@ def make_args_from_func(
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
         naming: How to name nested arguments when `recurse` is True.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     # Get the signature of the function
     sig = inspect.signature(func)
@@ -271,7 +262,7 @@ def make_args_from_func(
         recurse=recurse,
         kw_only=kw_only,
         naming=naming,
-        _parent_name=_parent_name,
+        parent_name=parent_name,
     )
 
 
@@ -283,8 +274,8 @@ def make_args_from_class(
     recurse: bool | Literal["child"] = False,
     kw_only: bool = False,
     naming: Literal["flat", "nested"] = "flat",
-    _used_short_names: set[str] | None = None,
-    _parent_name: str = "",
+    used_short_names: set[str] | None = None,
+    parent_name: str = "",
 ) -> Args:
     """
     Create an Args object from a class's `__init__` signature and docstring.
@@ -297,9 +288,9 @@ def make_args_from_class(
             "child" is same as True, but it also indicates that this is not the root Args.
         kw_only: If true, make all parameters keyword-only, regardless of their definition.
         naming: How to name nested arguments when `recurse` is True.
-        _used_short_names: Set of already used short names coming from parent Args.
+        used_short_names: Set of already used short names coming from parent Args.
             Modified in-place if not None.
-        _parent_name: Name of parent object when recursing with nested naming.
+        parent_name: Name of parent object when recursing with nested naming.
     """
     # TODO: check if cls is a class?
 
@@ -310,8 +301,8 @@ def make_args_from_class(
             brief=brief,
             recurse=recurse,
             naming=naming,
-            _used_short_names=_used_short_names,
-            _parent_name=_parent_name,
+            used_short_names=used_short_names,
+            parent_name=parent_name,
         )
 
     params = get_class_initializer_params(cls)
@@ -330,6 +321,6 @@ def make_args_from_class(
         recurse=recurse,
         kw_only=kw_only,
         naming=naming,
-        _used_short_names=_used_short_names,
-        _parent_name=_parent_name,
+        used_short_names=used_short_names,
+        parent_name=parent_name,
     )

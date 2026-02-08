@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from ._metavar import get_metavar
 from ._value_parser import parse
-from .error import ParserConfigError
+from .error import ArgumentKindError, UnsupportedContainerTypeError
 
 if TYPE_CHECKING:
     from .args import Args
@@ -84,9 +84,7 @@ class Arg:
 
     def __post_init__(self):
         if not self.is_positional and not self.is_named:
-            raise ParserConfigError(
-                "An argument should be either positional or named (or both)!"
-            )
+            raise ArgumentKindError()
         if not self.metavar:
             self.metavar = get_metavar(self.type_)
 
@@ -108,7 +106,7 @@ class Arg:
             assert isinstance(container, frozenset), "Programming error!"
             return container | frozenset({value})
         else:
-            raise ParserConfigError("Unsupported container type!")
+            raise UnsupportedContainerTypeError()
 
     def parse(self, value: str | None = None):
         """

@@ -6,7 +6,12 @@ from ._console import console, error, post_error
 from ._inspect.make_args import make_args_from_func
 from .args import Args
 from .cmds import Cmds
-from .error import ParserConfigError, ParserOptionError, ParserValueError
+from .error import (
+    CmdsRecurseError,
+    ParserOptionError,
+    ParserValueError,
+    SingleFunctionDefaultCommandError,
+)
 
 T = TypeVar("T")
 
@@ -51,15 +56,11 @@ def start(
     if isinstance(obj, list) or isinstance(obj, dict):
         obj = cast(list[Callable[..., Any]] | dict[str, Callable[..., Any]], obj)
         if recurse:
-            raise ParserConfigError(
-                "Recurse option is not yet supported for multiple functions."
-            )
+            raise CmdsRecurseError()
         return _start_cmds(obj, name, args, catch, default)
     else:
         if default is not None:
-            raise ParserConfigError(
-                "Default subcommand is not supported for a single function."
-            )
+            raise SingleFunctionDefaultCommandError()
         return _start_func(obj, name, args, catch, recurse, naming)
 
 

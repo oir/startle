@@ -20,8 +20,9 @@ def run_w_explicit_args(
     name: str | None = None,
     catch: bool = True,
     default: str | None = None,
+    recurse: bool = False,
 ) -> None:
-    start(func, name=name, args=args, catch=catch, default=default)
+    start(func, name=name, args=args, catch=catch, default=default, recurse=recurse)
 
 
 def run_w_sys_argv(
@@ -30,10 +31,11 @@ def run_w_sys_argv(
     name: str | None = None,
     catch: bool = True,
     default: str | None = None,
+    recurse: bool = False,
 ) -> None:
     old_argv = sys.argv[1:]
     sys.argv[1:] = args
-    start(func, name=name, catch=catch, default=default)
+    start(func, name=name, catch=catch, default=default, recurse=recurse)
     sys.argv[1:] = old_argv
 
 
