@@ -32,7 +32,6 @@ from .typeddict import make_args_from_td
 
 def _make_arg_from_param(
     *,
-    param_name: str,
     param: Parameter,
     hint: TypeHint,
     help: ParamHelp,
@@ -41,6 +40,7 @@ def _make_arg_from_param(
     args: Args,
     cfg: CommonConfig,
 ) -> Arg:
+    param_name = param.name
     normalized_annotation = normalize_annotation(hint)
 
     required = param.default is inspect.Parameter.empty
@@ -148,7 +148,6 @@ def _make_args_from_params(
     # Iterate over the parameters and add arguments based on kind
     for param_name, param in params:
         arg = _make_arg_from_param(
-            param_name=param_name,
             param=param,
             hint=hints.get(param_name, str),
             help=get_param_help(param_name, param, helps),
