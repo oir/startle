@@ -2,7 +2,7 @@ import inspect
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import is_dataclass
 from inspect import Parameter
-from typing import Any, cast, get_type_hints
+from typing import Any, Literal, cast, get_type_hints
 
 from .._docstr import ParamHelp, ParamHelps, get_param_help, parse_docstring
 from .._type_utils import (
@@ -15,7 +15,12 @@ from .._type_utils import (
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
-from ..error import UnsupportedTypeError, VariadicChildParamError
+from ..error import (
+    HelpCollisionError,
+    NameCollisionError,
+    UnsupportedTypeError,
+    VariadicChildParamError,
+)
 from .classes import get_class_initializer_params
 from .config import CommonConfig
 from .dataclasses import get_default_factories
@@ -25,8 +30,9 @@ from .names import (
     make_name,
     reserve_short_names,
 )
-from .parameter import is_keyword, is_positional, is_variadic
+from .parameter import ParamInfo, is_keyword, is_positional, is_variadic
 from .recursable import check_recursable
+from .tree import TreeNode, gather_subtree, leaves
 from .typeddict import make_args_from_td
 
 
@@ -112,6 +118,229 @@ def _make_arg_from_param(
     )
 
 
+def _check_help_collisions(param_infos: list[ParamInfo]) -> None:
+    """
+    Check for parameters named "help".
+    Raises HelpCollisionError if a collision is detected.
+    """
+    for param_info in param_infos:
+        if param_info.name == "help":
+            raise HelpCollisionError(param_info.owning_obj_name)
+
+
+def _check_parsable(param_infos: list[ParamInfo]) -> None:
+    """
+    Check that all parameters have parsable types.
+    Raises UnsupportedTypeError if an unparsable type is detected.
+    """
+    for param_info in param_infos:
+        if not is_parsable(param_info.normalized_annotation):
+            raise UnsupportedTypeError(
+                param_info.name,
+                shorten_type_annotation(param_info.hint),
+                param_info.owning_obj_name,
+            )
+
+
+def _check_name_collisions(param_infos: list[ParamInfo], obj_name: str = "") -> None:
+    """
+    Check for name collisions among parameters.
+    Raises NameCollisionError if a collision is detected.
+    Only relevant when recursive, and when naming is flat.
+    """
+    seen_names = set[str]()
+    for param_info in param_infos:
+        if param_info.name in seen_names:
+            raise NameCollisionError(
+                param_info.name, obj_name or param_info.owning_obj_name
+            )
+        seen_names.add(param_info.name)
+
+
+def _reserve_short_names(param_infos: list[ParamInfo]):
+    used_short_names = set[str]()
+    short_name_assignments: dict[str, str] = {}
+
+    for param_info in param_infos:
+        if param_info.is_non_var_keyword:
+            name = param_info.name
+            if len(name) == 1:
+                assert name not in used_short_names, (
+                    f"Duplicate short name {name} in {param_info.owning_obj_name}"
+                )
+                used_short_names.add(name)
+                short_name_assignments[name] = name
+
+    for param_info in param_infos:
+        if param_info.is_non_var_keyword:
+            custom_short_name = param_info.help.short_name
+            if custom_short_name and custom_short_name not in used_short_names:
+                used_short_names.add(custom_short_name)
+                short_name_assignments[param_info.name] = custom_short_name
+
+    return used_short_names, short_name_assignments
+
+
+def make_arg_from_param_info(
+    param_info: ParamInfo,
+    name: Name,
+    kw_only: bool = False,
+) -> Arg:
+    return Arg(
+        name=name,
+        type_=param_info.normalized_annotation,  # type: ignore
+        container_type=param_info.container_type,
+        help=param_info.help.desc,
+        required=param_info.is_required,
+        default=param_info.default,
+        default_factory=param_info.default_factory,
+        is_positional=param_info.is_positional and not kw_only,
+        is_named=param_info.is_keyword or kw_only,
+        is_nary=param_info.nary,
+    )
+
+
+def make_args_from_param_infos_flat(
+    param_infos: list[ParamInfo],
+    brief: str = "",
+    program_name: str = "",
+) -> Args:
+    args = Args(brief=brief, program_name=program_name)
+
+    _check_help_collisions(param_infos)
+    _check_parsable(param_infos)
+    used_short_names, short_name_assignments = _reserve_short_names(param_infos)
+
+    for param_info in param_infos:
+        short = short_name_assignments.get(param_info.name, "")
+        if (
+            param_info.is_non_var_keyword
+            and not short
+            and (first_char := param_info.name[0]) not in used_short_names
+        ):
+            used_short_names.add(first_char)
+            short_name_assignments[param_info.name] = first_char
+            short = first_char
+        arg = make_arg_from_param_info(
+            param_info=param_info,
+            name=Name(long=param_info.name.replace("_", "-"), short=short),
+        )
+        if param_info.is_var_positional:
+            arg.name = Name()
+            args.enable_unknown_args(arg)
+        elif param_info.is_var_keyword:
+            arg.name = Name(long="<key>")
+            args.enable_unknown_opts(arg)
+        else:
+            args.add(arg)
+
+    return args
+
+
+def make_args_from_param_infos_recursive(
+    param_infos: list[ParamInfo],
+    brief: str = "",
+    program_name: str = "",
+    naming: Literal["nested", "flat"] = "flat",
+) -> Args:
+    args = Args(brief=brief, program_name=program_name)
+
+    forest = [gather_subtree(param_info) for param_info in param_infos]
+    leaf_param_infos = list(leaves(forest))
+
+    _check_help_collisions(leaf_param_infos)
+    _check_parsable(leaf_param_infos)
+    # Use the first param_info's owning_obj_name as the top-level obj name
+    obj_name = param_infos[0].owning_obj_name if param_infos else ""
+
+    if naming == "nested":
+        used_short_names, short_name_assignments = _reserve_short_names(param_infos)
+    else:
+        _check_name_collisions(leaf_param_infos, obj_name=obj_name)
+        used_short_names, short_name_assignments = _reserve_short_names(
+            leaf_param_infos
+        )
+
+    def traverse(
+        node: TreeNode[ParamInfo],
+        args: Args,
+    ):
+        kw_only = node.parent is not None  # children are kw-only
+
+        if not node.children:
+            assert is_parsable(node.data.normalized_annotation)
+            param_info = node.data
+
+            # Variadic params are not allowed in child Args
+            if kw_only and (param_info.is_var_positional or param_info.is_var_keyword):
+                raise VariadicChildParamError(
+                    param_info.name, param_info.owning_obj_name
+                )
+
+            short = short_name_assignments.get(param_info.name, "")
+            if (
+                param_info.is_non_var_keyword
+                and not short
+                and (first_char := param_info.name[0]) not in used_short_names
+            ):
+                used_short_names.add(first_char)
+                short_name_assignments[param_info.name] = first_char
+                short = first_char
+            arg = make_arg_from_param_info(
+                param_info=param_info,
+                name=Name(long=param_info.name.replace("_", "-"), short=short),
+                kw_only=kw_only,
+            )
+            if param_info.is_var_positional:
+                arg.name = Name()
+                args.enable_unknown_args(arg)
+            elif param_info.is_var_keyword:
+                arg.name = Name(long="<key>")
+                args.enable_unknown_opts(arg)
+            else:
+                args.add(arg)
+        else:
+            child_args = Args()
+            for child in node.children:
+                traverse(child, child_args)
+
+            # We add a positional variadic argument for convenience when parsing
+            # recursively. Child Args will consume its own arguments and leave
+            # the rest for the parent to handle.
+            if node.parent is not None:  # only add to non-root nodes
+                args.enable_unknown_args(
+                    Arg(
+                        name=Name(),
+                        type_=str,
+                        is_positional=True,
+                        is_nary=True,
+                        container_type=list,
+                        help="Additional arguments for the parent parser.",
+                    )
+                )
+
+            actual_type = strip_optional(node.data.normalized_annotation)
+            arg = Arg(
+                name=Name(long=node.data.name.replace("_", "-")),
+                type_=actual_type,  # type: ignore
+                container_type=node.data.container_type,
+                help=node.data.help.desc,
+                required=node.data.is_required,
+                default=node.data.default,
+                default_factory=node.data.default_factory,
+                is_positional=node.data.is_positional and not kw_only,
+                is_named=node.data.is_keyword or kw_only,
+                is_nary=node.data.nary,
+                args=child_args,
+            )
+            args.add(arg)
+
+    for node in forest:
+        traverse(node, args)
+
+    return args
+
+
 def _make_args_from_params(
     *,
     params: Iterable[tuple[str, Parameter]],
@@ -182,6 +411,34 @@ def _make_args_from_params(
     return args
 
 
+def make_param_infos_from_func(func: Callable[..., Any]) -> tuple[list[ParamInfo], str]:
+    """
+    Create an Args object from a function signature.
+
+    Args:
+        func: The function to create Args from.
+        program_name: The name of the program, for help string.
+        cfg: Configuration.
+    """
+    # Get the signature of the function
+    sig = inspect.signature(func)
+    params = sig.parameters.items()
+    hints = get_type_hints(func, include_extras=True)
+
+    # Attempt to parse brief and arg descriptions from docstring
+    brief, arg_helps = parse_docstring(func)
+
+    return [
+        ParamInfo.from_param(
+            param=param,
+            hint=hints.get(param_name, str),
+            help=get_param_help(param_name, param, arg_helps),
+            owning_obj_name=f"{func.__name__}()",
+        )
+        for param_name, param in params
+    ], brief
+
+
 def make_args_from_func(
     func: Callable[..., Any],
     program_name: str = "",
@@ -203,6 +460,22 @@ def make_args_from_func(
     # Attempt to parse brief and arg descriptions from docstring
     brief, arg_helps = parse_docstring(func)
     cfg = cfg or CommonConfig()
+
+    if not cfg.recurse:
+        param_infos, brief = make_param_infos_from_func(func)
+        return make_args_from_param_infos_flat(
+            param_infos=param_infos,
+            brief=brief,
+            program_name=program_name,
+        )
+    elif cfg.naming == "flat":
+        param_infos, brief = make_param_infos_from_func(func)
+        return make_args_from_param_infos_recursive(
+            param_infos=param_infos,
+            brief=brief,
+            program_name=program_name,
+            naming=cfg.naming,
+        )
 
     return _make_args_from_params(
         params=params,
