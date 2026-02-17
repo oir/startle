@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from inspect import Parameter
-from typing import Any
+from typing import Any, Literal, cast
 
 from startle.error import (
     NaryNonRecursableParamError,
@@ -18,37 +18,66 @@ from .._typing import (
     strip_required,
 )
 from ..args import Missing
-from .nary import get_naryness
+from .nary import get_annotation_naryness
+
+ParameterKind = Literal[
+    # _ParameterKind is private, therefore we do this
+    Parameter.POSITIONAL_ONLY,
+    Parameter.POSITIONAL_OR_KEYWORD,
+    Parameter.VAR_POSITIONAL,
+    Parameter.KEYWORD_ONLY,
+    Parameter.VAR_KEYWORD,
+]
 
 
-def is_positional(param: Parameter) -> bool:
-    return param.kind in [
+def is_positional(kind: ParameterKind | None) -> bool:
+    return kind in [
         Parameter.POSITIONAL_ONLY,
         Parameter.POSITIONAL_OR_KEYWORD,
         Parameter.VAR_POSITIONAL,
     ]
 
 
-def is_keyword(param: Parameter) -> bool:
-    return param.kind in [
+def is_keyword(kind: ParameterKind | None) -> bool:
+    return kind in [
         Parameter.KEYWORD_ONLY,
         Parameter.POSITIONAL_OR_KEYWORD,
         Parameter.VAR_KEYWORD,
     ]
 
 
-def is_variadic(param: Parameter) -> bool:
-    return param.kind in [Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD]
+def is_variadic(kind: ParameterKind | None) -> bool:
+    return kind in [Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD]
+
+
+def get_naryness(
+    normalized_annotation: Any, kind: ParameterKind | None = None
+) -> tuple[bool, type | None, Any]:
+    """
+    Get the n-ary status, container type, and normalized annotation for a parameter.
+    For n-ary parameters, the type (updated `normalized_annotation`) will refer
+    to the inner type.
+
+    If inner type is absent from the hint, assume str.
+
+    Returns:
+        `nary`, `container_type`, and `normalized_annotation` as a tuple.
+    """
+    if kind == Parameter.VAR_POSITIONAL:
+        return True, list, normalized_annotation
+
+    return get_annotation_naryness(normalized_annotation)
 
 
 @dataclass(kw_only=True)
 class ParamInfo:
-    param: Parameter | str
+    name: str
     hint: TypeHint
     help: ParamHelp
     default: Any = None
     default_factory: Any = None
     is_required: bool
+    kind: ParameterKind | None = None
 
     normalized_annotation: TypeHint = field(init=False)
     container_type: type | None = field(init=False)
@@ -59,40 +88,25 @@ class ParamInfo:
     def __post_init__(self):
         self.normalized_annotation = normalize_annotation(self.hint)
 
-        param_or_annot = self.param if isinstance(self.param, Parameter) else self.hint
         self.nary, self.container_type, self.normalized_annotation = get_naryness(
-            param_or_annot, self.normalized_annotation
+            self.normalized_annotation, self.kind
         )
-
-    @property
-    def name(self) -> str:
-        if isinstance(self.param, Parameter):
-            return self.param.name
-        else:
-            assert isinstance(self.param, str)
-            return self.param
 
     @property
     def is_positional(self) -> bool:
-        return isinstance(self.param, Parameter) and is_positional(self.param)
+        return is_positional(self.kind)
 
     @property
     def is_keyword(self) -> bool:
-        return isinstance(self.param, str) or is_keyword(self.param)
+        return self.kind is None or is_keyword(self.kind)
 
     @property
     def is_var_positional(self) -> bool:
-        return (
-            isinstance(self.param, Parameter)
-            and self.param.kind == Parameter.VAR_POSITIONAL
-        )
+        return self.kind == Parameter.VAR_POSITIONAL
 
     @property
     def is_var_keyword(self) -> bool:
-        return (
-            isinstance(self.param, Parameter)
-            and self.param.kind == Parameter.VAR_KEYWORD
-        )
+        return self.kind == Parameter.VAR_KEYWORD
 
     @property
     def is_non_var_keyword(self) -> bool:
@@ -105,7 +119,7 @@ class ParamInfo:
         """
         Raise if the parameter cannot be recursed into, no-op otherwise.
         """
-        if isinstance(self.param, Parameter) and is_variadic(self.param):
+        if is_variadic(self.kind):
             raise VariadicNonRecursableParamError(self.name, self.owning_obj_name)
         if self.nary:
             raise NaryNonRecursableParamError(self.name, self.owning_obj_name)
@@ -131,12 +145,13 @@ class ParamInfo:
         default = param.default if not required else None
 
         return ParamInfo(
-            param=param,
+            name=param.name,
             hint=hint,
             help=help,
             default=default,
             default_factory=default_factory,
             is_required=required,
+            kind=cast(ParameterKind, param.kind),
             owning_obj_name=owning_obj_name,
         )
 
@@ -165,11 +180,12 @@ class ParamInfo:
             required = False
 
         return ParamInfo(
-            param=param_name,
+            name=param_name,
             hint=normalized_annotation,
             help=help,
             default=Missing if not required else None,
             default_factory=None,
             is_required=required,
+            kind=None,
             owning_obj_name=owning_obj_name,
         )

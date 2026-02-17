@@ -1,8 +1,7 @@
 from collections.abc import Iterable, MutableSequence, MutableSet, Sequence
-from inspect import Parameter
 from typing import Any, cast, get_args, get_origin
 
-from .._typing import TypeHint, strip_annotated
+from .._typing import strip_annotated
 
 
 def get_annotation_naryness(
@@ -48,23 +47,3 @@ def get_annotation_naryness(
         return True, set, str
 
     return False, None, normalized_annotation
-
-
-def get_naryness(
-    param_or_annot: "Parameter | TypeHint", normalized_annotation: Any
-) -> tuple[bool, type | None, Any]:
-    """
-    Get the n-ary status, container type, and normalized annotation for a parameter.
-    For n-ary parameters, the type (updated `normalized_annotation`) will refer
-    to the inner type.
-
-    If inner type is absent from the hint, assume str.
-
-    Returns:
-        `nary`, `container_type`, and `normalized_annotation` as a tuple.
-    """
-    if isinstance(param_or_annot, Parameter):
-        if param_or_annot.kind is Parameter.VAR_POSITIONAL:
-            return True, list, normalized_annotation
-
-    return get_annotation_naryness(normalized_annotation)
