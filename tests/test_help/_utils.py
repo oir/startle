@@ -5,7 +5,6 @@ from rich.console import Console
 from startle._inspect.make_args import (
     make_args_from_class,
     make_args_from_func,
-    CommonConfig,
 )
 
 VS = "blue"
@@ -24,9 +23,7 @@ def check_help_from_func(
 ):
     console = Console(width=120, highlight=False, force_terminal=True)
     with console.capture() as capture:
-        args = make_args_from_func(
-            f, program_name=program_name, cfg=CommonConfig(recurse=recurse)
-        )
+        args = make_args_from_func(f, program_name=program_name, recurse=recurse)
         args.print_help(console)
     result = capture.get()
 

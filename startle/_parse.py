@@ -3,7 +3,7 @@ from typing import TypeVar
 from rich.console import Console
 from rich.text import Text
 
-from ._inspect.make_args import CommonConfig, make_args_from_class
+from ._inspect.make_args import make_args_from_class
 from .error import ParserOptionError, ParserValueError
 
 T = TypeVar("T")
@@ -36,9 +36,7 @@ def parse(
         An instance of the class `cls`.
     """
     # first, make Args object from the class
-    args_ = make_args_from_class(
-        cls, brief=brief, program_name=name or "", cfg=CommonConfig()
-    )
+    args_ = make_args_from_class(cls, brief=brief, program_name=name or "")
 
     try:
         # then, parse the arguments from the CLI

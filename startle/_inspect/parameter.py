@@ -9,8 +9,8 @@ from .._type_utils import (
     strip_not_required,
     strip_required,
 )
+from ..args import Missing
 from .nary import get_naryness
-from .typeddict import Missing
 
 
 def is_positional(param: Parameter) -> bool:
