@@ -7,7 +7,7 @@ from .._typing import is_typeddict, strip_optional
 from .._value_parser import is_parsable
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
-from .parameter import ParamInfo
+from .param import Param
 
 T = TypeVar("T")
 
@@ -19,7 +19,7 @@ class TreeNode(Generic[T]):
     parent: "TreeNode[T] | None" = None
 
 
-def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
+def gather_children(param_info: Param) -> list[Param]:
     """
     Collect immediate children of a parameter, if any (non-recursively).
     """
@@ -32,7 +32,7 @@ def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
 
     cls = strip_optional(param_info.normalized_annotation)
 
-    children: list[ParamInfo] = []
+    children: list[Param] = []
     if is_typeddict(cls):
         params = get_type_hints(cls, include_extras=True).items()
         optional_keys = cast(frozenset[str], cls.__optional_keys__)  # type: ignore
@@ -40,7 +40,7 @@ def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
         _, arg_helps = parse_docstring(cls)
 
         for param_name, annotation in params:
-            child_info = ParamInfo.from_td_param(
+            child_info = Param.from_td_param(
                 param_name=param_name,
                 annotation=annotation,
                 help=get_param_help(param_name, annotation, arg_helps),
@@ -62,7 +62,7 @@ def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
         assert isinstance(cls, type), "Unexpected type form that is not a type!"
 
         for _, param in params:
-            child_info = ParamInfo.from_param(
+            child_info = Param.from_param(
                 param=param,
                 hint=hints.get(param.name, str),
                 help=get_param_help(param.name, param, arg_helps),
@@ -74,12 +74,12 @@ def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
     return children
 
 
-def gather_subtree(param_info: ParamInfo) -> TreeNode[ParamInfo]:
+def gather_subtree(param_info: Param) -> TreeNode[Param]:
     """
     Collect the entire subtree of a parameter, including itself and all its descendants.
     """
 
-    root = TreeNode[ParamInfo](data=param_info, children=[])
+    root = TreeNode[Param](data=param_info, children=[])
     for child_info in gather_children(param_info):
         child_node = gather_subtree(child_info)
         child_node.parent = root

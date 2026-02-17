@@ -70,7 +70,7 @@ def get_naryness(
 
 
 @dataclass(kw_only=True)
-class ParamInfo:
+class Param:
     name: str
     hint: TypeHint
     help: ParamHelp
@@ -140,11 +140,11 @@ class ParamInfo:
         help: ParamHelp,
         default_factory: Any = None,
         owning_obj_name: str = "",
-    ) -> "ParamInfo":
+    ) -> "Param":
         required = param.default is Parameter.empty
         default = param.default if not required else None
 
-        return ParamInfo(
+        return Param(
             name=param.name,
             hint=hint,
             help=help,
@@ -165,7 +165,7 @@ class ParamInfo:
         in_required_keys: bool,
         in_optional_keys: bool,
         owning_obj_name: str = "",
-    ) -> "ParamInfo":
+    ) -> "Param":
         is_required, normalized_annotation = strip_required(annotation)
         is_not_required, normalized_annotation = strip_not_required(
             normalized_annotation
@@ -179,7 +179,7 @@ class ParamInfo:
         elif is_not_required:
             required = False
 
-        return ParamInfo(
+        return Param(
             name=param_name,
             hint=normalized_annotation,
             help=help,

@@ -20,11 +20,11 @@ from ..error import (
 )
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
-from .parameter import ParamInfo
+from .param import Param
 from .tree import TreeNode, gather_subtree, leaves
 
 
-def _check_help_collisions(param_infos: list[ParamInfo]) -> None:
+def _check_help_collisions(param_infos: list[Param]) -> None:
     """
     Check for parameters named "help".
     Raises HelpCollisionError if a collision is detected.
@@ -34,7 +34,7 @@ def _check_help_collisions(param_infos: list[ParamInfo]) -> None:
             raise HelpCollisionError(param_info.owning_obj_name)
 
 
-def _check_parsable(param_infos: list[ParamInfo]) -> None:
+def _check_parsable(param_infos: list[Param]) -> None:
     """
     Check that all parameters have parsable types.
     Raises UnsupportedTypeError if an unparsable type is detected.
@@ -48,7 +48,7 @@ def _check_parsable(param_infos: list[ParamInfo]) -> None:
             )
 
 
-def _check_name_collisions(param_infos: list[ParamInfo], obj_name: str = "") -> None:
+def _check_name_collisions(param_infos: list[Param], obj_name: str = "") -> None:
     """
     Check for name collisions among parameters.
     Raises NameCollisionError if a collision is detected.
@@ -63,7 +63,7 @@ def _check_name_collisions(param_infos: list[ParamInfo], obj_name: str = "") -> 
         seen_names.add(param_info.name)
 
 
-def _reserve_short_names(param_infos: list[ParamInfo]):
+def _reserve_short_names(param_infos: list[Param]):
     used_short_names = set[str]()
     short_name_assignments: dict[str, str] = {}
 
@@ -87,37 +87,37 @@ def _reserve_short_names(param_infos: list[ParamInfo]):
     return used_short_names, short_name_assignments
 
 
-def make_arg_from_param_info(
-    param_info: ParamInfo,
+def make_arg_from_param(
+    param: Param,
     name: Name,
     kw_only: bool = False,
 ) -> Arg:
     return Arg(
         name=name,
-        type_=param_info.normalized_annotation,  # type: ignore
-        container_type=param_info.container_type,
-        help=param_info.help.desc,
-        required=param_info.is_required,
-        default=param_info.default,
-        default_factory=param_info.default_factory,
-        is_positional=param_info.is_positional and not kw_only,
-        is_named=param_info.is_keyword or kw_only,
-        is_nary=param_info.nary,
+        type_=param.normalized_annotation,  # type: ignore
+        container_type=param.container_type,
+        help=param.help.desc,
+        required=param.is_required,
+        default=param.default,
+        default_factory=param.default_factory,
+        is_positional=param.is_positional and not kw_only,
+        is_named=param.is_keyword or kw_only,
+        is_nary=param.nary,
     )
 
 
-def make_args_from_param_infos_flat(
-    param_infos: list[ParamInfo],
+def make_args_from_params_flat(
+    params: list[Param],
     brief: str = "",
     program_name: str = "",
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
-    _check_help_collisions(param_infos)
-    _check_parsable(param_infos)
-    used_short_names, short_name_assignments = _reserve_short_names(param_infos)
+    _check_help_collisions(params)
+    _check_parsable(params)
+    used_short_names, short_name_assignments = _reserve_short_names(params)
 
-    for param_info in param_infos:
+    for param_info in params:
         short = short_name_assignments.get(param_info.name, "")
         if (
             param_info.is_non_var_keyword
@@ -127,8 +127,8 @@ def make_args_from_param_infos_flat(
             used_short_names.add(first_char)
             short_name_assignments[param_info.name] = first_char
             short = first_char
-        arg = make_arg_from_param_info(
-            param_info=param_info,
+        arg = make_arg_from_param(
+            param=param_info,
             name=Name(long=param_info.name.replace("_", "-"), short=short),
         )
         if param_info.is_var_positional:
@@ -143,24 +143,24 @@ def make_args_from_param_infos_flat(
     return args
 
 
-def make_args_from_param_infos_recursive(
-    param_infos: list[ParamInfo],
+def make_args_from_params_recursive(
+    params: list[Param],
     brief: str = "",
     program_name: str = "",
     naming: Literal["nested", "flat"] = "flat",
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
-    forest = [gather_subtree(param_info) for param_info in param_infos]
+    forest = [gather_subtree(param_info) for param_info in params]
     leaf_param_infos = list(leaves(forest))
 
     _check_help_collisions(leaf_param_infos)
     _check_parsable(leaf_param_infos)
     # Use the first param_info's owning_obj_name as the top-level obj name
-    obj_name = param_infos[0].owning_obj_name if param_infos else ""
+    obj_name = params[0].owning_obj_name if params else ""
 
     if naming == "nested":
-        used_short_names, short_name_assignments = _reserve_short_names(param_infos)
+        used_short_names, short_name_assignments = _reserve_short_names(params)
     else:
         _check_name_collisions(leaf_param_infos, obj_name=obj_name)
         used_short_names, short_name_assignments = _reserve_short_names(
@@ -168,7 +168,7 @@ def make_args_from_param_infos_recursive(
         )
 
     def traverse(
-        node: TreeNode[ParamInfo],
+        node: TreeNode[Param],
         args: Args,
         parent_name: str = "",
     ):
@@ -201,8 +201,8 @@ def make_args_from_param_infos_recursive(
                     short = first_char
                 name = Name(long=param_info.name.replace("_", "-"), short=short)
 
-            arg = make_arg_from_param_info(
-                param_info=param_info,
+            arg = make_arg_from_param(
+                param=param_info,
                 name=name,
                 kw_only=kw_only,
             )
@@ -268,7 +268,7 @@ def make_args_from_param_infos_recursive(
     return args
 
 
-def make_param_infos_from_func(func: Callable[..., Any]) -> tuple[list[ParamInfo], str]:
+def make_params_from_func(func: Callable[..., Any]) -> tuple[list[Param], str]:
     sig = inspect.signature(func)
     params = sig.parameters.items()
     hints = get_type_hints(func, include_extras=True)
@@ -277,7 +277,7 @@ def make_param_infos_from_func(func: Callable[..., Any]) -> tuple[list[ParamInfo
     brief, arg_helps = parse_docstring(func)
 
     return [
-        ParamInfo.from_param(
+        Param.from_param(
             param=param,
             hint=hints.get(param_name, str),
             help=get_param_help(param_name, param, arg_helps),
@@ -304,30 +304,30 @@ def make_args_from_func(
     """
 
     if not recurse:
-        param_infos, brief = make_param_infos_from_func(func)
-        return make_args_from_param_infos_flat(
-            param_infos=param_infos,
+        param_infos, brief = make_params_from_func(func)
+        return make_args_from_params_flat(
+            params=param_infos,
             brief=brief,
             program_name=program_name,
         )
     else:
-        param_infos, brief = make_param_infos_from_func(func)
-        return make_args_from_param_infos_recursive(
-            param_infos=param_infos,
+        param_infos, brief = make_params_from_func(func)
+        return make_args_from_params_recursive(
+            params=param_infos,
             brief=brief,
             program_name=program_name,
             naming=naming,
         )
 
 
-def make_param_infos_from_class(cls: type) -> list[ParamInfo]:
+def make_params_from_class(cls: type) -> list[Param]:
     params = get_class_initializer_params(cls)
     hints = get_type_hints(cls.__init__, include_extras=True)
     _, arg_helps = parse_docstring(cls)
     default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
 
     return [
-        ParamInfo.from_param(
+        Param.from_param(
             param=param,
             hint=hints.get(param.name, str),
             help=get_param_help(param.name, param, arg_helps),
@@ -338,14 +338,14 @@ def make_param_infos_from_class(cls: type) -> list[ParamInfo]:
     ]
 
 
-def make_param_infos_from_td(cls: type) -> list[ParamInfo]:
+def make_params_from_td(cls: type) -> list[Param]:
     params = get_type_hints(cls, include_extras=True).items()
     optional_keys = cast(frozenset[str], cls.__optional_keys__)  # type: ignore
     required_keys = cast(frozenset[str], cls.__required_keys__)  # type: ignore
     _, arg_helps = parse_docstring(cls)
 
     return [
-        ParamInfo.from_td_param(
+        Param.from_td_param(
             param_name=param_name,
             annotation=annotation,
             help=get_param_help(param_name, annotation, arg_helps),
@@ -378,19 +378,19 @@ def make_args_from_class(
     # TODO: check if cls is a class?
 
     if is_typeddict(cls):
-        param_infos = make_param_infos_from_td(cls)
+        param_infos = make_params_from_td(cls)
     else:
-        param_infos = make_param_infos_from_class(cls)
+        param_infos = make_params_from_class(cls)
 
     if not recurse:
-        return make_args_from_param_infos_flat(
-            param_infos=param_infos,
+        return make_args_from_params_flat(
+            params=param_infos,
             brief=brief,
             program_name=program_name,
         )
     else:
-        return make_args_from_param_infos_recursive(
-            param_infos=param_infos,
+        return make_args_from_params_recursive(
+            params=param_infos,
             brief=brief,
             program_name=program_name,
             naming=naming,
