@@ -1,15 +1,13 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, is_dataclass
-from inspect import Parameter
 from typing import Generic, TypeVar, cast, get_type_hints
 
 from .._docstr import get_param_help, parse_docstring
-from .._type_utils import is_typeddict, strip_optional
+from .._typing import is_typeddict, strip_optional
 from .._value_parser import is_parsable
 from .classes import get_class_initializer_params
 from .dataclasses import get_default_factories
 from .parameter import ParamInfo
-from .recursable import check_recursable
 
 T = TypeVar("T")
 
@@ -30,14 +28,7 @@ def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
         # If parsable, we consider this a leaf node.
         return []
 
-    if isinstance(param_info.param, Parameter):
-        check_recursable(
-            param_info.name,
-            param_info.param,
-            param_info.normalized_annotation,
-            param_info.owning_obj_name,
-            param_info.nary,
-        )
+    param_info.check_recursable()
 
     cls = strip_optional(param_info.normalized_annotation)
 
@@ -67,13 +58,16 @@ def gather_children(param_info: ParamInfo) -> list[ParamInfo]:
         _, arg_helps = parse_docstring(cls)
         default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
 
+        # odd pyright quirk, have to repeat this assert
+        assert isinstance(cls, type), "Unexpected type form that is not a type!"
+
         for _, param in params:
             child_info = ParamInfo.from_param(
                 param=param,
                 hint=hints.get(param.name, str),
                 help=get_param_help(param.name, param, arg_helps),
                 default_factory=default_factories.get(param.name, None),
-                owning_obj_name=cls.__name__,  # type: ignore
+                owning_obj_name=cls.__name__,
             )
             children.append(child_info)
 

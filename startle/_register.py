@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from ._type_utils import normalize_annotation
+from ._typing import normalize_annotation
 
 
 def register(

@@ -2,11 +2,19 @@ from dataclasses import dataclass, field
 from inspect import Parameter
 from typing import Any
 
+from startle.error import (
+    NaryNonRecursableParamError,
+    NonClassNonRecursableParamError,
+    VariadicNonRecursableParamError,
+)
+
 from .._docstr import ParamHelp
-from .._type_utils import (
+from .._typing import (
     TypeHint,
     normalize_annotation,
+    shorten_type_annotation,
     strip_not_required,
+    strip_optional,
     strip_required,
 )
 from ..args import Missing
@@ -92,6 +100,22 @@ class ParamInfo:
         Whether this parameter is a non-variadic keyword parameter.
         """
         return self.is_keyword and not self.is_var_keyword
+
+    def check_recursable(self) -> None:
+        """
+        Raise if the parameter cannot be recursed into, no-op otherwise.
+        """
+        if isinstance(self.param, Parameter) and is_variadic(self.param):
+            raise VariadicNonRecursableParamError(self.name, self.owning_obj_name)
+        if self.nary:
+            raise NaryNonRecursableParamError(self.name, self.owning_obj_name)
+        normalized_annotation = strip_optional(self.normalized_annotation)
+        if not isinstance(normalized_annotation, type):
+            raise NonClassNonRecursableParamError(
+                self.name,
+                shorten_type_annotation(self.normalized_annotation),
+                self.owning_obj_name,
+            )
 
     @classmethod
     def from_param(

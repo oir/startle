@@ -7,6 +7,7 @@ from typing import (
     Any,
     Optional,
     TypeAlias,
+    TypeGuard,
     Union,
     get_args,
     get_origin,
@@ -177,9 +178,9 @@ def shorten_type_annotation(annotation: TypeHint) -> str:
     return repr(annotation)
 
 
-def is_typeddict(type_: type) -> bool:
+def is_typeddict(type_: TypeHint) -> TypeGuard[type[dict[str, Any]]]:
     """
-    Return True if the given type is a TypedDict class.
+    Return True if the given type hint is a TypedDict class.
     """
 
     # we only use __annotations__, so merely checking for that

@@ -2,7 +2,7 @@ from collections.abc import Iterable, MutableSequence, MutableSet, Sequence
 from inspect import Parameter
 from typing import Any, cast, get_args, get_origin
 
-from .._type_utils import TypeHint, strip_annotated
+from .._typing import TypeHint, strip_annotated
 
 
 def get_annotation_naryness(

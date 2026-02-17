@@ -7,7 +7,7 @@ from inspect import Parameter
 from textwrap import dedent
 from typing import Any, Literal
 
-from ._type_utils import TypeHint
+from ._typing import TypeHint
 
 
 @dataclass

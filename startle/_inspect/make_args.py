@@ -4,7 +4,7 @@ from dataclasses import is_dataclass
 from typing import Any, Literal, cast, get_type_hints
 
 from .._docstr import get_param_help, parse_docstring
-from .._type_utils import (
+from .._typing import (
     is_typeddict,
     shorten_type_annotation,
     strip_optional,
