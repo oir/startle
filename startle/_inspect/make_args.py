@@ -105,7 +105,7 @@ def make_arg_from_param(
 
 
 def make_args_from_params_flat(
-    params: list[Param],
+    params: Sequence[Param],
     brief: str = "",
     program_name: str = "",
 ) -> Args:
@@ -142,7 +142,7 @@ def make_args_from_params_flat(
 
 
 def make_args_from_params_recursive(
-    params: list[Param],
+    params: Sequence[Param],
     brief: str = "",
     program_name: str = "",
     naming: Literal["nested", "flat"] = "flat",
