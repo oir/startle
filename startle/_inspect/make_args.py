@@ -1,5 +1,5 @@
 import inspect
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import is_dataclass
 from typing import Any, Literal, cast, get_type_hints
 
@@ -24,65 +24,63 @@ from .param import Param
 from .tree import TreeNode, gather_subtree, leaves
 
 
-def _check_help_collisions(param_infos: list[Param]) -> None:
+def _check_help_collisions(params: Sequence[Param]) -> None:
     """
     Check for parameters named "help".
     Raises HelpCollisionError if a collision is detected.
     """
-    for param_info in param_infos:
-        if param_info.name == "help":
-            raise HelpCollisionError(param_info.owning_obj_name)
+    for param in params:
+        if param.name == "help":
+            raise HelpCollisionError(param.owning_obj_name)
 
 
-def _check_parsable(param_infos: list[Param]) -> None:
+def _check_parsable(params: Sequence[Param]) -> None:
     """
     Check that all parameters have parsable types.
     Raises UnsupportedTypeError if an unparsable type is detected.
     """
-    for param_info in param_infos:
-        if not is_parsable(param_info.normalized_annotation):
+    for param in params:
+        if not is_parsable(param.normalized_annotation):
             raise UnsupportedTypeError(
-                param_info.name,
-                shorten_type_annotation(param_info.hint),
-                param_info.owning_obj_name,
+                param.name,
+                shorten_type_annotation(param.hint),
+                param.owning_obj_name,
             )
 
 
-def _check_name_collisions(param_infos: list[Param], obj_name: str = "") -> None:
+def _check_name_collisions(params: Sequence[Param], obj_name: str = "") -> None:
     """
     Check for name collisions among parameters.
     Raises NameCollisionError if a collision is detected.
     Only relevant when recursive, and when naming is flat.
     """
     seen_names = set[str]()
-    for param_info in param_infos:
-        if param_info.name in seen_names:
-            raise NameCollisionError(
-                param_info.name, obj_name or param_info.owning_obj_name
-            )
-        seen_names.add(param_info.name)
+    for param in params:
+        if param.name in seen_names:
+            raise NameCollisionError(param.name, obj_name or param.owning_obj_name)
+        seen_names.add(param.name)
 
 
-def _reserve_short_names(param_infos: list[Param]):
+def _reserve_short_names(params: Sequence[Param]):
     used_short_names = set[str]()
     short_name_assignments: dict[str, str] = {}
 
-    for param_info in param_infos:
-        if param_info.is_non_var_keyword:
-            name = param_info.name
+    for param in params:
+        if param.is_non_var_keyword:
+            name = param.name
             if len(name) == 1:
                 assert name not in used_short_names, (
-                    f"Duplicate short name {name} in {param_info.owning_obj_name}"
+                    f"Duplicate short name {name} in {param.owning_obj_name}"
                 )
                 used_short_names.add(name)
                 short_name_assignments[name] = name
 
-    for param_info in param_infos:
-        if param_info.is_non_var_keyword:
-            custom_short_name = param_info.help.short_name
+    for param in params:
+        if param.is_non_var_keyword:
+            custom_short_name = param.help.short_name
             if custom_short_name and custom_short_name not in used_short_names:
                 used_short_names.add(custom_short_name)
-                short_name_assignments[param_info.name] = custom_short_name
+                short_name_assignments[param.name] = custom_short_name
 
     return used_short_names, short_name_assignments
 
@@ -117,24 +115,24 @@ def make_args_from_params_flat(
     _check_parsable(params)
     used_short_names, short_name_assignments = _reserve_short_names(params)
 
-    for param_info in params:
-        short = short_name_assignments.get(param_info.name, "")
+    for param in params:
+        short = short_name_assignments.get(param.name, "")
         if (
-            param_info.is_non_var_keyword
+            param.is_non_var_keyword
             and not short
-            and (first_char := param_info.name[0]) not in used_short_names
+            and (first_char := param.name[0]) not in used_short_names
         ):
             used_short_names.add(first_char)
-            short_name_assignments[param_info.name] = first_char
+            short_name_assignments[param.name] = first_char
             short = first_char
         arg = make_arg_from_param(
-            param=param_info,
-            name=Name(long=param_info.name.replace("_", "-"), short=short),
+            param=param,
+            name=Name(long=param.name.replace("_", "-"), short=short),
         )
-        if param_info.is_var_positional:
+        if param.is_var_positional:
             arg.name = Name()
             args.enable_unknown_args(arg)
-        elif param_info.is_var_keyword:
+        elif param.is_var_keyword:
             arg.name = Name(long="<key>")
             args.enable_unknown_opts(arg)
         else:
@@ -151,21 +149,19 @@ def make_args_from_params_recursive(
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
-    forest = [gather_subtree(param_info) for param_info in params]
-    leaf_param_infos = list(leaves(forest))
+    forest = [gather_subtree(param) for param in params]
+    leaf_params = list(leaves(forest))
 
-    _check_help_collisions(leaf_param_infos)
-    _check_parsable(leaf_param_infos)
-    # Use the first param_info's owning_obj_name as the top-level obj name
+    _check_help_collisions(leaf_params)
+    _check_parsable(leaf_params)
+    # Use the first param's owning_obj_name as the top-level obj name
     obj_name = params[0].owning_obj_name if params else ""
 
     if naming == "nested":
         used_short_names, short_name_assignments = _reserve_short_names(params)
     else:
-        _check_name_collisions(leaf_param_infos, obj_name=obj_name)
-        used_short_names, short_name_assignments = _reserve_short_names(
-            leaf_param_infos
-        )
+        _check_name_collisions(leaf_params, obj_name=obj_name)
+        used_short_names, short_name_assignments = _reserve_short_names(leaf_params)
 
     def traverse(
         node: TreeNode[Param],
@@ -177,39 +173,37 @@ def make_args_from_params_recursive(
 
         if not node.children:
             assert is_parsable(node.data.normalized_annotation)
-            param_info = node.data
+            param = node.data
 
             # Variadic params are not allowed in child Args
-            if kw_only and (param_info.is_var_positional or param_info.is_var_keyword):
-                raise VariadicChildParamError(
-                    param_info.name, param_info.owning_obj_name
-                )
+            if kw_only and (param.is_var_positional or param.is_var_keyword):
+                raise VariadicChildParamError(param.name, param.owning_obj_name)
 
             if is_nested_child:
                 # In nested naming, child leaves don't get short names
-                param_name_sub = f"{parent_name}.{param_info.name}".replace("_", "-")
+                param_name_sub = f"{parent_name}.{param.name}".replace("_", "-")
                 name = Name(long=param_name_sub)
             else:
-                short = short_name_assignments.get(param_info.name, "")
+                short = short_name_assignments.get(param.name, "")
                 if (
-                    param_info.is_non_var_keyword
+                    param.is_non_var_keyword
                     and not short
-                    and (first_char := param_info.name[0]) not in used_short_names
+                    and (first_char := param.name[0]) not in used_short_names
                 ):
                     used_short_names.add(first_char)
-                    short_name_assignments[param_info.name] = first_char
+                    short_name_assignments[param.name] = first_char
                     short = first_char
-                name = Name(long=param_info.name.replace("_", "-"), short=short)
+                name = Name(long=param.name.replace("_", "-"), short=short)
 
             arg = make_arg_from_param(
-                param=param_info,
+                param=param,
                 name=name,
                 kw_only=kw_only,
             )
-            if param_info.is_var_positional:
+            if param.is_var_positional:
                 arg.name = Name()
                 args.enable_unknown_args(arg)
-            elif param_info.is_var_keyword:
+            elif param.is_var_keyword:
                 arg.name = Name(long="<key>")
                 args.enable_unknown_opts(arg)
             else:
@@ -304,16 +298,16 @@ def make_args_from_func(
     """
 
     if not recurse:
-        param_infos, brief = make_params_from_func(func)
+        params, brief = make_params_from_func(func)
         return make_args_from_params_flat(
-            params=param_infos,
+            params=params,
             brief=brief,
             program_name=program_name,
         )
     else:
-        param_infos, brief = make_params_from_func(func)
+        params, brief = make_params_from_func(func)
         return make_args_from_params_recursive(
-            params=param_infos,
+            params=params,
             brief=brief,
             program_name=program_name,
             naming=naming,
@@ -378,19 +372,19 @@ def make_args_from_class(
     # TODO: check if cls is a class?
 
     if is_typeddict(cls):
-        param_infos = make_params_from_td(cls)
+        params = make_params_from_td(cls)
     else:
-        param_infos = make_params_from_class(cls)
+        params = make_params_from_class(cls)
 
     if not recurse:
         return make_args_from_params_flat(
-            params=param_infos,
+            params=params,
             brief=brief,
             program_name=program_name,
         )
     else:
         return make_args_from_params_recursive(
-            params=param_infos,
+            params=params,
             brief=brief,
             program_name=program_name,
             naming=naming,
