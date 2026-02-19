@@ -5,7 +5,7 @@ from typing import Generic, TypeVar, cast, get_type_hints
 from .._docstr import get_param_help, parse_docstring
 from .._typing import is_typeddict, strip_optional
 from .._value_parser import is_parsable
-from .classes import get_class_initializer_params
+from .classes import get_class_initializer_parameters
 from .dataclasses import get_default_factories
 from .param import Param
 
@@ -19,27 +19,27 @@ class TreeNode(Generic[T]):
     parent: "TreeNode[T] | None" = None
 
 
-def gather_children(param_info: Param) -> list[Param]:
+def gather_children(param: Param) -> list[Param]:
     """
     Collect immediate children of a parameter, if any (non-recursively).
     """
 
-    if is_parsable(param_info.normalized_annotation):
+    if is_parsable(param.normalized_annotation):
         # If parsable, we consider this a leaf node.
         return []
 
-    param_info.check_recursable()
+    param.check_recursable()
 
-    cls = strip_optional(param_info.normalized_annotation)
+    cls = strip_optional(param.normalized_annotation)
 
     children: list[Param] = []
     if is_typeddict(cls):
-        params = get_type_hints(cls, include_extras=True).items()
+        parameters = get_type_hints(cls, include_extras=True).items()
         optional_keys = cast(frozenset[str], cls.__optional_keys__)  # type: ignore
         required_keys = cast(frozenset[str], cls.__required_keys__)  # type: ignore
         _, arg_helps = parse_docstring(cls)
 
-        for param_name, annotation in params:
+        for param_name, annotation in parameters:
             child_info = Param.from_td_param(
                 param_name=param_name,
                 annotation=annotation,
@@ -53,7 +53,7 @@ def gather_children(param_info: Param) -> list[Param]:
         # regular class
         assert isinstance(cls, type), "Unexpected type form that is not a type!"
 
-        params = get_class_initializer_params(cls)
+        parameters = get_class_initializer_parameters(cls)
         hints = get_type_hints(cls.__init__, include_extras=True)
         _, arg_helps = parse_docstring(cls)
         default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
@@ -61,12 +61,12 @@ def gather_children(param_info: Param) -> list[Param]:
         # odd pyright quirk, have to repeat this assert
         assert isinstance(cls, type), "Unexpected type form that is not a type!"
 
-        for _, param in params:
-            child_info = Param.from_param(
-                param=param,
-                hint=hints.get(param.name, str),
-                help=get_param_help(param.name, param, arg_helps),
-                default_factory=default_factories.get(param.name, None),
+        for _, parameter in parameters:
+            child_info = Param.from_parameter(
+                parameter=parameter,
+                hint=hints.get(parameter.name, str),
+                help=get_param_help(parameter.name, parameter, arg_helps),
+                default_factory=default_factories.get(parameter.name, None),
                 owning_obj_name=cls.__name__,
             )
             children.append(child_info)
@@ -74,13 +74,13 @@ def gather_children(param_info: Param) -> list[Param]:
     return children
 
 
-def gather_subtree(param_info: Param) -> TreeNode[Param]:
+def gather_subtree(param: Param) -> TreeNode[Param]:
     """
     Collect the entire subtree of a parameter, including itself and all its descendants.
     """
 
-    root = TreeNode[Param](data=param_info, children=[])
-    for child_info in gather_children(param_info):
+    root = TreeNode[Param](data=param, children=[])
+    for child_info in gather_children(param):
         child_node = gather_subtree(child_info)
         child_node.parent = root
         root.children.append(child_node)

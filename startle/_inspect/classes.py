@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from inspect import Parameter, signature
 
 
-def get_class_initializer_params(cls: type) -> Iterable[tuple[str, Parameter]]:
+def get_class_initializer_parameters(cls: type) -> Iterable[tuple[str, Parameter]]:
     """
     Get the parameters of the class's `__init__` method, excluding `self`.
     """

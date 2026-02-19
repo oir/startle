@@ -132,26 +132,26 @@ class Param:
             )
 
     @classmethod
-    def from_param(
+    def from_parameter(
         cls,
         *,
-        param: Parameter,
+        parameter: Parameter,
         hint: TypeHint,
         help: ParamHelp,
         default_factory: Any = None,
         owning_obj_name: str = "",
     ) -> "Param":
-        required = param.default is Parameter.empty
-        default = param.default if not required else None
+        required = parameter.default is Parameter.empty
+        default = parameter.default if not required else None
 
         return Param(
-            name=param.name,
+            name=parameter.name,
             hint=hint,
             help=help,
             default=default,
             default_factory=default_factory,
             is_required=required,
-            kind=cast(ParameterKind, param.kind),
+            kind=cast(ParameterKind, parameter.kind),
             owning_obj_name=owning_obj_name,
         )
 

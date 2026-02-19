@@ -18,7 +18,7 @@ from ..error import (
     UnsupportedTypeError,
     VariadicChildParamError,
 )
-from .classes import get_class_initializer_params
+from .classes import get_class_initializer_parameters
 from .dataclasses import get_default_factories
 from .param import Param
 from .tree import TreeNode, gather_subtree, leaves
@@ -271,8 +271,8 @@ def make_params_from_func(func: Callable[..., Any]) -> tuple[list[Param], str]:
     brief, arg_helps = parse_docstring(func)
 
     return [
-        Param.from_param(
-            param=param,
+        Param.from_parameter(
+            parameter=param,
             hint=hints.get(param_name, str),
             help=get_param_help(param_name, param, arg_helps),
             owning_obj_name=f"{func.__name__}()",
@@ -315,14 +315,14 @@ def make_args_from_func(
 
 
 def make_params_from_class(cls: type) -> list[Param]:
-    params = get_class_initializer_params(cls)
+    params = get_class_initializer_parameters(cls)
     hints = get_type_hints(cls.__init__, include_extras=True)
     _, arg_helps = parse_docstring(cls)
     default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
 
     return [
-        Param.from_param(
-            param=param,
+        Param.from_parameter(
+            parameter=param,
             hint=hints.get(param.name, str),
             help=get_param_help(param.name, param, arg_helps),
             owning_obj_name=f"{cls.__name__}",  # type: ignore
