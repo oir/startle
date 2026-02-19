@@ -4,11 +4,7 @@ from dataclasses import is_dataclass
 from typing import Any, Literal, cast, get_type_hints
 
 from .._docstr import get_param_help, parse_docstring
-from .._typing import (
-    is_typeddict,
-    shorten_type_annotation,
-    strip_optional,
-)
+from .._typing import is_typeddict, shorten_type_annotation, strip_optional
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
@@ -18,8 +14,7 @@ from ..error import (
     UnsupportedTypeError,
     VariadicChildParamError,
 )
-from .classes import get_class_initializer_parameters
-from .dataclasses import get_default_factories
+from .classes import get_default_factories, get_initializer_parameters
 from .param import Param
 from .tree import TreeNode, gather_subtree, leaves
 
@@ -85,11 +80,7 @@ def _reserve_short_names(params: Sequence[Param]):
     return used_short_names, short_name_assignments
 
 
-def make_arg_from_param(
-    param: Param,
-    name: Name,
-    kw_only: bool = False,
-) -> Arg:
+def make_arg_from_param(param: Param, name: Name, kw_only: bool = False) -> Arg:
     return Arg(
         name=name,
         type_=param.normalized_annotation,  # type: ignore
@@ -100,14 +91,12 @@ def make_arg_from_param(
         default_factory=param.default_factory,
         is_positional=param.is_positional and not kw_only,
         is_named=param.is_keyword or kw_only,
-        is_nary=param.nary,
+        is_nary=param.is_nary,
     )
 
 
 def make_args_from_params_flat(
-    params: Sequence[Param],
-    brief: str = "",
-    program_name: str = "",
+    params: Sequence[Param], brief: str = "", program_name: str = ""
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
 
@@ -163,11 +152,7 @@ def make_args_from_params_recursive(
         _check_name_collisions(leaf_params, obj_name=obj_name)
         used_short_names, short_name_assignments = _reserve_short_names(leaf_params)
 
-    def traverse(
-        node: TreeNode[Param],
-        args: Args,
-        parent_name: str = "",
-    ):
+    def traverse(node: TreeNode[Param], args: Args, parent_name: str = ""):
         kw_only = node.parent is not None  # children are kw-only
         is_nested_child = naming == "nested" and kw_only
 
@@ -251,7 +236,7 @@ def make_args_from_params_recursive(
                 default_factory=node.data.default_factory,
                 is_positional=node.data.is_positional and not kw_only,
                 is_named=node.data.is_keyword or kw_only,
-                is_nary=node.data.nary,
+                is_nary=node.data.is_nary,
                 args=child_args,
             )
             args.add(arg)
@@ -274,7 +259,7 @@ def make_params_from_func(func: Callable[..., Any]) -> tuple[list[Param], str]:
         Param.from_parameter(
             parameter=param,
             hint=hints.get(param_name, str),
-            help=get_param_help(param_name, param, arg_helps),
+            help=get_param_help(param, arg_helps),
             owning_obj_name=f"{func.__name__}()",
         )
         for param_name, param in params
@@ -315,7 +300,7 @@ def make_args_from_func(
 
 
 def make_params_from_class(cls: type) -> list[Param]:
-    params = get_class_initializer_parameters(cls)
+    params = get_initializer_parameters(cls)
     hints = get_type_hints(cls.__init__, include_extras=True)
     _, arg_helps = parse_docstring(cls)
     default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
@@ -324,7 +309,7 @@ def make_params_from_class(cls: type) -> list[Param]:
         Param.from_parameter(
             parameter=param,
             hint=hints.get(param.name, str),
-            help=get_param_help(param.name, param, arg_helps),
+            help=get_param_help(param, arg_helps),
             owning_obj_name=f"{cls.__name__}",  # type: ignore
             default_factory=default_factories.get(param.name, None),
         )
@@ -342,7 +327,7 @@ def make_params_from_td(cls: type) -> list[Param]:
         Param.from_td_param(
             param_name=param_name,
             annotation=annotation,
-            help=get_param_help(param_name, annotation, arg_helps),
+            help=arg_helps.get(param_name),
             in_required_keys=param_name in required_keys,
             in_optional_keys=param_name in optional_keys,
             owning_obj_name=f"{cls.__name__}",

@@ -2,11 +2,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass, is_dataclass
 from typing import Generic, TypeVar, cast, get_type_hints
 
-from .._docstr import get_param_help, parse_docstring
+from .._docstr import ParamHelp, parse_docstring
 from .._typing import is_typeddict, strip_optional
 from .._value_parser import is_parsable
-from .classes import get_class_initializer_parameters
-from .dataclasses import get_default_factories
+from .classes import get_default_factories, get_initializer_parameters
 from .param import Param
 
 T = TypeVar("T")
@@ -43,7 +42,7 @@ def gather_children(param: Param) -> list[Param]:
             child_info = Param.from_td_param(
                 param_name=param_name,
                 annotation=annotation,
-                help=get_param_help(param_name, annotation, arg_helps),
+                help=arg_helps.get(param_name, ParamHelp()),
                 in_required_keys=param_name in required_keys,
                 in_optional_keys=param_name in optional_keys,
                 owning_obj_name=cls.__name__,
@@ -53,7 +52,7 @@ def gather_children(param: Param) -> list[Param]:
         # regular class
         assert isinstance(cls, type), "Unexpected type form that is not a type!"
 
-        parameters = get_class_initializer_parameters(cls)
+        parameters = get_initializer_parameters(cls)
         hints = get_type_hints(cls.__init__, include_extras=True)
         _, arg_helps = parse_docstring(cls)
         default_factories = get_default_factories(cls) if is_dataclass(cls) else {}
@@ -65,7 +64,7 @@ def gather_children(param: Param) -> list[Param]:
             child_info = Param.from_parameter(
                 parameter=parameter,
                 hint=hints.get(parameter.name, str),
-                help=get_param_help(parameter.name, parameter, arg_helps),
+                help=arg_helps.get(parameter.name),
                 default_factory=default_factories.get(parameter.name, None),
                 owning_obj_name=cls.__name__,
             )

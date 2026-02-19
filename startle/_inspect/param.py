@@ -71,6 +71,25 @@ def get_naryness(
 
 @dataclass(kw_only=True)
 class Param:
+    """
+    Represents a parameter with its metadata, either from a function signature or a TypedDict definition.
+
+    Attributes:
+        name: The name of the parameter.
+        hint: The type hint of the parameter.
+        help: The help information for the parameter, including description and short name.
+        default: The default value of the parameter, if any.
+        default_factory: The default factory for the parameter, if any (used for dataclasses).
+        is_required: Whether the parameter is required.
+            Note that TypedDict parameters can be required or optional regardless of whether they have defaults.
+        kind: The kind of the parameter (positional-only, keyword-only, variadic, etc.), if this
+            parameter comes from a function signature, None otherwise.
+        normalized_annotation: The normalized type hint of the parameter, computed from `hint`.
+        container_type: If the parameter is n-ary, the type of the container (e.g. list, tuple, set), None otherwise.
+        is_nary: Whether the parameter is n-ary (e.g. *args, List[int], etc.), computed from `hint` and `kind`.
+        owning_obj_name: The name of the owning object (function or class) for error messages.
+    """
+
     name: str
     hint: TypeHint
     help: ParamHelp
@@ -81,14 +100,14 @@ class Param:
 
     normalized_annotation: TypeHint = field(init=False)
     container_type: type | None = field(init=False)
-    nary: bool = field(init=False)
+    is_nary: bool = field(init=False)
 
     owning_obj_name: str = ""
 
     def __post_init__(self):
         self.normalized_annotation = normalize_annotation(self.hint)
 
-        self.nary, self.container_type, self.normalized_annotation = get_naryness(
+        self.is_nary, self.container_type, self.normalized_annotation = get_naryness(
             self.normalized_annotation, self.kind
         )
 
@@ -121,7 +140,7 @@ class Param:
         """
         if is_variadic(self.kind):
             raise VariadicNonRecursableParamError(self.name, self.owning_obj_name)
-        if self.nary:
+        if self.is_nary:
             raise NaryNonRecursableParamError(self.name, self.owning_obj_name)
         normalized_annotation = strip_optional(self.normalized_annotation)
         if not isinstance(normalized_annotation, type):
@@ -137,7 +156,7 @@ class Param:
         *,
         parameter: Parameter,
         hint: TypeHint,
-        help: ParamHelp,
+        help: ParamHelp | None = None,
         default_factory: Any = None,
         owning_obj_name: str = "",
     ) -> "Param":
@@ -147,7 +166,7 @@ class Param:
         return Param(
             name=parameter.name,
             hint=hint,
-            help=help,
+            help=help or ParamHelp(),
             default=default,
             default_factory=default_factory,
             is_required=required,
@@ -161,7 +180,7 @@ class Param:
         *,
         param_name: str,
         annotation: type,
-        help: ParamHelp,
+        help: ParamHelp | None = None,
         in_required_keys: bool,
         in_optional_keys: bool,
         owning_obj_name: str = "",
@@ -182,7 +201,7 @@ class Param:
         return Param(
             name=param_name,
             hint=normalized_annotation,
-            help=help,
+            help=help or ParamHelp(),
             default=Missing if not required else None,
             default_factory=None,
             is_required=required,

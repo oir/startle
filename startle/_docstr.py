@@ -7,8 +7,6 @@ from inspect import Parameter
 from textwrap import dedent
 from typing import Any, Literal
 
-from ._typing import TypeHint
-
 
 @dataclass
 class ParamHelp:
@@ -135,20 +133,16 @@ def _(cls: type) -> tuple[str, ParamHelps]:
     return _parse_docstring(docstring, "class")
 
 
-def get_param_help(
-    param_name: str,
-    param: "Parameter | TypeHint",
-    arg_helps: ParamHelps,
-) -> ParamHelp:
+def get_param_help(param: Parameter, arg_helps: ParamHelps) -> ParamHelp:
     param_key: str | None = None
-    if param_name in arg_helps:
-        param_key = param_name
+    if param.name in arg_helps:
+        param_key = param.name
     elif isinstance(param, Parameter):
-        if param.kind is Parameter.VAR_POSITIONAL and f"*{param_name}" in arg_helps:
+        if param.kind is Parameter.VAR_POSITIONAL and f"*{param.name}" in arg_helps:
             # admit both "arg" and "*arg" as valid names
-            param_key = f"*{param_name}"
-        elif param.kind is Parameter.VAR_KEYWORD and f"**{param_name}" in arg_helps:
+            param_key = f"*{param.name}"
+        elif param.kind is Parameter.VAR_KEYWORD and f"**{param.name}" in arg_helps:
             # admit both "arg" and "**arg" as valid names
-            param_key = f"**{param_name}"
+            param_key = f"**{param.name}"
 
     return arg_helps[param_key] if param_key else ParamHelp()

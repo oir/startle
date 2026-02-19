@@ -9,7 +9,7 @@ from typing import (
 )
 
 from pytest import mark, raises
-from startle._inspect.dataclasses import get_default_factories
+from startle._inspect.classes import get_default_factories
 from startle._typing import (
     normalize_annotation,
     shorten_type_annotation,
