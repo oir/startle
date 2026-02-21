@@ -2,14 +2,30 @@ import re
 from collections.abc import Iterable, MutableSequence, MutableSet, Sequence
 from typing import (
     Any,
-    Tuple as TyTuple,
-    List as TyList,
-    Iterable as TyIterable,
-    Sequence as TySequence,
-    Set as TySet,
+)
+from typing import (
     FrozenSet as TyFrozenSet,
+)
+from typing import (
+    Iterable as TyIterable,
+)
+from typing import (
+    List as TyList,
+)
+from typing import (
     MutableSequence as TyMutableSequence,
+)
+from typing import (
     MutableSet as TyMutableSet,
+)
+from typing import (
+    Sequence as TySequence,
+)
+from typing import (
+    Set as TySet,
+)
+from typing import (
+    Tuple as TyTuple,
 )
 
 from pytest import mark, raises

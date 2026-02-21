@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from pytest import mark, raises, CaptureFixture
+from pytest import CaptureFixture, mark, raises
 from startle.error import ParserConfigError, ParserOptionError
 
 from ._utils import (
