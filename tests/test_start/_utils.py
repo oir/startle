@@ -2,7 +2,7 @@ import sys
 from collections.abc import Callable
 from typing import Any
 
-from pytest import raises, CaptureFixture
+from pytest import CaptureFixture, raises
 from startle import start
 
 

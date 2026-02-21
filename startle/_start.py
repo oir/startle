@@ -90,9 +90,7 @@ def _start_func(
         The return value of the function `func`.
     """
     # first, make Args object from the function
-    args_ = make_args_from_func(
-        func, program_name=name or "", recurse=recurse, naming=naming
-    )
+    args_ = make_args_from_func(func, name or "", recurse=recurse, naming=naming)
 
     try:
         # then, parse the arguments from the CLI
@@ -148,7 +146,7 @@ def _start_cmds(
     # first, make Cmds object from the functions
     cmds = Cmds(
         {
-            cmd_name: make_args_from_func(func, program_name=cmd_prog_name(cmd_name))
+            cmd_name: make_args_from_func(func, cmd_prog_name(cmd_name))
             for cmd_name, func in cmd2func.items()
         },
         program_name=name or "",

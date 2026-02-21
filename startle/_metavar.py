@@ -4,7 +4,7 @@ from inspect import isclass
 from pathlib import Path
 from typing import Any, Literal, get_args, get_origin
 
-from ._type_utils import strip_optional
+from ._typing import strip_optional
 
 METAVARS: dict[Any, str | list[str]] = {
     int: "int",

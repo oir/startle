@@ -54,7 +54,7 @@ args = ["-ra", "-q"]
 python = ["3.14", "3.13", "3.12", "3.11", "3.10"]
 
 [tool.hatch.envs.hatch-test.overrides]
-matrix.python.extra-args = { value = ["--ignore=tests/test_type_alias.py"], if = ["3.10", "3.11"] }
+matrix.python.extra-args = { value = ["--ignore=tests/test_type_alias/test_type_alias.py"], if = ["3.10", "3.11"] }
 
 [tool.hatch.envs.hatch-test.scripts]
 run = 'pytest{env:HATCH_TEST_ARGS:} {args}'
@@ -75,7 +75,7 @@ select = ["B", "E", "F", "I", "RUF", "UP", "DOC102", "DOC202", "DOC403", "DOC502
 ignore = ["E501", "RUF001", "RUF002"]
 
 [tool.ruff.lint.per-file-ignores]
-"startle/_type_utils.py" = ["UP007", "UP045"]
+"startle/_typing.py" = ["UP007", "UP045"]
 
 
 [tool.pytest.ini_options]

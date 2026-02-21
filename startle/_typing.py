@@ -1,13 +1,16 @@
 import inspect
 import sys
 import types
+from collections.abc import Iterable, MutableSequence, MutableSet, Sequence
 from typing import (
     TYPE_CHECKING,
     Annotated,
     Any,
     Optional,
     TypeAlias,
+    TypeGuard,
     Union,
+    cast,
     get_args,
     get_origin,
 )
@@ -135,13 +138,13 @@ def normalize_union_type(annotation: TypeHint) -> TypeHint:
     return annotation
 
 
-def normalize_annotation(annotation: TypeHint) -> TypeHint:
+def normalize(hint: TypeHint) -> TypeHint:
     """
     Normalize a type annotation by stripping Annotated, resolving type aliases,
     and unifying Union and Optional types.
     """
     prev: Any = None
-    curr: Any = annotation
+    curr: Any = hint
     while prev != curr:
         prev = curr
         curr = strip_annotated(curr)
@@ -150,36 +153,39 @@ def normalize_annotation(annotation: TypeHint) -> TypeHint:
     return curr
 
 
-def shorten_type_annotation(annotation: TypeHint) -> str:
-    origin = get_origin(annotation)
+def shorten(hint: TypeHint) -> str:
+    """
+    Shorten a type annotation for error messages.
+    """
+    origin = get_origin(hint)
     if origin is None:
         # It's a simple type, return its name
-        if inspect.isclass(annotation):
-            return annotation.__name__
-        return repr(annotation)
+        if inspect.isclass(hint):
+            return hint.__name__
+        return repr(hint)
 
     if origin is Union or origin is types.UnionType:
-        args = get_args(annotation)
+        args = get_args(hint)
         if type(None) in args:
             args = tuple([arg for arg in args if arg is not type(None)])
             if len(args) == 1:
-                return f"{shorten_type_annotation(args[0])} | None"
-            return " | ".join(shorten_type_annotation(arg) for arg in args) + " | None"
+                return f"{shorten(args[0])} | None"
+            return " | ".join(shorten(arg) for arg in args) + " | None"
         else:
-            return " | ".join(shorten_type_annotation(arg) for arg in args)
+            return " | ".join(shorten(arg) for arg in args)
 
     # It's a generic type, process its arguments
-    args = get_args(annotation)
+    args = get_args(hint)
     if args:
-        args_str = ", ".join(shorten_type_annotation(arg) for arg in args)
+        args_str = ", ".join(shorten(arg) for arg in args)
         return f"{origin.__name__}[{args_str}]"
 
-    return repr(annotation)
+    return repr(hint)
 
 
-def is_typeddict(type_: type) -> bool:
+def is_typeddict(type_: TypeHint) -> TypeGuard[type[dict[str, Any]]]:
     """
-    Return True if the given type is a TypedDict class.
+    Return True if the given type hint is a TypedDict class.
     """
 
     # we only use __annotations__, so merely checking for that
@@ -189,3 +195,44 @@ def is_typeddict(type_: type) -> bool:
         and issubclass(type_, dict)
         and hasattr(type_, "__annotations__")  # type: ignore
     )
+
+
+def strip_container(hint: "TypeHint | type") -> tuple[type | None, Any]:
+    """
+    Split a sequential container type hint into its container type and inner type.
+    For example, given list[int], return (list, int).
+    If inner type is absent from the hint, assumes `str`.
+
+    Returns:
+        `container type`, and `inner type` as a tuple.
+    """
+    orig = get_origin(hint)
+    args_ = get_args(hint)
+
+    if orig in [list, set, frozenset]:
+        return orig, strip_annotated(args_[0]) if args_ else str
+    if orig is tuple and len(args_) == 2 and args_[1] is ...:
+        return orig, strip_annotated(args_[0]) if args_ else str
+    if orig is tuple and not args_:
+        return orig, str
+    if hint in [list, tuple, set, frozenset]:
+        container_type = cast(type, hint)
+        return container_type, str
+
+    # handle abstract collections
+    if orig in [MutableSequence]:
+        return list, strip_annotated(args_[0]) if args_ else str
+    if hint in [MutableSequence]:
+        return list, str
+
+    if orig in [Sequence, Iterable]:
+        return tuple, strip_annotated(args_[0]) if args_ else str
+    if hint in [Sequence, Iterable]:
+        return tuple, str
+
+    if orig in [MutableSet]:
+        return set, strip_annotated(args_[0]) if args_ else str
+    if hint in [MutableSet]:
+        return set, str
+
+    return None, hint

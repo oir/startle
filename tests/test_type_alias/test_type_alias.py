@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.12
-
 """
 This file needs to be skipped entirely in Python < 3.12 because it uses
 the new `type` syntax for type aliases, it is a syntax error in older versions,
@@ -17,8 +15,8 @@ from startle._metavar import METAVARS
 from startle._value_parser import PARSERS
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
-from ._utils import check_args
-from .test_parse_class import check_parse_exits
+from .._utils import check_args
+from ..test_parse_class import check_parse_exits
 
 type MyFloat = float
 type MyStr = str
