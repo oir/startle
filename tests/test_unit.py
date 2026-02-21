@@ -1,18 +1,12 @@
 import re
 import sys
-from typing import (
-    Any,
-    List,
-    Literal,
-    Optional,
-    Union,
-)
+from typing import Any, List, Literal, Optional, Union
 
 from pytest import mark, raises
 from startle._inspect.classes import get_default_factories
 from startle._typing import (
-    normalize_annotation,
-    shorten_type_annotation,
+    normalize,
+    shorten,
     strip_not_required,
     strip_optional,
     strip_required,
@@ -22,19 +16,19 @@ from startle.args import Args
 from startle.error import ParserConfigError
 
 
-def test_normalize_annotation():
-    assert normalize_annotation(int) is int
-    assert normalize_annotation(Union[int, None]) == Optional[int]
-    assert normalize_annotation(int | None) == Optional[int]
-    assert normalize_annotation(Optional[int]) == Optional[int]
+def test_normalize():
+    assert normalize(int) is int
+    assert normalize(Union[int, None]) == Optional[int]
+    assert normalize(int | None) == Optional[int]
+    assert normalize(Optional[int]) == Optional[int]
 
-    assert normalize_annotation(Union[str, float]) == Union[str, float]
-    assert normalize_annotation(str | float) == Union[str, float]
+    assert normalize(Union[str, float]) == Union[str, float]
+    assert normalize(str | float) == Union[str, float]
 
 
 def test_strip_optional():
     def normalize_strip_optional(type_: Any) -> Any:
-        return strip_optional(normalize_annotation(type_))
+        return strip_optional(normalize(type_))
 
     assert normalize_strip_optional(int) is int
     assert normalize_strip_optional(Union[int, None]) is int
@@ -49,36 +43,36 @@ def test_strip_optional():
     assert normalize_strip_optional(str | float) == Union[str, float]
 
 
-def test_shorten_type_annotation():
-    assert shorten_type_annotation(int) == "int"
-    assert shorten_type_annotation(str) == "str"
-    assert shorten_type_annotation(float) == "float"
-    assert shorten_type_annotation(bool) == "bool"
+def test_shorten():
+    assert shorten(int) == "int"
+    assert shorten(str) == "str"
+    assert shorten(float) == "float"
+    assert shorten(bool) == "bool"
 
-    assert shorten_type_annotation(Union[int, str]) == "int | str"
-    assert shorten_type_annotation(str | float) == "str | float"
-    assert shorten_type_annotation(Union[str, float]) == "str | float"
-    assert shorten_type_annotation(Union[int, None]) == "int | None"
-    assert shorten_type_annotation(Optional[int]) == "int | None"
+    assert shorten(Union[int, str]) == "int | str"
+    assert shorten(str | float) == "str | float"
+    assert shorten(Union[str, float]) == "str | float"
+    assert shorten(Union[int, None]) == "int | None"
+    assert shorten(Optional[int]) == "int | None"
 
-    assert shorten_type_annotation(str | float | None) == "str | float | None"
-    assert shorten_type_annotation(str | None | float) == "str | float | None"
-    assert shorten_type_annotation(None | str | float) == "str | float | None"
-    assert shorten_type_annotation(Union[str, float, None]) == "str | float | None"
-    assert shorten_type_annotation(Union[str, None, float]) == "str | float | None"
-    assert shorten_type_annotation(Optional[str | float]) == "str | float | None"
+    assert shorten(str | float | None) == "str | float | None"
+    assert shorten(str | None | float) == "str | float | None"
+    assert shorten(None | str | float) == "str | float | None"
+    assert shorten(Union[str, float, None]) == "str | float | None"
+    assert shorten(Union[str, None, float]) == "str | float | None"
+    assert shorten(Optional[str | float]) == "str | float | None"
 
-    assert shorten_type_annotation(list[int]) == "list[int]"
-    assert shorten_type_annotation(List[int]) == "list[int]"  # noqa
-    assert shorten_type_annotation(List[int | None]) == "list[int | None]"  # noqa
-    assert shorten_type_annotation(list[int | None] | None) == "list[int | None] | None"
-    assert shorten_type_annotation(list) == "list"  # type: ignore
-    assert shorten_type_annotation(List) == "typing.List"  # TODO:  # noqa
-    assert shorten_type_annotation(Any) in ["Any", "typing.Any"]  # TODO:
-    assert shorten_type_annotation(list[list]) == "list[list]"  # type: ignore
+    assert shorten(list[int]) == "list[int]"
+    assert shorten(List[int]) == "list[int]"  # noqa
+    assert shorten(List[int | None]) == "list[int | None]"  # noqa
+    assert shorten(list[int | None] | None) == "list[int | None] | None"
+    assert shorten(list) == "list"  # type: ignore
+    assert shorten(List) == "typing.List"  # TODO:  # noqa
+    assert shorten(Any) in ["Any", "typing.Any"]  # TODO:
+    assert shorten(list[list]) == "list[list]"  # type: ignore
 
-    assert shorten_type_annotation(Literal[1]) == "Literal[1]"
-    assert shorten_type_annotation(Literal["a"]) == "Literal['a']"
+    assert shorten(Literal[1]) == "Literal[1]"
+    assert shorten(Literal["a"]) == "Literal['a']"
 
 
 def test_arg_properties():

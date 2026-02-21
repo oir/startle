@@ -20,16 +20,16 @@ class TreeNode(Generic[T]):
 
 def gather_children(param: Param) -> list[Param]:
     """
-    Collect immediate children of a parameter, if any (non-recursively).
+    Collect immediate children of a parameter (non-recursively).
     """
 
-    if is_parsable(param.normalized_annotation):
+    if is_parsable(param.normalized_hint):
         # If parsable, we consider this a leaf node.
         return []
 
     param.check_recursable()
 
-    cls = strip_optional(param.normalized_annotation)
+    cls = strip_optional(param.normalized_hint)
 
     children: list[Param] = []
     if is_typeddict(cls):

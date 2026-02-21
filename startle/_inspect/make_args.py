@@ -4,7 +4,7 @@ from dataclasses import is_dataclass
 from typing import Any, Literal, cast, get_type_hints
 
 from .._docstr import get_param_help, parse_docstring
-from .._typing import is_typeddict, shorten_type_annotation, strip_optional
+from .._typing import is_typeddict, shorten, strip_optional
 from .._value_parser import is_parsable
 from ..arg import Arg, Name
 from ..args import Args
@@ -35,10 +35,10 @@ def _check_parsable(params: Sequence[Param]) -> None:
     Raises UnsupportedTypeError if an unparsable type is detected.
     """
     for param in params:
-        if not is_parsable(param.normalized_annotation):
+        if not is_parsable(param.normalized_hint):
             raise UnsupportedTypeError(
                 param.name,
-                shorten_type_annotation(param.hint),
+                shorten(param.hint),
                 param.owning_obj_name,
             )
 
@@ -83,7 +83,7 @@ def _reserve_short_names(params: Sequence[Param]):
 def make_arg_from_param(param: Param, name: Name, kw_only: bool = False) -> Arg:
     return Arg(
         name=name,
-        type_=param.normalized_annotation,  # type: ignore
+        type_=param.normalized_hint,  # type: ignore
         container_type=param.container_type,
         help=param.help.desc,
         required=param.is_required,
@@ -157,7 +157,7 @@ def make_args_from_params_recursive(
         is_nested_child = naming == "nested" and kw_only
 
         if not node.children:
-            assert is_parsable(node.data.normalized_annotation)
+            assert is_parsable(node.data.normalized_hint)
             param = node.data
 
             # Variadic params are not allowed in child Args
@@ -218,7 +218,7 @@ def make_args_from_params_recursive(
 
             child_args._parent = args  # type: ignore
 
-            actual_type = strip_optional(node.data.normalized_annotation)
+            actual_type = strip_optional(node.data.normalized_hint)
             node_name = (
                 node.data.name
                 if naming == "flat"
@@ -247,25 +247,6 @@ def make_args_from_params_recursive(
     return args
 
 
-def make_params_from_func(func: Callable[..., Any]) -> tuple[list[Param], str]:
-    sig = inspect.signature(func)
-    params = sig.parameters.items()
-    hints = get_type_hints(func, include_extras=True)
-
-    # Attempt to parse brief and arg descriptions from docstring
-    brief, arg_helps = parse_docstring(func)
-
-    return [
-        Param.from_parameter(
-            parameter=param,
-            hint=hints.get(param_name, str),
-            help=get_param_help(param, arg_helps),
-            owning_obj_name=f"{func.__name__}()",
-        )
-        for param_name, param in params
-    ], brief
-
-
 def make_args_from_func(
     func: Callable[..., Any],
     program_name: str = "",
@@ -282,15 +263,28 @@ def make_args_from_func(
         naming: The naming strategy for nested Args.
     """
 
+    sig = inspect.signature(func)
+    parameters = sig.parameters.items()
+    hints = get_type_hints(func, include_extras=True)
+    brief, arg_helps = parse_docstring(func)
+
+    params = [
+        Param.from_parameter(
+            parameter=parameter,
+            hint=hints.get(name, str),
+            help=get_param_help(parameter, arg_helps),
+            owning_obj_name=f"{func.__name__}()",
+        )
+        for name, parameter in parameters
+    ]
+
     if not recurse:
-        params, brief = make_params_from_func(func)
         return make_args_from_params_flat(
             params=params,
             brief=brief,
             program_name=program_name,
         )
     else:
-        params, brief = make_params_from_func(func)
         return make_args_from_params_recursive(
             params=params,
             brief=brief,

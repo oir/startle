@@ -2,12 +2,11 @@
 String-to-type conversion functions.
 """
 
-import typing
 from collections.abc import Callable
 from enum import Enum
 from inspect import isclass
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal, cast, get_args, get_origin
 
 from ._typing import strip_optional
 from .error import UnsupportedValueTypeError, ValueParsingError
@@ -77,8 +76,8 @@ def _get_parser(type_: Any) -> Callable[[str], Any] | None:
     # if type is Optional[T], convert to T
     type_ = strip_optional(type_)
 
-    if typing.get_origin(type_) is Literal:
-        type_args = typing.get_args(type_)
+    if get_origin(type_) is Literal:
+        type_args = get_args(type_)
         if all(isinstance(arg, str) for arg in type_args):
 
             def parser(value: str) -> str:

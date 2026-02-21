@@ -11,14 +11,14 @@ from startle.error import (
 from .._docstr import ParamHelp
 from .._typing import (
     TypeHint,
-    normalize_annotation,
-    shorten_type_annotation,
+    normalize,
+    shorten,
+    strip_container,
     strip_not_required,
     strip_optional,
     strip_required,
 )
 from ..args import Missing
-from .nary import get_annotation_naryness
 
 ParameterKind = Literal[
     # _ParameterKind is private, therefore we do this
@@ -50,25 +50,6 @@ def is_variadic(kind: ParameterKind | None) -> bool:
     return kind in [Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD]
 
 
-def get_naryness(
-    normalized_annotation: Any, kind: ParameterKind | None = None
-) -> tuple[bool, type | None, Any]:
-    """
-    Get the n-ary status, container type, and normalized annotation for a parameter.
-    For n-ary parameters, the type (updated `normalized_annotation`) will refer
-    to the inner type.
-
-    If inner type is absent from the hint, assume str.
-
-    Returns:
-        `nary`, `container_type`, and `normalized_annotation` as a tuple.
-    """
-    if kind == Parameter.VAR_POSITIONAL:
-        return True, list, normalized_annotation
-
-    return get_annotation_naryness(normalized_annotation)
-
-
 @dataclass(kw_only=True)
 class Param:
     """
@@ -84,7 +65,7 @@ class Param:
             Note that TypedDict parameters can be required or optional regardless of whether they have defaults.
         kind: The kind of the parameter (positional-only, keyword-only, variadic, etc.), if this
             parameter comes from a function signature, None otherwise.
-        normalized_annotation: The normalized type hint of the parameter, computed from `hint`.
+        normalized_hint: The normalized type hint of the parameter, computed from `hint`.
         container_type: If the parameter is n-ary, the type of the container (e.g. list, tuple, set), None otherwise.
         is_nary: Whether the parameter is n-ary (e.g. *args, List[int], etc.), computed from `hint` and `kind`.
         owning_obj_name: The name of the owning object (function or class) for error messages.
@@ -98,18 +79,23 @@ class Param:
     is_required: bool
     kind: ParameterKind | None = None
 
-    normalized_annotation: TypeHint = field(init=False)
-    container_type: type | None = field(init=False)
-    is_nary: bool = field(init=False)
+    normalized_hint: TypeHint = field(init=False)
+    container_type: type | None = None
+    is_nary: bool = False
 
     owning_obj_name: str = ""
 
     def __post_init__(self):
-        self.normalized_annotation = normalize_annotation(self.hint)
+        self.normalized_hint = normalize(self.hint)
 
-        self.is_nary, self.container_type, self.normalized_annotation = get_naryness(
-            self.normalized_annotation, self.kind
-        )
+        if self.kind == Parameter.VAR_POSITIONAL:
+            self.is_nary = True
+            self.container_type = list
+        else:
+            self.container_type, self.normalized_hint = strip_container(
+                self.normalized_hint
+            )
+            self.is_nary = self.container_type is not None
 
     @property
     def is_positional(self) -> bool:
@@ -142,11 +128,11 @@ class Param:
             raise VariadicNonRecursableParamError(self.name, self.owning_obj_name)
         if self.is_nary:
             raise NaryNonRecursableParamError(self.name, self.owning_obj_name)
-        normalized_annotation = strip_optional(self.normalized_annotation)
-        if not isinstance(normalized_annotation, type):
+        normalized_hint = strip_optional(self.normalized_hint)
+        if not isinstance(normalized_hint, type):
             raise NonClassNonRecursableParamError(
                 self.name,
-                shorten_type_annotation(self.normalized_annotation),
+                shorten(self.normalized_hint),
                 self.owning_obj_name,
             )
 
@@ -189,7 +175,7 @@ class Param:
         is_not_required, normalized_annotation = strip_not_required(
             normalized_annotation
         )
-        normalized_annotation = normalize_annotation(normalized_annotation)
+        normalized_annotation = normalize(normalized_annotation)
 
         required = in_required_keys or not in_optional_keys
         # NotRequired[] and Required[] are stronger than total=False/True
