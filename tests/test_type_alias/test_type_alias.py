@@ -15,8 +15,8 @@ from startle._metavar import METAVARS
 from startle._value_parser import PARSERS
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
-from ._utils import check_args
-from .test_parse_class import check_parse_exits
+from .._utils import check_args
+from ..test_parse_class import check_parse_exits
 
 type MyFloat = float
 type MyStr = str
