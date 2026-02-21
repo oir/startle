@@ -33,7 +33,7 @@ def check_args(
     assert args == expected_args
     assert kwargs == expected_kwargs
 
-    for arg, expected_arg in zip(args, expected_args):
+    for arg, expected_arg in zip(args, expected_args, strict=True):
         assert type(arg) is type(expected_arg)
 
     for key, value in kwargs.items():
@@ -47,11 +47,11 @@ class Opts:
 
     @staticmethod
     def short(name: str, value: list[str]) -> list[str]:
-        return [f"-{name[0]}"] + value
+        return [f"-{name[0]}", *value]
 
     @staticmethod
     def long(name: str, value: list[str]) -> list[str]:
-        return [f"--{name}"] + value
+        return [f"--{name}", *value]
 
     @staticmethod
     def short_eq(name: str, value: list[str]) -> list[str]:

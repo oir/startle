@@ -63,11 +63,11 @@ def test_shorten():
     assert shorten(Optional[str | float]) == "str | float | None"
 
     assert shorten(list[int]) == "list[int]"
-    assert shorten(List[int]) == "list[int]"  # noqa
-    assert shorten(List[int | None]) == "list[int | None]"  # noqa
+    assert shorten(List[int]) == "list[int]"
+    assert shorten(List[int | None]) == "list[int | None]"
     assert shorten(list[int | None] | None) == "list[int | None] | None"
     assert shorten(list) == "list"  # type: ignore
-    assert shorten(List) == "typing.List"  # TODO:  # noqa
+    assert shorten(List) == "typing.List"  # TODO:
     assert shorten(Any) in ["Any", "typing.Any"]  # TODO:
     assert shorten(list[list]) == "list[list]"  # type: ignore
 
@@ -166,8 +166,8 @@ def test_get_default_factories():
     @dataclass
     class Example:
         a: int = 5
-        b: List[int] = field(default_factory=lambda: [1, 2, 3])  # noqa
-        c: Optional[str] = None  # noqa
+        b: List[int] = field(default_factory=lambda: [1, 2, 3])
+        c: Optional[str] = None
 
     factories = get_default_factories(Example)
     assert "a" not in factories

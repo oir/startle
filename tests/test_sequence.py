@@ -151,7 +151,7 @@ def test_keyword_nargs_long(
     with raises(
         ParserOptionError, match=f"Option `{hopt.lstrip('-')}` is missing argument!"
     ):
-        check_args(add_, cli + [hopt], [], {})
+        check_args(add_, [*cli, hopt], [], {})
 
     if wscalar in [int, float]:
         with raises(

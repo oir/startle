@@ -1,5 +1,15 @@
-target-version = "py312"
-preview = true
+extend = "../pyproject.toml"
 
 [lint]
-ignore = ["E501", "RUF001", "RUF002", "RUF043", "UP007", "UP045"]
+ignore = [
+    "B006",
+    "B008",
+    "B903",
+    "RUF036",
+    "RUF043",
+    "UP006",
+    "UP007", 
+    "UP035",
+    "UP042",
+    "UP045",
+]

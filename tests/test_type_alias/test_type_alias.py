@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.12
-
 """
 This file needs to be skipped entirely in Python < 3.12 because it uses
 the new `type` syntax for type aliases, it is a syntax error in older versions,

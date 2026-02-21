@@ -173,7 +173,6 @@ def test_custom_program_name_help(capsys: CaptureFixture[str], help_cmd: str) ->
         Args:
             blip: Whether to blip or not.
         """
-        pass
 
     # here, output is not detected as a tty, so it does not use rich
     expected = """\

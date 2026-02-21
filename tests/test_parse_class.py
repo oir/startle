@@ -7,8 +7,8 @@ from typing import Annotated, TypedDict
 from pytest import CaptureFixture, mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
-from typing_extensions import NotRequired as TE_NotRequired  # noqa
-from typing_extensions import Required as TE_Required  # noqa
+from typing_extensions import NotRequired as TE_NotRequired
+from typing_extensions import Required as TE_Required
 
 
 @dataclass

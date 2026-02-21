@@ -18,7 +18,6 @@ def fun3(name: str = "john", /, *, count: int = 1, c: int = 2) -> None:
         count: The number of times to greet.
         c: The number of times to groot.
     """
-    ...
 
 
 def fun4(name: str = "john", /, *, count: int = 1, c: int = 2) -> None:
@@ -30,7 +29,6 @@ def fun4(name: str = "john", /, *, count: int = 1, c: int = 2) -> None:
         count [k]: The number of times to greet.
         c: The number of times to groot.
     """
-    ...
 
 
 def fun5(cake: str = "john", /, *, count: int = 1) -> None: ...
@@ -52,7 +50,6 @@ def fun7(
         frosting [c]: The amount of frosting on the cake.
     """
     # Here `c` should win the short version over others
-    ...
 
 
 def fun8(cake: str = "john", /, *, count: int = 1, frosting: int = 3) -> None:
@@ -65,7 +62,6 @@ def fun8(cake: str = "john", /, *, count: int = 1, frosting: int = 3) -> None:
         frosting [c]: The amount of frosting on the cake.
     """
     # Here `frosting` should win the short version over `count`
-    ...
 
 
 def fun9(
@@ -81,7 +77,6 @@ def fun9(
         glazing [c]: The amount of glazing on the cake.
     """
     # Here `frosting` should win the short version over `count`, and `glazing`
-    ...
 
 
 @dataclass
