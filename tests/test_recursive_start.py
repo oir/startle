@@ -809,15 +809,7 @@ Fuse two monsters with polymerization.
 
 @mark.parametrize("fuse", [fuse2, fuse2td])
 def test_recursive_dataclass_nested(fuse: Callable[..., Any]) -> None:
-    if fuse is fuse1:
-        expected = FusionConfig(
-            left_path="monster1.dat",
-            right_path="monster2.dat",
-            output_path="fused_monster.dat",
-            components=["wing", "tail"],
-            alpha=0.7,
-        )
-    elif fuse is fuse2:
+    if fuse is fuse2:
         expected = FusionConfig2(
             io_paths=IOPaths(
                 input_paths=InputPaths(

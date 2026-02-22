@@ -830,3 +830,219 @@ Fuse two monsters with polymerization.
             expected=expected,
             recurse=True,
         )
+
+
+@mark.parametrize("cls", [Fuse2, Fuse2TD])
+def test_recursive_dataclass_nested(cls: type[Fuse2] | type[Fuse2TD]) -> None:
+    if cls is Fuse2:
+        expected = Fuse2(
+            FusionConfig2(
+                io_paths=IOPaths(
+                    input_paths=InputPaths(
+                        left_path="monster1.dat", right_path="monster2.dat"
+                    ),
+                    output_path="fused_monster.dat",
+                ),
+                components=["wing", "tail"],
+                alpha=0.7,
+            )
+        )
+    else:
+        expected = Fuse2TD({
+            "io_paths": IOPaths(
+                input_paths=InputPaths(
+                    left_path="monster1.dat", right_path="monster2.dat"
+                ),
+                output_path="fused_monster.dat",
+            ),
+            "components": ["wing", "tail"],
+            "alpha": 0.7,
+        })
+
+    parsed = parse(
+        cls,
+        args=[
+            "--cfg.io-paths.input-paths.left-path",
+            "monster1.dat",
+            "--cfg.io-paths.input-paths.right-path",
+            "monster2.dat",
+            "--cfg.io-paths.output-path",
+            "fused_monster.dat",
+            "--cfg.components",
+            "wing",
+            "tail",
+            "--cfg.alpha",
+            "0.7",
+        ],
+        recurse=True,
+        naming="nested",
+        catch=False,
+    )
+    assert parsed == expected
+
+
+@dataclass
+class IOPaths2:
+    """
+    Input and output paths for fusion.
+
+    Attributes:
+        input_paths: Input paths for the fusion.
+        output_path [l]: Path to store the fused monster.
+    """
+
+    input_paths: InputPaths
+    output_path: str
+
+
+@dataclass
+class FusionConfig3:
+    """
+    Fusion config with separate input and output paths.
+
+    Attributes:
+        io_paths: Input and output paths for the fusion.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    io_paths: IOPaths2
+    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+    alpha: float = 0.5
+
+
+@dataclass
+class Fuse3:
+    """
+    Top level fusion config.
+
+    Attributes:
+        cfg: The fusion configuration.
+    """
+
+    cfg: FusionConfig3
+
+
+def test_recursive_dataclass_help_2() -> None:
+    expected = f"""\
+
+Fuse two monsters with polymerization.
+
+[{TS}]Usage:[/]
+  fuse.py [{NS} {OS}]--left-path[/] [{VS}]<text>[/] [{NS} {OS}]--right-path[/] [{VS}]<text>[/] [{NS} {OS}]--output-path[/] [{VS}]<text>[/] [[{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]] [[{NS} {OS}]--alpha[/] [{VS}]<float>[/]]
+
+[{TS}]where[/]
+  [dim](option)[/]  [{NS} {OS}]--left-path[/] [{VS}]<text>[/]                   [i]Path to the first monster.[/] [yellow](required)[/]                 
+  [dim](option)[/]  [{NS} {OS}]-r[/][{OS} dim]|[/][{NS} {OS}]--right-path[/] [{VS}]<text>[/]               [i]Path to the second monster.[/] [yellow](required)[/]                
+  [dim](option)[/]  [{NS} {OS}]-l[/][{OS} dim]|[/][{NS} {OS}]--output-path[/] [{VS}]<text>[/]              [i]Path to store the fused monster.[/] [yellow](required)[/]           
+  [dim](option)[/]  [{NS} {OS}]-c[/][{OS} dim]|[/][{NS} {OS}]--components[/] [{VS}]<text>[/] [dim][[/][{VS} dim]<text>[/][dim] ...][/]  [i]Components to fuse.[/] [green](default: [/][green]['fang', 'claw'][/][green])[/]       
+  [dim](option)[/]  [{NS} {OS}]-a[/][{OS} dim]|[/][{NS} {OS}]--alpha[/] [{VS}]<float>[/]                   [i]Weighting factor for the first monster.[/] [green](default: [/][green]0.5[/][green])[/]
+  [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
+"""
+    check_help_from_class(
+        Fuse3,
+        brief="Fuse two monsters with polymerization.",
+        program_name="fuse.py",
+        expected=expected,
+        recurse=True,
+    )
+
+
+@dataclass
+class FusionConfig4:
+    """
+    Fusion config with separate input and output paths.
+
+    Attributes:
+        io_paths: Input and output paths for the fusion.
+        components: Components to fuse.
+        alpha: Weighting factor for the first monster.
+    """
+
+    io_paths: IOPaths2 | tuple[str, str]
+    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
+    alpha: float = 0.5
+
+
+@dataclass
+class Fuse4:
+    """
+    Top level fusion config.
+
+    Attributes:
+        cfg: The fusion configuration.
+    """
+
+    cfg: FusionConfig4
+
+
+def test_recursive_dataclass_non_class() -> None:
+    with raises(
+        ParserConfigError,
+        match="Cannot recurse into parameter `io_paths` of non-class type `IOPaths2 | tuple[str, str]` in `Fuse4`!",
+    ):
+        parse(Fuse4, args=[], recurse=True, naming="nested")
+
+
+@dataclass(kw_only=True)
+class AppleConfig:
+    """
+    Configuration for apple.
+
+    Attributes:
+        color: The color of the apple.
+        heavy: Whether the apple is heavy.
+    """
+
+    color: str = "red"
+    heavy: bool = False
+
+
+@dataclass(kw_only=True)
+class BananaConfig:
+    """
+    Configuration for banana.
+
+    Attributes:
+        length: The length of the banana.
+        ripe: Whether the banana is ripe.
+    """
+
+    length: float = 6.0
+    ripe: bool = False
+
+
+@dataclass
+class FruitSaladConfig:
+    """
+    Configuration for fruit salad.
+
+    Attributes:
+        apple_cfg: Configuration for the apple.
+        banana_cfg: Configuration for the banana.
+        servings: Number of servings.
+    """
+
+    apple_cfg: AppleConfig
+    banana_cfg: BananaConfig
+    servings: int = 1
+
+
+@mark.parametrize(
+    "cli_args",
+    [
+        ["--color", "green", "--heavy", "--length", "7.5", "--ripe", "--servings", "3"],
+        ["--color", "green", "--length", "7.5", "-h", "-r", "-s", "3"],
+        ["--color", "green", "--length", "7.5", "-hrs", "3"],
+        ["--color", "green", "--length", "7.5", "-hrs=3"],
+        ["--color", "green", "--length", "7.5", "-rhs", "3"],
+        ["--color", "green", "--length", "7.5", "-rhs=3"],
+    ],
+)
+def test_combined_short_flags(cli_args: list[str]) -> None:
+    cfg = parse(FruitSaladConfig, args=cli_args, recurse=True)
+    assert cfg == FruitSaladConfig(
+        apple_cfg=AppleConfig(color="green", heavy=True),
+        banana_cfg=BananaConfig(length=7.5, ripe=True),
+        servings=3,
+    )
