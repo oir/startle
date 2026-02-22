@@ -1,32 +1,30 @@
 import re
 from dataclasses import dataclass, field
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal
 
 from pytest import mark, raises
 from startle import parse
 from startle.error import ParserConfigError, ParserOptionError
 
-from .test_help._utils import (
-    NS,
-    OS,
-    TS,
-    VS,
-    check_help_from_class,
+from ..test_help._utils import NS, OS, TS, VS, check_help_from_class
+from .defs import (
+    AppleConfig,
+    BananaConfig,
+    ConfigWithVarArgs,
+    ConfigWithVarKwargs,
+    DieConfig,
+    DieConfig2,
+    DieConfig2TD,
+    FusionConfig,
+    FusionConfig2,
+    FusionConfig2TD,
+    FusionConfig3,
+    FusionConfig4,
+    InputPaths,
+    IOPaths,
+    NestedConfigWithVarArgs,
+    NestedTypedDictWithVarArgs,
 )
-
-
-@dataclass
-class DieConfig:
-    """
-    Configuration for the dice program.
-
-    Attributes:
-        sides: The number of sides on the dice.
-        kind: Whether to throw a single die or a pair of dice.
-    """
-
-    sides: int = 6
-    kind: Literal["single", "pair"] = "single"
 
 
 @dataclass
@@ -82,8 +80,6 @@ def test_recursive_w_defaults(
     if count is not None:
         cli_args += [count_opt, str(count)]
 
-    # expected_cfg = DieConfig(**config_kwargs)  # type: ignore[arg-type]
-    # expected_count = count if count is not None else 1
     cfg = parse(MainConfig, args=cli_args, recurse=True)
 
     assert cfg == MainConfig(
@@ -133,20 +129,6 @@ def test_recursive_w_defaults_nested(
 
 
 @dataclass
-class DieConfig2:
-    """
-    Configuration for the dice program.
-
-    Attributes:
-        sides: The number of sides on the dice.
-        kind: Whether to throw a single die or a pair of dice.
-    """
-
-    sides: int
-    kind: Literal["single", "pair"]
-
-
-@dataclass
 class MainConfig2:
     """
     Main configuration for the dice program.
@@ -158,19 +140,6 @@ class MainConfig2:
 
     cfg: DieConfig2
     count: int
-
-
-class DieConfig2TD(TypedDict):
-    """
-    Configuration for the dice program.
-
-    Attributes:
-        sides: The number of sides on the dice.
-        kind: Whether to throw a single die or a pair of dice.
-    """
-
-    sides: int
-    kind: Literal["single", "pair"]
 
 
 @dataclass
@@ -399,25 +368,6 @@ def test_recursive_w_inner_required_nested() -> None:
     assert cfg == MainConfig4(count=2, cfg=None)
 
 
-class ConfigWithVarArgs:
-    def __init__(self, *values: int) -> None:
-        self.values = list(values)
-
-
-class ConfigWithVarKwargs:
-    def __init__(self, **settings: int) -> None:
-        self.settings = settings
-
-
-@dataclass
-class NestedConfigWithVarArgs:
-    config: ConfigWithVarArgs
-
-
-class NestedTypedDictWithVarArgs(TypedDict):
-    config: ConfigWithVarArgs
-
-
 @mark.parametrize("naming", ["flat", "nested"])
 def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
     @dataclass
@@ -622,95 +572,6 @@ def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
 
 
 @dataclass
-class FusionConfig:
-    """
-    Fusion config.
-
-    Attributes:
-        left_path: Path to the first monster.
-        right_path: Path to the second monster.
-        output_path [p]: Path to store the fused monster.
-        components: Components to fuse.
-        alpha: Weighting factor for the first monster.
-    """
-
-    left_path: str
-    right_path: str
-    output_path: str
-    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
-    alpha: float = 0.5
-
-
-@dataclass
-class InputPaths:
-    """
-    Input paths for fusion.
-
-    Attributes:
-        left_path: Path to the first monster.
-        right_path: Path to the second monster.
-    """
-
-    left_path: str
-    right_path: str
-
-
-@dataclass
-class IOPaths:
-    """
-    Input and output paths for fusion.
-
-    Attributes:
-        input_paths: Input paths for the fusion.
-        output_path [p]: Path to store the fused monster.
-    """
-
-    input_paths: InputPaths
-    output_path: str
-
-
-@dataclass
-class FusionConfig2:
-    """
-    Fusion config with separate input and output paths.
-
-    Attributes:
-        io_paths: Input and output paths for the fusion.
-        components: Components to fuse.
-        alpha: Weighting factor for the first monster.
-    """
-
-    io_paths: IOPaths
-    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
-    alpha: float = 0.5
-
-
-class FusionConfig2TD(TypedDict):
-    """
-    Fusion config with separate input and output paths.
-
-    Attributes:
-        io_paths: Input and output paths for the fusion.
-        components: Components to fuse.
-        alpha: Weighting factor for the first monster.
-    """
-
-    io_paths: IOPaths
-    components: list[str]
-    alpha: float
-
-
-def fuse1(cfg: FusionConfig) -> None:
-    """
-    Fuse two monsters with polymerization.
-
-    Args:
-        cfg: The fusion configuration.
-    """
-    pass
-
-
-@dataclass
 class Fuse1:
     """
     Top level fusion config.
@@ -882,36 +743,6 @@ def test_recursive_dataclass_nested(cls: type[Fuse2] | type[Fuse2TD]) -> None:
 
 
 @dataclass
-class IOPaths2:
-    """
-    Input and output paths for fusion.
-
-    Attributes:
-        input_paths: Input paths for the fusion.
-        output_path [l]: Path to store the fused monster.
-    """
-
-    input_paths: InputPaths
-    output_path: str
-
-
-@dataclass
-class FusionConfig3:
-    """
-    Fusion config with separate input and output paths.
-
-    Attributes:
-        io_paths: Input and output paths for the fusion.
-        components: Components to fuse.
-        alpha: Weighting factor for the first monster.
-    """
-
-    io_paths: IOPaths2
-    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
-    alpha: float = 0.5
-
-
-@dataclass
 class Fuse3:
     """
     Top level fusion config.
@@ -949,22 +780,6 @@ Fuse two monsters with polymerization.
 
 
 @dataclass
-class FusionConfig4:
-    """
-    Fusion config with separate input and output paths.
-
-    Attributes:
-        io_paths: Input and output paths for the fusion.
-        components: Components to fuse.
-        alpha: Weighting factor for the first monster.
-    """
-
-    io_paths: IOPaths2 | tuple[str, str]
-    components: list[str] = field(default_factory=lambda: ["fang", "claw"])
-    alpha: float = 0.5
-
-
-@dataclass
 class Fuse4:
     """
     Top level fusion config.
@@ -982,34 +797,6 @@ def test_recursive_dataclass_non_class() -> None:
         match="Cannot recurse into parameter `io_paths` of non-class type `IOPaths2 | tuple[str, str]` in `Fuse4`!",
     ):
         parse(Fuse4, args=[], recurse=True, naming="nested")
-
-
-@dataclass(kw_only=True)
-class AppleConfig:
-    """
-    Configuration for apple.
-
-    Attributes:
-        color: The color of the apple.
-        heavy: Whether the apple is heavy.
-    """
-
-    color: str = "red"
-    heavy: bool = False
-
-
-@dataclass(kw_only=True)
-class BananaConfig:
-    """
-    Configuration for banana.
-
-    Attributes:
-        length: The length of the banana.
-        ripe: Whether the banana is ripe.
-    """
-
-    length: float = 6.0
-    ripe: bool = False
 
 
 @dataclass
