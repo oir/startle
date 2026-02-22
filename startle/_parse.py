@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 from rich.console import Console
 from rich.text import Text
@@ -16,6 +16,8 @@ def parse(
     args: list[str] | None = None,
     brief: str = "",
     catch: bool = True,
+    recurse: bool = False,
+    naming: Literal["flat", "nested"] = "flat",
 ) -> T:
     """
     Given a class `cls`, parse arguments from the command-line according to the
@@ -36,7 +38,9 @@ def parse(
         An instance of the class `cls`.
     """
     # first, make Args object from the class
-    args_ = make_args_from_class(cls, brief=brief, program_name=name or "")
+    args_ = make_args_from_class(
+        cls, brief=brief, program_name=name or "", recurse=recurse, naming=naming
+    )
 
     try:
         # then, parse the arguments from the CLI

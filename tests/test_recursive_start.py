@@ -505,18 +505,6 @@ def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
     def f7b(cfg: DieConfig2TD, sides: int) -> None:
         pass
 
-    def f8a(cfg: DieConfig, cfg2: DieConfig) -> None:
-        pass
-
-    def f8b(cfg: DieConfig, cfg2: DieConfig2TD) -> None:
-        pass
-
-    def f8c(cfg: DieConfig2TD, cfg2: DieConfig) -> None:
-        pass
-
-    def f8d(cfg: DieConfig2TD, cfg2: DieConfig2TD) -> None:
-        pass
-
     if naming == "flat":
         for f in [f7a, f7b]:
             with raises(
@@ -544,6 +532,18 @@ def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
             recurse=True,
             naming="nested",
         )
+
+    def f8a(cfg: DieConfig, cfg2: DieConfig) -> None:
+        pass
+
+    def f8b(cfg: DieConfig, cfg2: DieConfig2TD) -> None:
+        pass
+
+    def f8c(cfg: DieConfig2TD, cfg2: DieConfig) -> None:
+        pass
+
+    def f8d(cfg: DieConfig2TD, cfg2: DieConfig2TD) -> None:
+        pass
 
     if naming == "flat":
         for f in [f8a, f8b, f8c, f8d]:
@@ -803,21 +803,13 @@ Fuse two monsters with polymerization.
   [dim](option)[/]  [{NS} {OS} dim]-?[/][{OS} dim]|[/][{NS} {OS} dim]--help[/]                            [i dim]Show this help message and exit.[/]                      
 """
     if fuse is not fuse2td:
-        # TypedDict does not have default values for now, every option is required.
+        # TypedDict example does not have default values, every option is required.
         check_help_from_func(fuse, "fuse.py", expected, recurse=True)
 
 
 @mark.parametrize("fuse", [fuse2, fuse2td])
 def test_recursive_dataclass_nested(fuse: Callable[..., Any]) -> None:
-    if fuse is fuse1:
-        expected = FusionConfig(
-            left_path="monster1.dat",
-            right_path="monster2.dat",
-            output_path="fused_monster.dat",
-            components=["wing", "tail"],
-            alpha=0.7,
-        )
-    elif fuse is fuse2:
+    if fuse is fuse2:
         expected = FusionConfig2(
             io_paths=IOPaths(
                 input_paths=InputPaths(

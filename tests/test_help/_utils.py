@@ -35,12 +35,14 @@ def check_help_from_func(
     assert remove_trailing_spaces(result) == remove_trailing_spaces(expected)
 
 
-def check_help_from_class(cls: type, brief: str, program_name: str, expected: str):
+def check_help_from_class(
+    cls: type, brief: str, program_name: str, expected: str, recurse: bool = False
+):
     console = Console(width=120, highlight=False, force_terminal=True)
     with console.capture() as capture:
-        make_args_from_class(cls, program_name=program_name, brief=brief).print_help(
-            console
-        )
+        make_args_from_class(
+            cls, program_name=program_name, brief=brief, recurse=recurse
+        ).print_help(console)
     result = capture.get()
 
     console = Console(width=120, highlight=False, force_terminal=True)

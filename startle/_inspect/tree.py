@@ -1,3 +1,7 @@
+"""
+Utilities for recursive inspection when parsing nested structures.
+"""
+
 from collections.abc import Iterable
 from dataclasses import dataclass, is_dataclass
 from typing import Generic, TypeVar, cast, get_type_hints
