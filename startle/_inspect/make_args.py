@@ -80,7 +80,7 @@ def _reserve_short_names(params: Sequence[Param]):
     return used_short_names, short_name_assignments
 
 
-def make_arg_from_param(param: Param, name: Name, kw_only: bool = False) -> Arg:
+def _make_arg_from_param(param: Param, name: Name, kw_only: bool = False) -> Arg:
     return Arg(
         name=name,
         type_=param.normalized_hint,  # type: ignore
@@ -95,7 +95,7 @@ def make_arg_from_param(param: Param, name: Name, kw_only: bool = False) -> Arg:
     )
 
 
-def make_args_from_params_flat(
+def _make_args_from_params_flat(
     params: Sequence[Param], brief: str = "", program_name: str = ""
 ) -> Args:
     args = Args(brief=brief, program_name=program_name)
@@ -114,7 +114,7 @@ def make_args_from_params_flat(
             used_short_names.add(first_char)
             short_name_assignments[param.name] = first_char
             short = first_char
-        arg = make_arg_from_param(
+        arg = _make_arg_from_param(
             param=param,
             name=Name(long=param.name.replace("_", "-"), short=short),
         )
@@ -130,7 +130,7 @@ def make_args_from_params_flat(
     return args
 
 
-def make_args_from_params_recursive(
+def _make_args_from_params_recursive(
     params: Sequence[Param],
     brief: str = "",
     program_name: str = "",
@@ -180,7 +180,7 @@ def make_args_from_params_recursive(
                     short = first_char
                 name = Name(long=param.name.replace("_", "-"), short=short)
 
-            arg = make_arg_from_param(
+            arg = _make_arg_from_param(
                 param=param,
                 name=name,
                 kw_only=kw_only,
@@ -279,13 +279,13 @@ def make_args_from_func(
     ]
 
     if not recurse:
-        return make_args_from_params_flat(
+        return _make_args_from_params_flat(
             params=params,
             brief=brief,
             program_name=program_name,
         )
     else:
-        return make_args_from_params_recursive(
+        return _make_args_from_params_recursive(
             params=params,
             brief=brief,
             program_name=program_name,
@@ -293,7 +293,7 @@ def make_args_from_func(
         )
 
 
-def make_params_from_class(cls: type) -> list[Param]:
+def _make_params_from_class(cls: type) -> list[Param]:
     params = get_initializer_parameters(cls)
     hints = get_type_hints(cls.__init__, include_extras=True)
     _, arg_helps = parse_docstring(cls)
@@ -311,7 +311,7 @@ def make_params_from_class(cls: type) -> list[Param]:
     ]
 
 
-def make_params_from_td(cls: type) -> list[Param]:
+def _make_params_from_td(cls: type) -> list[Param]:
     params = get_type_hints(cls, include_extras=True).items()
     optional_keys = cast(frozenset[str], cls.__optional_keys__)  # type: ignore
     required_keys = cast(frozenset[str], cls.__required_keys__)  # type: ignore
@@ -351,18 +351,18 @@ def make_args_from_class(
     # TODO: check if cls is a class?
 
     if is_typeddict(cls):
-        params = make_params_from_td(cls)
+        params = _make_params_from_td(cls)
     else:
-        params = make_params_from_class(cls)
+        params = _make_params_from_class(cls)
 
     if not recurse:
-        return make_args_from_params_flat(
+        return _make_args_from_params_flat(
             params=params,
             brief=brief,
             program_name=program_name,
         )
     else:
-        return make_args_from_params_recursive(
+        return _make_args_from_params_recursive(
             params=params,
             brief=brief,
             program_name=program_name,
