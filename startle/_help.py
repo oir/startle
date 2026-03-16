@@ -5,6 +5,7 @@ Utilities for prettifying and formatting of help messages.
 from enum import Enum
 from typing import Any, Literal
 
+from rich.cells import cell_len
 from rich.text import Text
 
 from .arg import Arg, Name
@@ -155,3 +156,35 @@ def var_args_usage_line(arg: Arg) -> Text:
 
 def var_kwargs_usage_line(arg: Arg) -> Text:
     return Text.assemble("[", _repeated(_opt_usage(arg, "usage line")), "]")
+
+
+def wrap_usage(name: str, components: list[Text], width: int) -> Text:
+    """
+    Custom word-wrapping for usage lines that avoids splitting individual components
+    (e.g. we want "--foo bar" or "[--foo bar]" stay together).
+    Continuation lines are indented to align after the program name.
+
+    This was needed because (afaik) there is no way to declare non-breaking spaces in rich,
+    and even in that case I would prefer to use actual space char.
+    """
+
+    indent = len(name) + 1
+    lines: list[Text] = []
+    current = Text(f"{name} ")
+    current_len = indent
+
+    for comp in components:
+        comp_len = cell_len(comp.plain)
+        if current_len > indent and current_len + comp_len + 1 > width:
+            lines.append(current)
+            current = Text(" " * indent) + comp
+            current_len = indent + comp_len
+        else:
+            if current_len > indent:
+                current.append(" ")
+                current_len += 1
+            current = Text.assemble(current, comp)
+            current_len += comp_len
+
+    lines.append(current)
+    return Text("\n").join(lines)

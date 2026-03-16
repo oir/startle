@@ -3,7 +3,14 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
-from ._help import Sty, help, usage, var_args_usage_line, var_kwargs_usage_line
+from ._help import (
+    Sty,
+    help,
+    usage,
+    var_args_usage_line,
+    var_kwargs_usage_line,
+    wrap_usage,
+)
 from .arg import Arg, Name
 from .error import (
     DuplicateOptionError,
@@ -539,7 +546,7 @@ class Args:
 
         # (2) then print usage line
         console.print(Text("Usage:", style=Sty.title))
-        usage_components = [Text(f"  {name}")]
+        usage_components: list[Text] = []
         pos_only_str = Text(" ").join([
             usage(arg, "usage line") for arg in positional_only
         ])
@@ -554,7 +561,7 @@ class Args:
         if self._var_kwargs:
             usage_components.append(var_kwargs_usage_line(self._var_kwargs))
 
-        console.print(Text(" ").join(usage_components))
+        console.print(wrap_usage(f"  {name}", usage_components, console.width or 80))
 
         if usage_only:
             console.print()
