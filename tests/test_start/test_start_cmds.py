@@ -57,6 +57,50 @@ def div(a: int, b: int) -> None:
     print(f"{a} / {b} = {a / b}")
 
 
+async def aadd(a: int, b: int) -> None:
+    """
+    Add two numbers.
+
+    Args:
+        a: The first number.
+        b: The second number.
+    """
+    print(f"{a} + {b} = {a + b}")
+
+
+async def asub(a: int, b: int) -> None:
+    """
+    Subtract two numbers.
+
+    Args:
+        a: The first number.
+        b: The second number
+    """
+    print(f"{a} - {b} = {a - b}")
+
+
+async def amul(a: int, b: int) -> None:
+    """
+    Multiply two numbers.
+
+    Args:
+        a: The first number.
+        b: The second number.
+    """
+    print(f"{a} * {b} = {a * b}")
+
+
+async def adiv(a: int, b: int) -> None:
+    """
+    Divide two numbers.
+
+    Args:
+        a: The dividend.
+        b: The divisor.
+    """
+    print(f"{a} / {b} = {a / b}")
+
+
 @mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
 @mark.parametrize("default", [False, True])
 def test_calc(
@@ -68,6 +112,14 @@ def test_calc(
     check(capsys, run_, [add, sub, mul, div], ["sub", "2", "3"], "2 - 3 = -1\n")
     check(capsys, run_, [add, sub, mul, div], ["mul", "2", "3"], "2 * 3 = 6\n")
     check(capsys, run_, [add, sub, mul, div], ["div", "6", "3"], "6 / 3 = 2.0\n")
+    check(capsys, run, [aadd, asub, amul, adiv], ["aadd", "2", "3"], "2 + 3 = 5\n")
+    check(capsys, run, [aadd, asub, amul, adiv], ["asub", "2", "3"], "2 - 3 = -1\n")
+    check(capsys, run, [aadd, asub, amul, adiv], ["amul", "2", "3"], "2 * 3 = 6\n")
+    check(capsys, run, [aadd, asub, amul, adiv], ["adiv", "6", "3"], "6 / 3 = 2.0\n")
+    check(capsys, run, [add, asub, mul, adiv], ["add", "2", "3"], "2 + 3 = 5\n")
+    check(capsys, run, [aadd, asub, mul, div], ["asub", "2", "3"], "2 - 3 = -1\n")
+    check(capsys, run, [add, asub, mul, adiv], ["mul", "2", "3"], "2 * 3 = 6\n")
+    check(capsys, run, [add, sub, amul, adiv], ["adiv", "6", "3"], "6 / 3 = 2.0\n")
     check(
         capsys,
         partial(run, default="sum") if default else run,
@@ -87,6 +139,17 @@ def test_calc(
         "\nAdd two numbers.\n\nUsage:\n",
         exit_code="0",
     )
+    check_exits(
+        capsys, run, [aadd, asub, amul, adiv], ["--help"], "\nUsage:\n", exit_code="0"
+    )
+    check_exits(
+        capsys,
+        run,
+        [aadd, asub, amul, adiv],
+        ["aadd", "--help"],
+        "\nAdd two numbers.\n\nUsage:\n",
+        exit_code="0",
+    )
 
     if default:
         check(capsys, run_, [add, sub, mul, div], ["2", "3"], "2 + 3 = 5\n")
@@ -95,6 +158,22 @@ def test_calc(
             capsys,
             run_,
             [add, sub, mul, div],
+            ["2", "3"],
+            "Error: Unknown command `2`!\n",
+        )
+    if default:
+        check(
+            capsys,
+            partial(run, default="aadd"),
+            [aadd, asub, amul, adiv],
+            ["2", "3"],
+            "2 + 3 = 5\n",
+        )
+    else:
+        check_exits(
+            capsys,
+            run,
+            [aadd, asub, amul, adiv],
             ["2", "3"],
             "Error: Unknown command `2`!\n",
         )
@@ -112,6 +191,19 @@ def test_calc(
             capsys, run_, [add, sub, mul, div], [], "Error: No command given!\n"
         )
 
+    if default:
+        check_exits(
+            capsys,
+            partial(run, default="aadd"),
+            [aadd, asub, amul, adiv],
+            [],
+            "Error: Required option `a` is not provided!\n",
+        )
+    else:
+        check_exits(
+            capsys, run, [aadd, asub, amul, adiv], [], "Error: No command given!\n"
+        )
+
     check_exits(
         capsys,
         run_,
@@ -121,9 +213,16 @@ def test_calc(
     )
     check_exits(
         capsys,
-        run_,
-        [add, sub, mul, div],
-        ["sub", "2"],
+        run,
+        [aadd, asub, amul, adiv],
+        ["aadd", "2", "3", "4"],
+        "Error: Unexpected positional argument: `4`!\n",
+    )
+    check_exits(
+        capsys,
+        run,
+        [aadd, asub, amul, adiv],
+        ["asub", "2"],
         "Error: Required option `b` is not provided!\n",
     )
 
@@ -226,6 +325,16 @@ def test_recursive_commands() -> None:
     ):
         run_w_explicit_args(
             [add, sub],
+            ["add", "2", "3"],
+            recurse=True,
+        )
+
+    with raises(
+        ParserConfigError,
+        match=("Recurse option is not yet supported for multiple functions."),
+    ):
+        run_w_explicit_args(
+            [add, asub, amul],
             ["add", "2", "3"],
             recurse=True,
         )

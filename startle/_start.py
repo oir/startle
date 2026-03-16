@@ -1,5 +1,6 @@
 import sys
 from collections.abc import Callable
+from inspect import iscoroutinefunction
 from typing import Any, Literal, TypeVar, cast
 
 from ._console import console, error, post_error
@@ -100,7 +101,12 @@ def _start_func(
         f_args, f_kwargs = args_.make_func_args()
 
         # finally, call the function with the arguments
-        return func(*f_args, **f_kwargs)
+        if iscoroutinefunction(func):
+            import asyncio
+
+            return asyncio.run(func(*f_args, **f_kwargs))
+        else:
+            return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
             error(str(e), exit=False, endl=False)
@@ -164,7 +170,13 @@ def _start_cmds(
 
         # finally, call the function with the arguments
         func = cmd2func[cmd]
-        return func(*f_args, **f_kwargs)
+
+        if iscoroutinefunction(func):
+            import asyncio
+
+            return asyncio.run(func(*f_args, **f_kwargs))
+        else:
+            return func(*f_args, **f_kwargs)
     except (ParserOptionError, ParserValueError) as e:
         if catch:
             error(str(e), exit=False, endl=False)

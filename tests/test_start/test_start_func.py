@@ -191,3 +191,185 @@ where
         run_w_sys_argv(f, [help_cmd], name="my_program")
     captured = capsys.readouterr()
     assert remove_trailing_spaces(captured.out) == remove_trailing_spaces(expected)
+
+
+async def ahi1(name: str, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"Hello, {name}!")
+
+
+async def ahi2(name: str, count: int = 1, /) -> None:
+    for _ in range(count):
+        print(f"Hello, {name}!")
+
+
+async def ahi3(name: str, /, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"Hello, {name}!")
+
+
+async def ahi4(name: str, /, *, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"Hello, {name}!")
+
+
+async def ahi5(name: str, *, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"Hello, {name}!")
+
+
+async def ahi6(*, name: str, count: int = 1) -> None:
+    for _ in range(count):
+        print(f"Hello, {name}!")
+
+
+@mark.parametrize("hi", [ahi1, ahi2, ahi3, ahi4, ahi5, ahi6])
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
+def test_async_hi(
+    capsys: CaptureFixture[str], run: Callable[..., Any], hi: Callable[..., Any]
+) -> None:
+    if hi in [ahi1, ahi2, ahi3, ahi4]:
+        check(capsys, run, hi, ["Alice"], "Hello, Alice!\n")
+
+    if hi in [ahi1, ahi2, ahi3]:
+        check(capsys, run, hi, ["Bob", "3"], "Hello, Bob!\nHello, Bob!\nHello, Bob!\n")
+
+    if hi in [ahi1, ahi5, ahi6]:
+        check(
+            capsys,
+            run,
+            hi,
+            ["--name", "Bob", "--count", "3"],
+            "Hello, Bob!\nHello, Bob!\nHello, Bob!\n",
+        )
+        check(
+            capsys,
+            run,
+            hi,
+            ["--count", "3", "--name", "Bob"],
+            "Hello, Bob!\nHello, Bob!\nHello, Bob!\n",
+        )
+        check(capsys, run, hi, ["--name", "Alice"], "Hello, Alice!\n")
+
+    if hi in [ahi1, ahi3, ahi4, ahi5]:
+        check(
+            capsys,
+            run,
+            hi,
+            ["--count", "3", "Bob"],
+            "Hello, Bob!\nHello, Bob!\nHello, Bob!\n",
+        )
+        check(
+            capsys,
+            run,
+            hi,
+            ["Bob", "--count", "3"],
+            "Hello, Bob!\nHello, Bob!\nHello, Bob!\n",
+        )
+
+    if hi is ahi1:
+        check(
+            capsys,
+            run,
+            hi,
+            ["--name", "Bob", "3"],
+            "Hello, Bob!\nHello, Bob!\nHello, Bob!\n",
+        )
+
+
+@mark.parametrize("hi", [ahi1, ahi2, ahi3, ahi4, ahi5, ahi6])
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
+def test_parse_err_async(
+    capsys: CaptureFixture[str], run: Callable[..., Any], hi: Callable[..., Any]
+) -> None:
+    if hi in [ahi1, ahi5, ahi6]:
+        check_exits(
+            capsys, run, hi, [], "Error: Required option `name` is not provided!"
+        )
+        check_exits(
+            capsys,
+            run,
+            hi,
+            ["--name", "Bob", "--count", "3", "--name", "Alice"],
+            "Error: Option `name` is multiply given!",
+        )
+        check_exits(
+            capsys,
+            run,
+            hi,
+            ["--name", "Bob", "--count", "3", "--lastname", "Alice"],
+            "Error: Unexpected option `lastname`!",
+        )
+        with raises(ParserOptionError, match="Required option `name` is not provided!"):
+            run(hi, [], catch=False)
+        with raises(ParserOptionError, match="Option `name` is multiply given!"):
+            run(hi, ["--name", "Bob", "--count", "3", "--name", "Alice"], catch=False)
+        with raises(ParserOptionError, match="Unexpected option `lastname`!"):
+            run(
+                hi,
+                ["--name", "Bob", "--count", "3", "--lastname", "Alice"],
+                catch=False,
+            )
+    else:
+        check_exits(
+            capsys,
+            run,
+            hi,
+            [],
+            "Error: Required positional argument <name> is not provided!",
+        )
+        with raises(
+            ParserOptionError,
+            match="Required positional argument <name> is not provided!",
+        ):
+            run(hi, [], catch=False)
+
+
+@mark.parametrize("run", [run_w_explicit_args, run_w_sys_argv])
+@mark.parametrize("catch", [False, True])
+def test_config_err_async(run: Callable[..., Any], catch: bool) -> None:
+    async def f(help: bool = False) -> None:
+        pass
+
+    async def f2(dummy: str) -> None:
+        pass
+
+    with raises(
+        ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
+    ):
+        run(f, [], catch=catch)
+    with raises(
+        ParserConfigError, match=r"Cannot use `help` as parameter name in `f\(\)`!"
+    ):
+        run([f, f2], [], catch=catch)
+
+
+@mark.parametrize("help_cmd", ["--help", "-?", "-?b", "-b?"])
+def test_custom_program_name_help_async(
+    capsys: CaptureFixture[str], help_cmd: str
+) -> None:
+    async def f(*, blip: bool = False) -> None:
+        """
+        Do something.
+
+        Args:
+            blip: Whether to blip or not.
+        """
+
+    # here, output is not detected as a tty, so it does not use rich
+    expected = """\
+
+Do something.
+
+Usage:
+  my_program [--blip]
+
+where
+  (option)  -b|--blip   Whether to blip or not. (flag)
+  (option)  -?|--help   Show this help message and exit.
+
+"""
+    with raises(SystemExit):
+        run_w_sys_argv(f, [help_cmd], name="my_program")
+    captured = capsys.readouterr()
+    assert remove_trailing_spaces(captured.out) == remove_trailing_spaces(expected)
