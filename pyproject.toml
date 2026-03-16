@@ -72,7 +72,7 @@ preview = true
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "I", "RUF", "UP", "DOC102", "DOC202", "DOC403", "DOC502"]
-ignore = ["E501", "RUF001", "RUF002"]
+ignore = ["E501", "RUF001", "RUF002", "RUF029"]
 
 [tool.ruff.lint.per-file-ignores]
 "startle/_typing.py" = ["UP007", "UP045"]
