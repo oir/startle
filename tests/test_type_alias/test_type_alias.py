@@ -7,7 +7,7 @@ that cannot be gracefully handled with `if sys.version_info < (3, 12): ...`.
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pytest import mark, raises
 from startle import parse, register
@@ -16,6 +16,9 @@ from startle._value_parser import PARSERS
 from startle.error import ParserConfigError, ParserOptionError, ParserValueError
 
 from .._utils import check_args
+from ..test_literal import Opt, Opts
+from ..test_literal import check as check_literal
+from ..test_literal import check_with_default as check_literal_with_default
 from ..test_parse_class import check_parse_exits
 
 type MyFloat = float
@@ -331,3 +334,61 @@ def test_unsupported_type(mul_f, register_t):
 
     del PARSERS[Rational]
     del METAVARS[Rational]
+
+
+def sum1(vals: list[MyFloat]) -> float:
+    return sum(vals)
+
+
+def sum2(vals: list[MyFloat2]) -> float:
+    return sum(vals)
+
+
+def sum3(vals: list[MyFloat3]) -> float:
+    return sum(vals)
+
+
+@mark.parametrize("sum_f", [sum1, sum2, sum3])
+def test_list_of_type_alias(sum_f: Callable[[list[float]], float]):
+    check_args(sum_f, ["1.0", "2.0", "3.0"], [[1.0, 2.0, 3.0]], {})
+
+    with raises(ParserValueError, match="Cannot parse float from `x`!"):
+        check_args(sum_f, ["1.0", "x", "3.0"], [], {})
+
+
+type Shape = Literal["square", "circle", "triangle"]
+
+
+@mark.parametrize("opt", Opts())
+def test_literal(opt: Opt):
+    def draw(shape: Shape):
+        print(f"Drawing a {shape}.")
+
+    check_literal(draw, opt)
+
+    def draw_with_default(shape: Shape = "circle"):
+        print(f"Drawing a {shape}.")
+
+    check_literal_with_default(draw_with_default, opt)
+
+
+@mark.parametrize("opt", Opts())
+def test_many_literals(opt: Opt):
+    def draw(shapes: tuple[Shape, ...]):
+        print(f"Drawing {len(shapes)} shapes.")
+
+    check_args(draw, opt("shapes", ["square", "circle"]), [("square", "circle")], {})
+    check_args(
+        draw,
+        opt("shapes", ["square", "square", "triangle"]),
+        [("square", "square", "triangle")],
+        {},
+    )
+
+    with raises(
+        ParserValueError,
+        match=re.escape(
+            "Cannot parse literal ('square', 'circle', 'triangle') from `rectangle`!"
+        ),
+    ):
+        check_args(draw, opt("shapes", ["square", "rectangle"]), [], {})
