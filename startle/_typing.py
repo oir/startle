@@ -210,9 +210,9 @@ def strip_container(hint: "TypeHint | type") -> tuple[type | None, Any]:
     args_ = get_args(hint)
 
     if orig in [list, set, frozenset]:
-        return orig, strip_annotated(args_[0]) if args_ else str
+        return orig, normalize(args_[0]) if args_ else str
     if orig is tuple and len(args_) == 2 and args_[1] is ...:
-        return orig, strip_annotated(args_[0]) if args_ else str
+        return orig, normalize(args_[0]) if args_ else str
     if orig is tuple and not args_:
         return orig, str
     if hint in [list, tuple, set, frozenset]:
@@ -221,17 +221,17 @@ def strip_container(hint: "TypeHint | type") -> tuple[type | None, Any]:
 
     # handle abstract collections
     if orig in [MutableSequence]:
-        return list, strip_annotated(args_[0]) if args_ else str
+        return list, normalize(args_[0]) if args_ else str
     if hint in [MutableSequence]:
         return list, str
 
     if orig in [Sequence, Iterable]:
-        return tuple, strip_annotated(args_[0]) if args_ else str
+        return tuple, normalize(args_[0]) if args_ else str
     if hint in [Sequence, Iterable]:
         return tuple, str
 
     if orig in [MutableSet]:
-        return set, strip_annotated(args_[0]) if args_ else str
+        return set, normalize(args_[0]) if args_ else str
     if hint in [MutableSet]:
         return set, str
 
