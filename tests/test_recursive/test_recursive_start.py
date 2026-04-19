@@ -422,6 +422,41 @@ def test_recursive_partial_child_grandchild() -> None:
     )
 
 
+def test_recursive_branch_does_not_eat_sibling_positional() -> None:
+    """
+    A recursable branch is a positional-or-keyword param in the Python signature,
+    but there's no way to spell a class as a single CLI token. Positional tokens
+    from the CLI must flow past the branch to the next real positional leaf /
+    variadic.
+    """
+    from dataclasses import dataclass
+
+    @dataclass
+    class Cfg:
+        x: int = 0
+
+    # Branch + positional leaf sibling.
+    def f1(cfg: Cfg, name: str) -> None:
+        pass
+
+    check_args(f1, ["--x=5", "hi"], [Cfg(x=5), "hi"], {}, recurse=True)
+    check_args(f1, ["hi", "--x=5"], [Cfg(x=5), "hi"], {}, recurse=True)
+
+    # Branch + *args sibling.
+    def f2(cfg: Cfg, *extra: str) -> None:
+        pass
+
+    check_args(
+        f2, ["--x=5", "a", "b", "c"], [Cfg(x=5), "a", "b", "c"], {}, recurse=True
+    )
+
+    # Branch with positional-only leaf sibling.
+    def f3(cfg: Cfg, name: str, /) -> None:
+        pass
+
+    check_args(f3, ["--x=5", "hi"], [Cfg(x=5), "hi"], {}, recurse=True)
+
+
 @mark.parametrize("naming", ["flat", "nested"])
 def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
     def f1(cfg: ConfigWithVarArgs) -> None:
