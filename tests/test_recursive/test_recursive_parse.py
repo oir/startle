@@ -1,10 +1,10 @@
 import re
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 from pytest import mark, raises
 from startle import parse
-from startle.error import ParserConfigError, ParserOptionError
+from startle.error import ParserConfigError, ParserOptionError, RecursiveTypeError
 
 from ..test_help._utils import NS, OS, TS, VS, check_help_from_class
 from .defs import (
@@ -835,3 +835,79 @@ def test_combined_short_flags(cli_args: list[str]) -> None:
         banana_cfg=BananaConfig(length=7.5, ripe=True),
         servings=3,
     )
+
+
+@dataclass
+class CycleNode:
+    name: str = "x"
+    child: "CycleNode | None" = None
+
+
+@dataclass
+class CycleA:
+    b: "CycleB | None" = None
+
+
+@dataclass
+class CycleB:
+    a: "CycleA | None" = None
+
+
+class CycleTD(TypedDict):
+    name: str
+    child: "CycleTD | None"
+
+
+@dataclass
+class TwinPoint:
+    x: float = 0.0
+    y: float = 0.0
+
+
+@dataclass
+class TwinLine:
+    start: TwinPoint
+    end: TwinPoint
+
+
+def test_recursive_self_reference_raises() -> None:
+    with raises(
+        RecursiveTypeError,
+        match=re.escape(
+            "Cannot recurse into parameter `child` of type `CycleNode | None` "
+            "in `CycleNode`: recursive type cycles are not supported!"
+        ),
+    ):
+        parse(CycleNode, args=[], recurse=True)
+
+
+def test_recursive_mutual_cycle_raises() -> None:
+    with raises(
+        RecursiveTypeError,
+        match=re.escape(
+            "Cannot recurse into parameter `b` of type `CycleB | None` "
+            "in `CycleA`: recursive type cycles are not supported!"
+        ),
+    ):
+        parse(CycleA, args=[], recurse=True)
+
+
+def test_recursive_typeddict_self_reference_raises() -> None:
+    with raises(
+        RecursiveTypeError,
+        match=re.escape(
+            "Cannot recurse into parameter `child` of type `CycleTD | None` "
+            "in `CycleTD`: recursive type cycles are not supported!"
+        ),
+    ):
+        parse(CycleTD, args=[], recurse=True)
+
+
+def test_recursive_siblings_same_type_ok() -> None:
+    cfg = parse(
+        TwinLine,
+        args=["--start.x", "1", "--end.y", "2"],
+        recurse=True,
+        naming="nested",
+    )
+    assert cfg == TwinLine(start=TwinPoint(x=1.0), end=TwinPoint(y=2.0))
