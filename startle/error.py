@@ -214,6 +214,19 @@ class NonClassNonRecursableParamError(ParserConfigError):
         )
 
 
+class RecursiveTypeError(ParserConfigError):
+    """
+    Exception raised when a recursive type cycle is detected during recursive parser
+    construction (e.g., a self-referential class, or mutual recursion between classes).
+    """
+
+    def __init__(self, param_name: str, annotation: Any, obj_name: str) -> None:
+        super().__init__(
+            f"Cannot recurse into parameter `{param_name}` of type `{annotation}` "
+            f"in `{obj_name}`: recursive type cycles are not supported!"
+        )
+
+
 class UnsupportedTypeError(ParserConfigError):
     """
     Exception raised when an unsupported type is encountered during parser construction.

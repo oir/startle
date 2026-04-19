@@ -7,8 +7,9 @@ from dataclasses import dataclass, is_dataclass
 from typing import Generic, TypeVar, cast, get_type_hints
 
 from .._docstr import ParamHelp, parse_docstring
-from .._typing import is_typeddict, strip_optional
+from .._typing import is_typeddict, shorten, strip_optional
 from .._value_parser import is_parsable
+from ..error import RecursiveTypeError
 from .classes import get_default_factories, get_initializer_parameters
 from .param import Param
 
@@ -77,14 +78,31 @@ def gather_children(param: Param) -> list[Param]:
     return children
 
 
-def gather_subtree(param: Param) -> TreeNode[Param]:
+def gather_subtree(
+    param: Param, ancestors: tuple[type, ...] = ()
+) -> TreeNode[Param]:
     """
     Collect the entire subtree of a parameter, including itself and all its descendants.
+
+    `ancestors` is the chain of (class) types we've descended through from the root,
+    used to detect recursive type cycles (e.g. self-referential classes).
     """
 
     root = TreeNode[Param](data=param, children=[])
+
+    if is_parsable(param.normalized_hint):
+        return root
+
+    # About to recurse — check for cycle and extend the ancestor chain.
+    cls = strip_optional(param.normalized_hint)
+    if isinstance(cls, type) and cls in ancestors:
+        raise RecursiveTypeError(
+            param.name, shorten(param.normalized_hint), param.owning_obj_name
+        )
+    new_ancestors = (*ancestors, cls) if isinstance(cls, type) else ancestors
+
     for child_info in gather_children(param):
-        child_node = gather_subtree(child_info)
+        child_node = gather_subtree(child_info, new_ancestors)
         child_node.parent = root
         root.children.append(child_node)
     return root
