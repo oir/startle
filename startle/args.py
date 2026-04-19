@@ -13,6 +13,7 @@ from ._help import (
 )
 from .arg import Arg, Name
 from .error import (
+    BranchWithValueError,
     DuplicateOptionError,
     DuplicatePositionalArgumentError,
     FlagWithValueError,
@@ -216,6 +217,8 @@ class Args:
             else:
                 raise UnexpectedOptionError(name)
         opt = self._named_args[self._name2idx[normal_name]]
+        if opt.args is not None:
+            raise BranchWithValueError(str(opt.name))
         if opt.is_parsed and not opt.is_nary:
             raise DuplicateOptionError(str(opt.name))
         if opt.is_flag:
@@ -318,6 +321,8 @@ class Args:
             else:
                 raise UnexpectedOptionError(name)
         opt = self._named_args[self._name2idx[normal_name]]
+        if opt.args is not None:
+            raise BranchWithValueError(str(opt.name))
         if opt.is_parsed and not opt.is_nary:
             raise DuplicateOptionError(str(opt.name))
 
