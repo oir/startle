@@ -318,20 +318,18 @@ def test_recursive_w_inner_required() -> None:
         recurse=True,
     )
 
-    # TODO: Decide if this should be handled differently.
-    # Because --kind is required for DieConfig2 but not provided,
-    # we will fail to parse and use the default for cfg.
-    # But because --sides is then not consumed by the child parser,
-    # it will surface up to the parent as an unexpected option.
-    # NOTE: "sides" is partially consumed now.
-    # with raises(ParserOptionError, match="Unexpected option `sides`!"):
-    #     check_args(
-    #         throw_dice3,
-    #         ["--count", "2", "--sides", "4"],
-    #         [2, DieConfig2(sides=6, kind="single")],
-    #         {},
-    #         recurse=True,
-    #     )
+    # Partial provision of child args means the user intended to build the child;
+    # missing a required inner arg should surface that, not silently fall back
+    # to the parent's default.
+    for func in [throw_dice3, throw_dice4]:
+        with raises(ParserOptionError, match="Required option `kind` is not provided!"):
+            check_args(
+                func,
+                ["--count", "2", "--sides", "4"],
+                [],
+                {},
+                recurse=True,
+            )
 
 
 def test_recursive_w_inner_required_nested() -> None:
@@ -368,6 +366,59 @@ def test_recursive_w_inner_required_nested() -> None:
         {},
         recurse=True,
         naming="nested",
+    )
+
+    # Partial provision should raise, not silently fall back.
+    for func in [throw_dice3, throw_dice4]:
+        with raises(
+            ParserOptionError, match="Required option `cfg.kind` is not provided!"
+        ):
+            check_args(
+                func,
+                ["--count", "2", "--cfg.sides", "4"],
+                [],
+                {},
+                recurse=True,
+                naming="nested",
+            )
+
+
+def test_recursive_partial_child_grandchild() -> None:
+    """
+    Partial provision of a grandchild's args should surface the missing-required
+    error at the grandchild level rather than silently dropping every level above.
+    """
+    from dataclasses import dataclass
+
+    @dataclass
+    class Grand:
+        grand_req: str
+        grand_opt: str = "grand-default"
+
+    @dataclass
+    class Middle:
+        mid_val: str = "mid-default"
+        grand: Grand | None = None
+
+    def run(count: int, mid: Middle | None = None) -> None:
+        pass
+
+    # User touches only grand_opt (grandchild is optional, middle is optional,
+    # grand_req is required). Should surface the missing required arg.
+    with raises(
+        ParserOptionError, match="Required option `grand-req` is not provided!"
+    ):
+        check_args(run, ["--count", "1", "--grand-opt", "X"], [], {}, recurse=True)
+
+    # Control: when no grandchild arg is touched, the existing silent-default
+    # behavior for untouched optional subtrees is preserved (middle has only
+    # optional fields, so it gets built with defaults and a None grand).
+    check_args(
+        run,
+        ["--count", "1"],
+        [1, Middle(mid_val="mid-default", grand=None)],
+        {},
+        recurse=True,
     )
 
 
