@@ -351,11 +351,11 @@ class Args:
         Return new indices after consuming the argument.
         """
 
-        # skip already parsed positional arguments
-        # (because they could have also been named)
-        while (
-            state.positional_idx < len(self._positional_args)
-            and self._positional_args[state.positional_idx].is_parsed
+        # Skip over positional slots that can't accept the current CLI token:
+        # already-parsed leaves, and recursable branches.
+        while state.positional_idx < len(self._positional_args) and (
+            self._positional_args[state.positional_idx].is_parsed
+            or self._positional_args[state.positional_idx].args is not None
         ):
             state.positional_idx += 1
 
