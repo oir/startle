@@ -4,7 +4,14 @@ from typing import Any, Literal, TypedDict
 
 from pytest import mark, raises
 from startle import parse
-from startle.error import ParserConfigError, ParserOptionError, RecursiveTypeError
+from startle.error import (
+    DuplicateOptionError,
+    FlagWithValueError,
+    MissingOptionValueError,
+    ParserConfigError,
+    ParserOptionError,
+    RecursiveTypeError,
+)
 
 from ..test_help._utils import NS, OS, TS, VS, check_help_from_class
 from .defs import (
@@ -911,3 +918,60 @@ def test_recursive_siblings_same_type_ok() -> None:
         naming="nested",
     )
     assert cfg == TwinLine(start=TwinPoint(x=1.0), end=TwinPoint(y=2.0))
+
+
+@dataclass
+class ChildErrInner:
+    items: list[int] = field(default_factory=list[int])
+    name: str = "y"
+    verbose: bool = False
+
+
+@dataclass
+class ChildErrOuter:
+    inner: ChildErrInner
+    extra: str = "x"
+
+
+def test_recursive_child_nary_missing_value() -> None:
+    with raises(
+        MissingOptionValueError,
+        match=re.escape("Option `inner.items` is missing argument!"),
+    ):
+        parse(
+            ChildErrOuter,
+            args=["--inner.items"],
+            recurse=True,
+            naming="nested",
+            catch=False,
+        )
+
+
+def test_recursive_child_duplicate_option() -> None:
+    with raises(
+        DuplicateOptionError,
+        match=re.escape("Option `inner.name` is multiply given!"),
+    ):
+        parse(
+            ChildErrOuter,
+            args=["--inner.name=a", "--inner.name=b"],
+            recurse=True,
+            naming="nested",
+            catch=False,
+        )
+
+
+def test_recursive_child_flag_with_value() -> None:
+    with raises(
+        FlagWithValueError,
+        match=re.escape(
+            "Option `inner.verbose` is a flag and cannot be assigned a value!"
+        ),
+    ):
+        parse(
+            ChildErrOuter,
+            args=["--inner.verbose=true"],
+            recurse=True,
+            naming="nested",
+            catch=False,
+        )
