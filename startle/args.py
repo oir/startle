@@ -234,9 +234,12 @@ class Args:
             else:
                 # last option can be a flag or a regular option
                 if "=" in args[state.idx]:
+                    if opt.is_flag:
+                        raise FlagWithValueError(str(opt.name))
                     value = args[state.idx].split("=", 1)[1]
-                    last = f"{name}={value}"
-                    return self._parse_equals_syntax(last, state)
+                    opt.parse(value)
+                    state.idx += 1
+                    return state
                 if opt.is_flag:
                     opt.parse()
                     state.idx += 1
