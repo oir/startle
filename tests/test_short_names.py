@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
+from pytest import raises
 from startle._inspect.make_args import make_args_from_class, make_args_from_func
+from startle.error import ParserConfigError
 
 
 def fun1(name: str = "john", /, *, count: int = 1) -> None: ...
@@ -218,3 +220,46 @@ def test_short_names():
     assert args._name2idx["c"] != args._name2idx["cake"]
     assert args._name2idx["c"] == args._name2idx["frosting"]
     assert args._name2idx["c"] != args._name2idx["count"]
+
+
+def _fun_with_short(short: str):
+    def f(*, verbose: bool = False) -> None:
+        pass
+
+    f.__doc__ = f"""
+    Args:
+        verbose [{short}]: Whether to be verbose.
+    """
+    return f
+
+
+def test_reserved_short_names():
+    """
+    Certain short names are unreachable at runtime because they conflict with
+    the parser's own syntax or built-ins. Reject at config time.
+
+        `?` - shadowed by the `-?`/`--help` built-in alias
+        `-` - `--` is the positional-only separator
+        `_` - `_parse_named` normalizes `_` to `-`, so `-_` doesn't route back
+        `=` - `=` triggers the value-assignment split
+    """
+    import re
+
+    for short in ["?", "-", "_", "="]:
+        with raises(
+            ParserConfigError,
+            match=rf"Short name `{re.escape(short)}` cannot be used",
+        ):
+            make_args_from_func(_fun_with_short(short))
+
+    @dataclass
+    class ClsQ:
+        """
+        Attributes:
+            verbose [?]: Whether to be verbose.
+        """
+
+        verbose: bool = False
+
+    with raises(ParserConfigError, match=r"Short name `\?` cannot be used"):
+        make_args_from_class(ClsQ)
