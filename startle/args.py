@@ -23,7 +23,6 @@ from .error import (
     MissingRequiredOptionError,
     MissingRequiredPositionalArgumentError,
     NonFlagInShortNameCombinationError,
-    ParserOptionError,
     UnexpectedOptionError,
     UnexpectedPositionalArgumentError,
 )
@@ -280,7 +279,7 @@ class Args:
         for _, child_args in self._children:
             try:
                 return child_args._parse_named(name, args, state)
-            except ParserOptionError:
+            except UnexpectedOptionError:
                 pass
 
         if "=" in name:
