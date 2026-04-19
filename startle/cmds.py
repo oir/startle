@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from .args import Args
 from .error import (
+    DuplicateCommandError,
     MissingCommandError,
     UnexpectedCommandError,
     UnexpectedDefaultCommandError,
@@ -29,10 +30,27 @@ class Cmds:
     default: str = ""
 
     def __post_init__(self):
-        if self.default and self.default not in self.cmd_parsers:
-            raise UnexpectedDefaultCommandError(
-                self.default, list(self.cmd_parsers.keys())
-            )
+        # Normalize cmd keys (and `default`) to the canonical hyphen form so
+        # that user input is found regardless of which form was registered.
+        # Two registrations that collide post-normalization are unrecoverable
+        # (one would silently shadow the other) — surface as a config error.
+        normalized: dict[str, Args] = {}
+        originals_by_norm: dict[str, list[str]] = {}
+        for key, parser in self.cmd_parsers.items():
+            norm_key = key.replace("_", "-")
+            originals_by_norm.setdefault(norm_key, []).append(key)
+            normalized[norm_key] = parser
+        for norm_key, originals in originals_by_norm.items():
+            if len(originals) > 1:
+                raise DuplicateCommandError(norm_key, originals)
+        self.cmd_parsers = normalized
+
+        if self.default:
+            self.default = self.default.replace("_", "-")
+            if self.default not in self.cmd_parsers:
+                raise UnexpectedDefaultCommandError(
+                    self.default, list(self.cmd_parsers.keys())
+                )
 
     def get_cmd_parser(
         self, cli_args: list[str] | None = None

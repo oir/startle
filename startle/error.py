@@ -302,3 +302,16 @@ class SingleFunctionDefaultCommandError(ParserConfigError):
 
     def __init__(self) -> None:
         super().__init__("Default subcommand is not supported for a single function!")
+
+
+class DuplicateCommandError(ParserConfigError):
+    """
+    Exception raised when two subcommand names normalize to the same canonical
+    name (CLI command lookup treats `_` and `-` as equivalent).
+    """
+
+    def __init__(self, normalized: str, originals: list[str]) -> None:
+        super().__init__(
+            f"Multiple commands normalize to the same name `{normalized}`: "
+            f"{', '.join(f'`{o}`' for o in originals)}"
+        )

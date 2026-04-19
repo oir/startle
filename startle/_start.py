@@ -135,29 +135,30 @@ def _start_cmds(
             after the program name.
     """
 
-    cmd2func: dict[str, Callable[..., Any]]
-    if isinstance(funcs, dict):
-        cmd2func = funcs
-    else:
-
-        def _cmd_name(func: Callable[..., Any]) -> str:
-            return func.__name__.replace("_", "-")
-
-        cmd2func = {_cmd_name(func): func for func in funcs}
+    def _normalize(name: str) -> str:
+        return name.replace("_", "-")
 
     def cmd_prog_name(cmd_name: str) -> str:
         # TODO: more reliable way of getting the program name
         return f"{name or sys.argv[0]} {cmd_name}"
 
-    # first, make Cmds object from the functions
+    items: list[tuple[str, Callable[..., Any]]] = (
+        list(funcs.items())
+        if isinstance(funcs, dict)
+        else [(func.__name__, func) for func in funcs]
+    )
     cmds = Cmds(
         {
-            cmd_name: make_args_from_func(func, cmd_prog_name(cmd_name))
-            for cmd_name, func in cmd2func.items()
+            original: make_args_from_func(func, cmd_prog_name(_normalize(original)))
+            for original, func in items
         },
         program_name=name or "",
         default=default or "",
     )
+
+    cmd2func: dict[str, Callable[..., Any]] = {
+        _normalize(original): func for original, func in items
+    }
 
     args: Args | None = None
     try:

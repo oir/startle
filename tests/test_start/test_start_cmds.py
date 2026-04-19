@@ -318,6 +318,52 @@ def test_underscores(capsys: CaptureFixture[str], run: Callable[..., Any]) -> No
         run([this_command, that_command], ["that.command", "2", "foo"], catch=False)
 
 
+def test_dict_keys_with_underscores(capsys: CaptureFixture[str]) -> None:
+    """
+    Dict-based registration should accept underscore keys and route both
+    `foo_bar` and `foo-bar` user inputs to the same command (matching the
+    list-based behavior, which normalizes function names via `__name__`).
+    """
+    check(
+        capsys,
+        run_w_explicit_args,
+        {"foo_bar": this_command},
+        ["foo-bar", "2", "qux"],
+        "foo: 2, bar: qux\n",
+    )
+    check(
+        capsys,
+        run_w_explicit_args,
+        {"foo_bar": this_command},
+        ["foo_bar", "2", "qux"],
+        "foo: 2, bar: qux\n",
+    )
+
+    # `default=` should also tolerate the underscore form.
+    check(
+        capsys,
+        partial(run_w_explicit_args, default="foo_bar"),
+        {"foo_bar": this_command},
+        ["2", "qux"],
+        "foo: 2, bar: qux\n",
+    )
+
+
+def test_dict_key_collision_after_normalization() -> None:
+    """
+    If two dict keys normalize to the same name (e.g. `foo_bar` and `foo-bar`),
+    the silent drop is unrecoverable for the user — surface it as a config error.
+    """
+    with raises(
+        ParserConfigError,
+        match=r"Multiple commands normalize to the same name `foo-bar`",
+    ):
+        run_w_explicit_args(
+            {"foo_bar": this_command, "foo-bar": that_command},
+            ["foo-bar", "2"],
+        )
+
+
 def test_recursive_commands() -> None:
     with raises(
         ParserConfigError,
