@@ -131,6 +131,16 @@ class FlagWithValueError(ParserOptionError):
         super().__init__(f"Option `{name}` is a flag and cannot be assigned a value!")
 
 
+class BranchWithValueError(ParserOptionError):
+    """
+    Exception raised when a recursable branch option (a parent of sub-options)
+    is given a direct value instead of being expanded via its sub-options.
+    """
+
+    def __init__(self, name: str) -> None:
+        super().__init__(f"Option `{name}` takes sub-options, not a direct value!")
+
+
 class NonFlagInShortNameCombinationError(ParserOptionError):
     """
     Exception raised when a non-flag option is used in a short name combination (e.g. -abc),

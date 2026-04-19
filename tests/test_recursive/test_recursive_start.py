@@ -457,6 +457,41 @@ def test_recursive_branch_does_not_eat_sibling_positional() -> None:
     check_args(f3, ["--x=5", "hi"], [Cfg(x=5), "hi"], {}, recurse=True)
 
 
+def test_recursive_branch_rejects_direct_value() -> None:
+    """
+    A recursable branch has no single-token representation — assigning a value
+    directly (e.g. `--cfg=foo` or `--cfg foo`) should surface a helpful error,
+    not the internal `UnsupportedValueTypeError` that leaks the class type.
+    """
+    from dataclasses import dataclass
+
+    @dataclass
+    class Cfg:
+        x: int = 0
+
+    def f(cfg: Cfg) -> None:
+        pass
+
+    # flat naming: `cfg` is the branch's name
+    with raises(
+        ParserOptionError,
+        match=r"Option `cfg` takes sub-options, not a direct value!",
+    ):
+        check_args(f, ["--cfg=foo"], [], {}, recurse=True)
+    with raises(
+        ParserOptionError,
+        match=r"Option `cfg` takes sub-options, not a direct value!",
+    ):
+        check_args(f, ["--cfg", "foo"], [], {}, recurse=True)
+
+    # nested naming: branch's name is still `cfg` at the top level
+    with raises(
+        ParserOptionError,
+        match=r"Option `cfg` takes sub-options, not a direct value!",
+    ):
+        check_args(f, ["--cfg=foo"], [], {}, recurse=True, naming="nested")
+
+
 @mark.parametrize("naming", ["flat", "nested"])
 def test_recursive_unsupported(naming: Literal["flat", "nested"]) -> None:
     def f1(cfg: ConfigWithVarArgs) -> None:
