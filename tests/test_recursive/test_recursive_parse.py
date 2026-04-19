@@ -844,6 +844,57 @@ def test_combined_short_flags(cli_args: list[str]) -> None:
     )
 
 
+@mark.parametrize(
+    ("cli_args", "expected"),
+    [
+        # last short targets a child option taking a value via `=`
+        (
+            ["-hrc=green"],
+            FruitSaladConfig(
+                apple_cfg=AppleConfig(color="green", heavy=True),
+                banana_cfg=BananaConfig(ripe=True),
+            ),
+        ),
+        (
+            ["-rhc=green"],
+            FruitSaladConfig(
+                apple_cfg=AppleConfig(color="green", heavy=True),
+                banana_cfg=BananaConfig(ripe=True),
+            ),
+        ),
+        (
+            ["-hl=7.5"],
+            FruitSaladConfig(
+                apple_cfg=AppleConfig(heavy=True),
+                banana_cfg=BananaConfig(length=7.5),
+            ),
+        ),
+        (
+            ["-hrl=7.5"],
+            FruitSaladConfig(
+                apple_cfg=AppleConfig(heavy=True),
+                banana_cfg=BananaConfig(length=7.5, ripe=True),
+            ),
+        ),
+    ],
+)
+def test_combined_short_equals_into_child(
+    cli_args: list[str], expected: FruitSaladConfig
+) -> None:
+    cfg = parse(FruitSaladConfig, args=cli_args, recurse=True)
+    assert cfg == expected
+
+
+def test_combined_short_equals_flag_with_value_errors() -> None:
+    # last short is a flag in a child — using `=` should raise FlagWithValueError,
+    # not UnexpectedOptionError
+    with raises(
+        FlagWithValueError,
+        match=re.escape("Option `heavy` is a flag and cannot be assigned a value!"),
+    ):
+        parse(FruitSaladConfig, args=["-rh=true"], recurse=True, catch=False)
+
+
 @dataclass
 class CycleNode:
     name: str = "x"
