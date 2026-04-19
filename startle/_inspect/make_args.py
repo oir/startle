@@ -11,6 +11,7 @@ from ..args import Args
 from ..error import (
     HelpCollisionError,
     NameCollisionError,
+    ReservedShortNameError,
     UnsupportedTypeError,
     VariadicChildParamError,
 )
@@ -56,6 +57,14 @@ def _check_name_collisions(params: Sequence[Param], obj_name: str = "") -> None:
         seen_names.add(param.name)
 
 
+_RESERVED_SHORT_NAMES: dict[str, str] = {
+    "?": "reserved for the built-in `-?`/`--help` alias",
+    "-": "conflicts with the `--` positional-only separator",
+    "_": "`-_` would be normalized to `-`, which is not an option name",
+    "=": "conflicts with the `=` value-assignment syntax",
+}
+
+
 def _reserve_short_names(params: Sequence[Param]):
     used_short_names = set[str]()
     short_name_assignments: dict[str, str] = {}
@@ -73,6 +82,13 @@ def _reserve_short_names(params: Sequence[Param]):
     for param in params:
         if param.is_non_var_keyword:
             custom_short_name = param.help.short_name
+            if custom_short_name in _RESERVED_SHORT_NAMES:
+                raise ReservedShortNameError(
+                    custom_short_name,
+                    _RESERVED_SHORT_NAMES[custom_short_name],
+                    param.name,
+                    param.owning_obj_name,
+                )
             if custom_short_name and custom_short_name not in used_short_names:
                 used_short_names.add(custom_short_name)
                 short_name_assignments[param.name] = custom_short_name
@@ -200,21 +216,6 @@ def _make_args_from_params_recursive(
             )
             for child in node.children:
                 traverse(child, child_args, parent_name=child_parent_name)
-
-            # We add a positional variadic argument for convenience when parsing
-            # recursively. Child Args will consume its own arguments and leave
-            # the rest for the parent to handle.
-            if node.parent is not None:  # only add to non-root nodes
-                child_args.enable_unknown_args(
-                    Arg(
-                        name=Name(),
-                        type_=str,
-                        is_positional=True,
-                        is_nary=True,
-                        container_type=list,
-                        help="Additional arguments for the parent parser.",
-                    )
-                )
 
             child_args._parent = args  # type: ignore
 

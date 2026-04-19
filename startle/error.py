@@ -191,6 +191,20 @@ class HelpCollisionError(ParserConfigError):
         super().__init__(f"Cannot use `help` as parameter name in `{obj_name}`!")
 
 
+class ReservedShortNameError(ParserConfigError):
+    """
+    Exception raised when a parameter requests a short name that would be
+    unreachable at runtime (either reserved by the parser, or colliding with
+    CLI syntax).
+    """
+
+    def __init__(self, short: str, reason: str, param_name: str, obj_name: str) -> None:
+        super().__init__(
+            f"Short name `{short}` cannot be used for `{param_name}` in "
+            f"`{obj_name}`: {reason}!"
+        )
+
+
 class VariadicChildParamError(ParserConfigError):
     """
     Exception raised when a variadic parameter is found in child Args during recursive parsing.
