@@ -122,6 +122,8 @@ def default_value(val: Any) -> Text:
 
 
 def help(arg: Arg) -> Text:
+    from .args import Missing
+
     helptext = Text(arg.help, style="italic")
     delim = " " if helptext else ""
     if str(arg.name) == "":
@@ -134,6 +136,8 @@ def help(arg: Arg) -> Text:
         helptext = Text.assemble(helptext, delim, ("(flag)", Sty.opt))
     elif arg.required:
         helptext = Text.assemble(helptext, delim, ("(required)", "yellow"))
+    elif arg.default is Missing:
+        helptext = Text.assemble(helptext, delim, ("(optional)", Sty.opt))
     else:
         if arg.default_factory is not None:
             # is it harmful to just call the factory here?
