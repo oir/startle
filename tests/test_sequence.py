@@ -234,6 +234,33 @@ def test_positional_nargs_with_defaults(container: Any, scalar: type) -> None:
     check_args(add_, [], [ctr_cls([scalar(3), scalar(5)])], {})
 
 
+def test_positional_nargs_dashdash_escape():
+    """
+    `--` should let flag-looking tokens be consumed as values of an n-ary positional
+    argument. Without `--` they'd be treated as options.
+    """
+
+    def run(cmd_args: list[str], /) -> None:
+        pass
+
+    # Baseline: flag-looking positional values require `--`.
+    with raises(ParserOptionError, match="Unexpected option `a`!"):
+        check_args(run, ["-a", "-b", "-c"], [], {})
+
+    # `--`: everything after should be positional.
+    check_args(run, ["--", "-a", "-b", "-c"], [["-a", "-b", "-c"]], {})
+    check_args(run, ["--", "a", "-b", "c"], [["a", "-b", "c"]], {})
+
+    # Subsequent `--` tokens in positional-only mode are values, not separators.
+    check_args(run, ["--", "-a", "--", "-b"], [["-a", "--", "-b"]], {})
+
+    # Mixing regular positionals before `--` should still work.
+    def run2(leader: str, rest: list[str], /) -> None:
+        pass
+
+    check_args(run2, ["go", "--", "-x", "-y"], ["go", ["-x", "-y"]], {})
+
+
 def test_positional_nargs_infeasible():
     """
     Below case is ambiguous, because the parser cannot determine the end of the first positional argument.

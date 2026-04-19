@@ -358,7 +358,9 @@ class Args:
         if arg.is_nary:
             # n-ary positional arg
             values: list[str] = []
-            while state.idx < len(args) and self._is_name(args[state.idx]) is False:
+            while state.idx < len(args) and (
+                state.positional_only or self._is_name(args[state.idx]) is False
+            ):
                 values.append(args[state.idx])
                 state.idx += 1
             for value in values:
