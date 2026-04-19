@@ -100,6 +100,21 @@ class Args:
             if arg.args:
                 yield arg, arg.args
 
+    def _any_parsed_leaf(self) -> bool:
+        """
+        Return True if any leaf argument in this subtree has been parsed (via
+        user input). Relies on `_check_completion` being structured so that
+        defaults are assigned only after all required args are validated, so
+        `is_parsed` on a leaf reliably means "the user provided it".
+        """
+        for arg in self._args:
+            if arg.args is None:
+                if arg.is_parsed:
+                    return True
+            elif arg.args._any_parsed_leaf():
+                return True
+        return False
+
     @staticmethod
     def _is_name(value: str) -> str | Literal[False]:
         """
@@ -382,25 +397,31 @@ class Args:
                 child._value = child.type_(*init_args, **init_kwargs)  # type: ignore
                 child._parsed = True  # type: ignore
             except MissingRequiredOptionError as e:
-                if not child.required:
-                    child._value = child.default  # type: ignore
-                    child._parsed = True  # type: ignore
-                    continue
-                else:
+                # fall back to the child's default only if the user left the
+                # whole subtree untouched. if they provided any inner arg,
+                # their intent was to build the child, thus surface the error.
+                if child.required or child_args._any_parsed_leaf():
                     raise e
+                child._value = child.default  # type: ignore
+                child._parsed = True  # type: ignore
+                continue
 
-        # check if all required arguments are given, assign defaults otherwise
+        # check that all required args are given first, before assigning any
+        # defaults; this keeps `is_parsed` a reliable "user-provided" signal for
+        # callers that catch the raise (see `_any_parsed_leaf`).
+        for arg in self._positional_args + self._named_args:
+            if not arg.is_parsed and arg.required:
+                if arg.is_named:
+                    # if a positional arg is also named, prefer this type of error message
+                    raise MissingRequiredOptionError(str(arg.name))
+                else:
+                    raise MissingRequiredPositionalArgumentError(str(arg.name))
+
+        # assign defaults to any unparsed optional args
         for arg in self._positional_args + self._named_args:
             if not arg.is_parsed:
-                if arg.required:
-                    if arg.is_named:
-                        # if a positional arg is also named, prefer this type of error message
-                        raise MissingRequiredOptionError(str(arg.name))
-                    else:
-                        raise MissingRequiredPositionalArgumentError(str(arg.name))
-                else:
-                    arg._value = arg.default  # type: ignore
-                    arg._parsed = True  # type: ignore
+                arg._value = arg.default  # type: ignore
+                arg._parsed = True  # type: ignore
 
     def _parse(self, args: list[str]):
         state = _ParsingState()
