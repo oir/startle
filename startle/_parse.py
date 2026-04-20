@@ -34,6 +34,12 @@ def parse(
         catch: Whether to catch and print (startle specific) errors instead of raising.
             This is used to display a more presentable output when a parse error occurs instead
             of the default traceback. This option will never catch non-startle errors.
+        recurse: (experimental) Whether to recursively parse objects using their initializers.
+        naming: How to name nested arguments when `recurse` is True.
+            "flat" means all arguments are at the top level with their names (e.g. `--baz`),
+            while "nested" means arguments are named using dot notation to indicate
+            their nesting (e.g. `--foo.bar.baz`).
+            Ignored if `recurse` is False.
     Returns:
         An instance of the class `cls`.
     """
