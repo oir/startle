@@ -154,6 +154,7 @@ Thus, some decisions are done differently:
 - Like Fire and unlike Typer, docstrings determine the description of each argument in the help text, instead of having to individually add extra type annotations. This allows for a very non-intrusive design, you can adopt (or un-adopt) **Startle** with no changes to your functions.
 - `*args` but also `**kwargs` are supported, to parse unknown arguments as well as unknown options (`--unk-key unk-val`).
   See [example](https://github.com/oir/startle/blob/main/examples/search_gh.py).
+- `async def` functions are supported: `start()` runs them via `asyncio.run`, so you can put your whole async entry point behind a single `start()` call.
 
 See all [examples](https://github.com/oir/startle/tree/main/examples).
 
