@@ -127,3 +127,59 @@ AsciinemaPlayer.create('cast/dice-help.cast', document.getElementById('dice-help
 >
 > In this case, **Startle** will _call_ the default factory to display the
 > default values, therefore be wary if your factories have any side effects.
+
+## TypedDicts
+
+`parse()` also accepts a
+[`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict)
+class. Unlike the dataclass / regular class case, the return value is a plain
+`dict`, not an instance of the class, as is the case with any runtime
+instantiation of a `TypedDict` type.
+
+```python
+from typing import NotRequired, TypedDict
+from startle import parse
+
+
+class Config(TypedDict):
+    """
+    Configuration for the dice program.
+
+    Attributes:
+        sides: The number of sides on the dice.
+        count: The number of dice to throw.
+        nickname: An optional nickname for the dice.
+    """
+
+    sides: int
+    count: int
+    nickname: NotRequired[str]
+
+
+cfg = parse(Config, brief="A program to throw dice.")
+print(cfg)
+```
+
+- Similarly to dataclasses, **descriptions** are derived from the class
+  docstring's `Attributes:` section.
+- **Required vs optional** follows standard TypedDict rules. By default, every
+  key is required. Marking a field with
+  [`NotRequired[T]`](https://docs.python.org/3/library/typing.html#typing.NotRequired)
+  makes it optional. Declaring the class with `total=False` flips the default,
+  and individual fields can be pinned with
+  [`Required[T]`](https://docs.python.org/3/library/typing.html#typing.Required).
+- **Omitted optional keys are _absent_ from the dict — not `None`.** This
+  preserves the TypedDict convention that a missing key is semantically
+  different from a present `None` value. For instance, with the `Config` above:
+
+  ```bash
+  ~ ❯ python dice.py --sides 6 --count 2
+  # prints: {'sides': 6, 'count': 2}
+
+  ~ ❯ python dice.py --sides 6 --count 2 --nickname lucky
+  # prints: {'sides': 6, 'count': 2, 'nickname': 'lucky'}
+  ```
+
+  This is useful when forwarding the dict to something that treats absence and
+  `None` differently (e.g. an HTTP client that drops unset parameters, or a
+  `**kwargs` call where a `None` would override a different default).

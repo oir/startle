@@ -72,6 +72,15 @@ Therefore, this version of the program will admit the following flags:
 - `-d, --missile-direction`
 - `-m, --mana-cost`
 
+> [!WARNING]
+> The characters `?`, `-`, `_`, and `=` cannot be used as custom short names
+> and will raise a `ParserConfigError` if requested. They are unreachable at
+> runtime because they conflict with the parser's own syntax:
+> - `?` is reserved for the built-in `-?`/`--help` alias,
+> - `-` conflicts with the `--` positional-only separator,
+> - `_` is normalized to `-`, which is not a valid option name,
+> - `=` triggers the `=` value-assignment split (e.g. `--opt=value`).
+
 ## Type
 
 Target type after parsing the argument is directly obtained from the type

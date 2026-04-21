@@ -14,6 +14,9 @@ def _shorten_type_annotation(annotation: Any) -> str:
         # It's a simple type, return its name
         if inspect.isclass(annotation):
             return annotation.__name__
+        if isinstance(annotation, str):
+            # e.g. string members of typing.Literal
+            return repr(annotation)
         return str(annotation)
 
     # Handle Optional types explicitly
@@ -27,8 +30,13 @@ def _shorten_type_annotation(annotation: Any) -> str:
     if origin is Callable or origin is abc.Callable:
         args = get_args(annotation)
         if args:
-            args_str = ", ".join(_shorten_type_annotation(arg) for arg in args[0])
-            return f"Callable[[{args_str}], {_shorten_type_annotation(args[1])}]"
+            if args[0] is Ellipsis:
+                params_str = "..."
+            else:
+                params_str = "[" + ", ".join(
+                    _shorten_type_annotation(arg) for arg in args[0]
+                ) + "]"
+            return f"Callable[{params_str}, {_shorten_type_annotation(args[1])}]"
         return "Callable"
 
     # It's a generic type, process its arguments
@@ -104,7 +112,8 @@ def func_api(func: Callable, file: TextIO):
         name = f"`{param.name}`"
         typ = _shorten_type_annotation(param.annotation).replace("|", "\\|")
         typ = f'<span class="codey"> {typ} </span>'
-        desc = arg_helps.get(param.name, "").replace("|", "\\|")
+        help = arg_helps.get(param.name)
+        desc = (help.desc if help else "").replace("|", "\\|")
         default = param.default
         if default is inspect.Parameter.empty:
             default = "_required_"
