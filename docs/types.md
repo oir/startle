@@ -102,6 +102,28 @@ appended to the container.
 > to be `str`, e.g. `list` or `frozenset` is assumed to be `list[str]`
 > or `frozenset[str]`, respectively.
 
+### Type aliases and `Annotated`
+
+Before looking up a parser, **Startle** normalizes the type hint by
+unwrapping a few type forms:
+
+- `typing.Annotated[T, ...]` is reduced to `T`. Any metadata you attach
+  (for other tools, documentation, etc.) is ignored by the parser.
+- Type aliases declared with `typing.TypeAlias` (or the PEP 695 `type Foo = ...`
+  syntax on Python 3.12+) are resolved to their underlying type.
+
+For example, all three of the following arguments parse identically as `int`:
+
+```python
+from typing import Annotated, TypeAlias
+
+Count: TypeAlias = int
+type Count2 = int  # PEP 695, Python 3.12+
+
+def f(a: int, b: Count, c: Annotated[Count2, "docs-only metadata"]):
+    ...
+```
+
 ## User defined types
 
 Any custom type that is not supported out of the box can be supported by registering it with `register()`.
