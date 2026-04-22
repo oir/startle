@@ -1,10 +1,11 @@
 # Recursive parsing
 
-_`recurse=True` is experimental, consider its API as unstable and evolving._
+> [!WARNING]
+> _`recurse=True` is experimental, consider its API as unstable and evolving._
 
 Sometimes a config class nests other config classes.
 Setting `recurse=True` on either `start()` or `parse()` makes
-**Startle** to recursively walk _into_ such nested attributes,
+**Startle** recursively walk _into_ such nested attributes,
 expose their individual fields as CLI options, and then recursively
 construct children and parent instances at program invocation time.
 
@@ -88,6 +89,12 @@ These are the same three kinds of types that `parse()` can admit.
 Anything else is a _leaf_: primitives, enums, `typing.Literal`,
 `Optional` of a scalar, n-ary containers (`list[T]`, `set[T]`, ...), and any
 user defined types registered with `register()`.
+
+> [!INFO]
+> Leaves are always exposed as _options_ (e.g. `--name value`),
+> even when the corresponding parameter in the nested type's initializer
+> is positional or positional-or-keyword. Positional CLI arguments are
+> only available on the top-level entry function.
 
 ## Flat vs nested naming
 
