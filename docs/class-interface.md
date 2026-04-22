@@ -183,3 +183,9 @@ print(cfg)
   This is useful when forwarding the dict to something that treats absence and
   `None` differently (e.g. an HTTP client that drops unset parameters, or a
   `**kwargs` call where a `None` would override a different default).
+
+## See also
+
+For configs that nest other configs (a common pattern as programs grow),
+`parse()` also supports walking _into_ nested dataclasses, classes, and
+TypedDicts. See [Recursive parsing](/recurse).

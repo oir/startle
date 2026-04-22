@@ -31,7 +31,7 @@ class RandomForestConfig:
     """
 
     n_estimators: int = 100
-    criterion: Literal["gini", "entropy", "log_loss"] = "gini"
+    criterion: Literal["gini", "entropy"] = "gini"
     max_depth: int | None = None
 
 

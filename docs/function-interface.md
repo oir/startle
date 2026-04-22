@@ -155,6 +155,9 @@ This gives us the final output:
 
 <div id="wc-run-cast"></div>
 
+For entry points whose arguments are themselves configurable objects (nested
+dataclasses, TypedDicts, etc.), see [Recursive parsing](/recurse).
+
 ## Commands
 
 You can invoke `start()` with a list of functions instead of a single function.
