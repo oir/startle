@@ -435,3 +435,17 @@ def test_typeddict_with_help_attr(capsys: CaptureFixture[str], catch: bool):
         ParserConfigError, match="Cannot use `help` as parameter name in `Config`!"
     ):
         parse(Config, args=[], catch=catch)
+
+
+def test_parse_non_class():
+    def some_func(x: int):
+        pass
+
+    with raises(ParserConfigError, match=re.escape("Expected a class, got `")):
+        parse(some_func, args=[])  # type: ignore[arg-type]
+
+    with raises(ParserConfigError, match=re.escape("Expected a class, got `42`")):
+        parse(42, args=[])  # type: ignore[arg-type]
+
+    with raises(ParserConfigError, match=re.escape("Expected a class, got `'hi'`")):
+        parse("hi", args=[])  # type: ignore[arg-type]

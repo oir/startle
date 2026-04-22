@@ -11,6 +11,7 @@ from ..args import Args
 from ..error import (
     HelpCollisionError,
     NameCollisionError,
+    NotAClassError,
     ReservedShortNameError,
     UnsupportedTypeError,
     VariadicChildParamError,
@@ -349,7 +350,8 @@ def make_args_from_class(
         recurse: Whether to recurse into nested Args.
         naming: The naming strategy for nested Args.
     """
-    # TODO: check if cls is a class?
+    if not inspect.isclass(cls):
+        raise NotAClassError(cls)
 
     if is_typeddict(cls):
         params = _make_params_from_td(cls)

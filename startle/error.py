@@ -169,6 +169,18 @@ class UnexpectedCommandError(ParserOptionError):
         super().__init__(f"Unknown command `{cmd}`!")
 
 
+class NotAClassError(ParserConfigError):
+    """
+    Exception raised when a non-class object is passed where a class is
+    expected (e.g. to `parse()` or `make_args_from_class()`).
+    """
+
+    def __init__(self, obj: Any) -> None:
+        super().__init__(
+            f"Expected a class, got `{obj!r}` of type `{type(obj).__name__}`!"
+        )
+
+
 class NameCollisionError(ParserConfigError):
     """
     Exception raised when there is a name collision in the parser configuration during
