@@ -23,7 +23,7 @@ jobs:
       - name: Install
         run: pip install hatch pyright .[test]
       - name: Run tests
-        run: hatch test --all --cover
+        run: hatch test --all --cover --parallel
       - name: Run static checks
         run: hatch run test:pyright
       - name: Upload coverage reports to Coveralls

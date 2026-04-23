@@ -47,7 +47,7 @@ version-file = "startle/_version.py"
 dependencies = [ "pytest", "pytest-cov", "pyright", "typing-extensions" ]
 
 [tool.hatch.envs.hatch-test]
-dependencies = [ "pytest", "pytest-cov", "pyright", "typing-extensions" ]
+dependencies = [ "pytest", "pytest-cov", "pytest-xdist", "pyright", "typing-extensions" ]
 args = ["-ra", "-q"]
 
 [[tool.hatch.envs.hatch-test.matrix]]
