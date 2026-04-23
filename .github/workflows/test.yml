@@ -42,4 +42,5 @@ jobs:
           hatch run test:python examples/dice.py
           hatch run test:python examples/dice.py --sides 20 --count 2 --kind pair
           hatch run test:python examples/rational.py 2/3 4/5
-          hatch run test:python examples/wc.py --kind char examples/wc.py 
+          hatch run test:python examples/wc.py --kind char examples/wc.py
+          hatch run test:python examples/parallel_wait.py alpha beta gamma
