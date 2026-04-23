@@ -17,3 +17,4 @@ you can inspect with `python <example> --help`.
 | `dice.py` | How to use `parse()` to parse args into a class. |
 | `dice2.py` | How to use `parse()` to parse args into a dict using a `TypedDict` definition. |
 | `digits.py` | A recursive parsing example composing dataclasses and a main function signature. |
+| `parallel_wait.py` | An `async def` entry point, showing that `start()` runs the coroutine via `asyncio.run()`. |
