@@ -124,6 +124,19 @@ def f(a: int, b: Count, c: Annotated[Count2, "docs-only metadata"]):
     ...
 ```
 
+## Dataclasses, classes, and TypedDicts
+
+These aren't "types" in the sense of the table above: You don't parse a
+single command-line string into them. Instead they act as _containers_ of
+typed fields, each of which is a leaf type handled by the rules on this
+page.
+
+- `parse()` accepts any `@dataclass`, regular class with `__init__`, or
+  `TypedDict` subclass as its top-level target. See
+  [CLI from classes](/class-interface).
+- With `recurse=True`, `start()` and `parse()` also walk _into_ such types
+  when they appear as nested attributes. See [Recursive parsing](/recurse).
+
 ## User defined types
 
 Any custom type that is not supported out of the box can be supported by registering it with `register()`.

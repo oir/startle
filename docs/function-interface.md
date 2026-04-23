@@ -244,6 +244,34 @@ start({
 ~ ❯ python program.py plus 1 2 3
 ```
 
+## Async functions
+
+`start()` also accepts `async def` functions, both as the single entry
+point and as items in a command list. In this case, once arguments are
+parsed, **Startle** runs the coroutine via `asyncio.run()`, so you can
+keep your whole async entry point behind a single `start()` call:
+
+```python
+import asyncio
+from startle import start
+
+
+async def greet(name: str, *, delay: float = 0.0) -> None:
+    """
+    Print a greeting after an optional delay.
+
+    Args:
+        name: Who to greet.
+        delay: Seconds to wait before greeting.
+    """
+    await asyncio.sleep(delay)
+    print(f"Hello, {name}!")
+
+
+if __name__ == "__main__":
+    start(greet)
+```
+
 ## Returning
 
 `start()`'s design is primarily around the use case where it invokes a function executing
