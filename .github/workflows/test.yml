@@ -20,6 +20,17 @@ jobs:
             3.12
             3.13
             3.14
+      - name: Compute cache window
+        id: cache_window
+        run: echo "week=$(date +%Y-W%U)" >> $GITHUB_OUTPUT
+      - name: Cache hatch envs
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/hatch
+          key: hatch-${{ runner.os }}-${{ steps.cache_window.outputs.week }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            hatch-${{ runner.os }}-${{ steps.cache_window.outputs.week }}-
+            hatch-${{ runner.os }}-
       - name: Install
         run: pip install hatch pyright .[test]
       - name: Run tests
