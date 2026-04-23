@@ -22,7 +22,10 @@ jobs:
             3.14
       - name: Compute cache window
         id: cache_window
-        run: echo "week=$(date +%Y-W%U)" >> $GITHUB_OUTPUT
+        run: |
+          week=$(date +%Y-W%U)
+          echo "week=$week" >> $GITHUB_OUTPUT
+          echo "Cache window: $week"
       - name: Cache hatch envs
         uses: actions/cache@v4
         with:
