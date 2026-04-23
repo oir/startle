@@ -2,7 +2,9 @@ import re
 from dataclasses import dataclass
 
 from pytest import raises
+from rich.console import Console
 from startle import register
+from startle._inspect.make_args import make_args_from_func
 from startle._metavar import METAVARS
 from startle._value_parser import PARSERS
 from startle.error import ParserConfigError
@@ -113,8 +115,22 @@ def test_supported_type_new_meta():
     check_args(mul3, ["1.0", "2.0"], [1.0, 2.0], {})
 
     old_meta = METAVARS[float]
+
+    console = Console(width=120, highlight=False, force_terminal=True)
+    with console.capture() as cap:
+        make_args_from_func(mul3).print_help(console)
+    help_before = cap.get()
+    assert "<float>" in help_before
+    assert "<x.y>" not in help_before
+
     register(float, metavar="x.y")
-    # TODO: check help string for new metavar
+
+    console = Console(width=120, highlight=False, force_terminal=True)
+    with console.capture() as cap:
+        make_args_from_func(mul3).print_help(console)
+    help_after = cap.get()
+    assert "<x.y>" in help_after
+    assert "<float>" not in help_after
 
     check_args(mul3, ["1.0", "2.0"], [1.0, 2.0], {})
     assert METAVARS[float] == "x.y"

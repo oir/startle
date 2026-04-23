@@ -5,6 +5,7 @@ from typing import Any, List, Literal, Optional, Union
 from pytest import mark, raises
 from startle._inspect.classes import get_default_factories
 from startle._typing import (
+    is_typeddict,
     normalize,
     shorten,
     strip_not_required,
@@ -205,3 +206,30 @@ def test_strip_not_required_and_required():
     is_required, type_c = strip_required(ExampleDict.__annotations__["c"])
     assert is_required is False
     assert type_c is float
+
+
+def test_is_typeddict():
+    from typing import TypedDict
+
+    from typing_extensions import TypedDict as TE_TypedDict
+
+    class StdlibTD(TypedDict):
+        x: int
+
+    class ExtensionsTD(TE_TypedDict):
+        x: int
+
+    class PlainDictSubclass(dict):
+        x: int
+
+    class Normal:
+        x: int
+
+    assert is_typeddict(StdlibTD)
+    assert is_typeddict(ExtensionsTD)
+    assert not is_typeddict(PlainDictSubclass)
+    assert not is_typeddict(Normal)
+    assert not is_typeddict(dict)
+    assert not is_typeddict(int)
+    assert not is_typeddict(42)  # type: ignore[arg-type]
+    assert not is_typeddict("hi")  # type: ignore[arg-type]

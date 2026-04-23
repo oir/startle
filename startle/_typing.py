@@ -188,12 +188,15 @@ def is_typeddict(type_: TypeHint) -> TypeGuard[type[dict[str, Any]]]:
     Return True if the given type hint is a TypedDict class.
     """
 
-    # we only use __annotations__, so merely checking for that
-    # and dict subclassing. TODO: maybe narrow this down further?
+    # Both `typing.TypedDict` and `typing_extensions.TypedDict` set these
+    # attributes on the generated class, while plain `dict` subclasses do not.
+    # This is the portable way to recognize both variants without taking a
+    # runtime dependency on typing_extensions.
     return (
         isinstance(type_, type)
         and issubclass(type_, dict)
-        and hasattr(type_, "__annotations__")  # type: ignore
+        and hasattr(type_, "__required_keys__")  # type: ignore
+        and hasattr(type_, "__optional_keys__")  # type: ignore
     )
 
 
