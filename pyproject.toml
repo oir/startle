@@ -31,6 +31,7 @@ dependencies = [ "rich" ]
 
 [project.urls]
 "Homepage" = "https://github.com/oir/startle"
+"Changelog" = "https://github.com/oir/startle/releases"
 
 
 [tool.hatch.version]
