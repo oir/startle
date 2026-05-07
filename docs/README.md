@@ -139,7 +139,7 @@ Then `dice.py` could be executed like:
 
 **Startle** is inspired by [Typer](https://github.com/fastapi/typer), [Fire](https://github.com/google/python-fire),
 and [HFArgumentParser](https://github.com/huggingface/transformers/blob/main/src/transformers/hf_argparser.py),
-but aims to be _non-intrusive_, to have stronger type support, and to have saner defaults.
+but aims to be [_non-intrusive_](/design?id=non-intrusive), to have stronger type support, and to have intuitive defaults.
 Thus, some decisions are done differently:
 
 - Use of positional-only or keyword-only argument separators (`/`, `*`, see PEP [570](https://peps.python.org/pep-0570/),
