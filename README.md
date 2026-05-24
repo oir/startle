@@ -19,7 +19,13 @@ _Give your code a start._ ⚡👀
 </div>
 
 > [!WARNING]  
-> **Startle** is _alpha_ and should be considered unstable as its interface is fluid 😅, consider pinning to a version.
+> **Startle** is _beta_ and should be considered unstable as its interface is evolving 😅, consider pinning to a version.
+
+**Status:** A useable MVP for parsing into functions, classes, and dicts (via TypedDicts).
+Core interface is expected to be mostly stable. Recursive parsing is evolving. <br>
+**Roadmap:** See [project board](https://github.com/users/oir/projects/3).
+
+---
 
 **Startle** lets you transform a python function (or functions) into a command line entry point, e.g:
 
