@@ -20,11 +20,12 @@ _Give your code a start._ ⚡👀
 
 </div>
 
-> [!ATTENTION]
-**Startle** is _alpha_ and should be considered unstable as its interface is fluid 😅.
+> [!WARNING]
+**Startle** is _beta_ and should be considered unstable as its interface is evolving 😅.
 Consider pinning to a version.
 
-**Status:** A useable MVP for parsing into functions and classes. Unstable interface. <br>
+**Status:** A useable MVP for parsing into functions, classes, and dicts (via TypedDicts).
+Core interface is expected to be mostly stable. Recursive parsing is evolving. <br>
 **Roadmap:** See [project board](https://github.com/users/oir/projects/3).
 
 ---
